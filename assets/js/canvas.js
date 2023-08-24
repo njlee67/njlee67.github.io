@@ -32,6 +32,8 @@ function drawBackground() {
 var radius = Math.round(window.innerHeight/3);
 var overlapHexPadding = Math.round(radius/20);
 var dynamicOverlapHexPadding = overlapHexPadding;
+var doneWithShrink = false;
+var doneWithExpansion = true;
 
 function updateDisplay() {
     // Set the canvas width and height each time in case window size changes
@@ -45,9 +47,24 @@ function updateDisplay() {
     //Animate the hexagons shrinking in front of dark grey background
     
     // Animate Iris mechanism on each hexagon with main image of each project
-    if((radius + dynamicOverlapHexPadding) > (0.85*radius)) {
-        dynamicOverlapHexPadding -= 0.25;
+    if(doneWithShrink == false
+    && (radius + dynamicOverlapHexPadding) > (0.85*radius) ) {
 
+        dynamicOverlapHexPadding -= 0.25;
+    }
+    else if(doneWithShrink == false
+    && (radius + dynamicOverlapHexPadding) <= (0.85*radius) ) {
+
+        doneWithShrink = true;
+    }
+    else if(doneWithShrink == true
+    && (radius + dynamicOverlapHexPadding) < (radius + overlapHexPadding)) {
+
+        dynamicOverlapHexPadding += 1;
+    }
+    else if(doneWithShrink == true
+    && (radius + dynamicOverlapHexPadding) >= (radius + overlapHexPadding)){
+        doneWithShrink = false;
     }
     
     drawHexagonTessalation(radius, '#00FF00', dynamicOverlapHexPadding);
