@@ -34,7 +34,12 @@ var overlapHexPadding = Math.round(radius/20);
 var dynamicOverlapHexPadding = overlapHexPadding;
 var doneWithShrink = false;
 var doneWithExpansion = true;
-
+var startPose = {x: 0, y: 0};
+var irisDistance = 0;
+var seisColores = [];
+for(let colo = 0;colo < 6;colo++){
+    seisColores.push(getRandomColor());
+}
 function updateDisplay() {
     // Set the canvas width and height each time in case window size changes
     mainCanvas.width = window.innerWidth;
@@ -48,26 +53,34 @@ function updateDisplay() {
     
     // Animate Iris mechanism on each hexagon with main image of each project
     if(doneWithShrink == false
-    && (radius + dynamicOverlapHexPadding) > (0.85*radius) ) {
+    && (radius + dynamicOverlapHexPadding) > (0.9*radius) ) {
 
-        dynamicOverlapHexPadding -= 0.25;
+        dynamicOverlapHexPadding--;
     }
     else if(doneWithShrink == false
-    && (radius + dynamicOverlapHexPadding) <= (0.85*radius) ) {
+    && (radius + dynamicOverlapHexPadding) <= (0.9*radius) ) {
 
         doneWithShrink = true;
     }
-    else if(doneWithShrink == true
-    && (radius + dynamicOverlapHexPadding) < (radius + overlapHexPadding)) {
 
-        dynamicOverlapHexPadding += 1;
+    if(doneWithShrink == true
+    && irisDistance < 0.7*(radius - overlapHexPadding)){
+        irisDistance ++;
     }
-    else if(doneWithShrink == true
-    && (radius + dynamicOverlapHexPadding) >= (radius + overlapHexPadding)){
-        doneWithShrink = false;
+    else {
+        irisDistance = irisDistance;
     }
+    // else if(doneWithShrink == true
+    // && (radius + dynamicOverlapHexPadding) < (radius + overlapHexPadding)) {
+
+    //     dynamicOverlapHexPadding += 0.25;
+    // }
+    // else if(doneWithShrink == true
+    // && (radius + dynamicOverlapHexPadding) >= (radius + overlapHexPadding)){
+    //     doneWithShrink = false;
+    // }
     
-    drawHexagonTessalation(radius, '#00FF00', dynamicOverlapHexPadding);
+    drawHexagonTessalation(radius, '#77dd00', dynamicOverlapHexPadding, startPose);
 
 
     //canvas
@@ -85,11 +98,16 @@ function drawHexagonTessalation(radii, color, overlapHexPadding, startPosition =
 
     for(var hexVertIndex = 0;hexVertIndex < numRows;hexVertIndex++) {
         for(var hexIndex = 0;hexIndex < numColumns;hexIndex++) {
-            let hexIndexPosition = {x: (1.5*radii) * hexIndex, y: 2*hexTesselationVerticalOffset*(hexVertIndex)};
+            let hexIndexPosition = {x: startPosition.x + (1.5*radii) * hexIndex, y: startPosition.y + 2*hexTesselationVerticalOffset*(hexVertIndex)};
             if(hexIndex % 2 > 0) {
                 hexIndexPosition.y -= hexTesselationVerticalOffset;
             }
-            drawHexagon(radii + overlapHexPadding, hexIndexPosition, color, angleOffset);
+            if(doneWithShrink) {
+                drawIrisTriangles(radii + overlapHexPadding, hexIndexPosition, color, irisDistance)
+            }
+            else {
+                drawHexagon(radii + overlapHexPadding, hexIndexPosition, color, angleOffset);
+            }
         }
     }
 }
@@ -105,4 +123,36 @@ function drawHexagon(radius, centerPositon, color, angleOffset = Math.PI/6) {
 
     ctx.closePath();
     ctx.fill();
+}
+
+function drawIrisTriangles(radius, centerPositon, color,irisMechanismDistanceFromCenter, angleOffset = Math.PI/6) {
+    
+    for(let vertex = 0;vertex < 6;vertex++) {
+        ctx.fillStyle = seisColores[vertex];
+        ctx.beginPath();
+        let percentageOpen = irisMechanismDistanceFromCenter/radius;
+        let perpindicularToSideVector = {x: radius*Math.sin(vertex*Math.PI/3 + angleOffset) - radius*Math.sin((vertex+1)*Math.PI/3 + angleOffset), y: radius*Math.cos(vertex*Math.PI/3 + angleOffset) -  radius*Math.cos((vertex+1)*Math.PI/3 + angleOffset)}
+        let perpindicularToSideVectorPrev = {x: radius*Math.sin((vertex-1)*Math.PI/3 + angleOffset) - radius*Math.sin((vertex)*Math.PI/3 + angleOffset), y: radius*Math.cos((vertex-1)*Math.PI/3 + angleOffset) -  radius*Math.cos((vertex)*Math.PI/3 + angleOffset)}
+   
+        ctx.moveTo(centerPositon.x + percentageOpen*perpindicularToSideVector.x, centerPositon.y + percentageOpen*perpindicularToSideVector.y);
+
+        ctx.lineTo(centerPositon.x + radius*Math.sin((vertex)*Math.PI/3 + angleOffset) + (percentageOpen)*perpindicularToSideVectorPrev.x, centerPositon.y + radius*Math.cos((vertex)*Math.PI/3 + angleOffset) + (percentageOpen)*perpindicularToSideVectorPrev.y);
+        ctx.lineTo(centerPositon.x + radius*Math.sin((vertex)*Math.PI/3 + angleOffset) + (0)*perpindicularToSideVectorPrev.x, centerPositon.y + radius*Math.cos((vertex)*Math.PI/3 + angleOffset) + (0)*perpindicularToSideVectorPrev.y);
+
+        ctx.lineTo(centerPositon.x + radius*Math.sin((vertex+1)*Math.PI/3 + angleOffset) + percentageOpen*perpindicularToSideVector.x, centerPositon.y + radius*Math.cos((vertex+1)*Math.PI/3 + angleOffset) + percentageOpen*perpindicularToSideVector.y);
+
+        ctx.closePath();
+        ctx.fill();
+    }
+
+}
+
+// https://stackoverflow.com/questions/1484506/random-color-generator
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
 }
