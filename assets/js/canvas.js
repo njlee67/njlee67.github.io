@@ -75,7 +75,7 @@ function updateDisplay() {
     if(doneWithShrink == false
     && (radius + dynamicOverlapHexPadding) > (shrinkHexSize*radius) ) {
 
-        dynamicOverlapHexPadding--;
+        dynamicOverlapHexPadding-= 0.25;
     }
     else if(doneWithShrink == false
     && (radius + dynamicOverlapHexPadding) <= (shrinkHexSize*radius) ) {
