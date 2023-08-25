@@ -22,24 +22,31 @@ function setupCanvas() {
 
 window.addEventListener('load', setupCanvas);
 
+let bg_color = "#444444";
 function drawBackground() {
-    let bg_color = "#444444";
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     ctx.fillStyle = bg_color;
     ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
 }
 
-var radius = Math.round(window.innerHeight/3);
+var radius = Math.round(window.innerHeight/2.7);
 var overlapHexPadding = Math.round(radius/20);
 var dynamicOverlapHexPadding = overlapHexPadding;
 var doneWithShrink = false;
-var doneWithExpansion = true;
-var startPose = {x: 0, y: 0};
+var doneWithIris = false;
+var startPose = {x: 0, y: 20};
 var irisDistance = 0;
-var seisColores = [];
-for(let colo = 0;colo < 6;colo++){
-    seisColores.push(getRandomColor());
-}
+var seisColores = ['#FF0000', 
+                    '#FF0000',
+                    '#FFFF00',
+                    '#FF00FF',
+                    '#0000FF',
+                    '#ffaa00'
+                ];
+
+// for(let colo = 0;colo < 10;colo++){
+//     seisColores.push(getRandomColor());
+// }
 function updateDisplay() {
     // Set the canvas width and height each time in case window size changes
     mainCanvas.width = window.innerWidth;
@@ -64,12 +71,20 @@ function updateDisplay() {
     }
 
     if(doneWithShrink == true
-    && irisDistance < 0.7*(radius - overlapHexPadding)){
+    && irisDistance < 0.75*(radius - overlapHexPadding)){
         irisDistance ++;
     }
-    else {
-        irisDistance = irisDistance;
+    else if(irisDistance >= 0.75*(radius - overlapHexPadding)) {
+        doneWithIris = true;
     }
+
+    if(doneWithShrink && doneWithIris && startPose.x > -window.innerWidth + 0.5*radius) {
+        startPose.x --;
+    }
+    else {
+        startPose.x = 0;
+    }
+
     // else if(doneWithShrink == true
     // && (radius + dynamicOverlapHexPadding) < (radius + overlapHexPadding)) {
 
@@ -80,12 +95,15 @@ function updateDisplay() {
     //     doneWithShrink = false;
     // }
     
-    drawHexagonTessalation(radius, '#77dd00', dynamicOverlapHexPadding, startPose);
+    drawHexagonTessalation(radius, '#37E300', dynamicOverlapHexPadding, startPose);
+    // drawHexagonTessalation(radius, '#000000', dynamicOverlapHexPadding, startPose);
 
 
     //canvas
     requestAnimationFrame(updateDisplay);
 }
+
+var closeIrisDuringScrollDistance = radius;
 
 function drawHexagonTessalation(radii, color, overlapHexPadding, startPosition = {x: 0, y: 0}, angleOffset = Math.PI/6) {
     var hexTesselationVerticalOffset = Math.sqrt(Math.pow(radii, 2) - Math.pow(radii/2, 2));
@@ -102,8 +120,47 @@ function drawHexagonTessalation(radii, color, overlapHexPadding, startPosition =
             if(hexIndex % 2 > 0) {
                 hexIndexPosition.y -= hexTesselationVerticalOffset;
             }
-            if(doneWithShrink) {
-                drawIrisTriangles(radii + overlapHexPadding, hexIndexPosition, color, irisDistance)
+            if(doneWithShrink && !doneWithIris) {
+                drawHexagon(radii + overlapHexPadding, hexIndexPosition, seisColores[(hexIndex*hexVertIndex)%seisColores.length], angleOffset);
+                drawHexagon(0.55*(radius - overlapHexPadding), hexIndexPosition, '#000000', angleOffset);
+
+                let tooHighOrLowInY = hexIndexPosition.y < (0.5*radii) || hexIndexPosition.y > window.innerHeight - (0.5*radii);
+                let tooRightOrLeft = hexIndexPosition.x < (0.5*radii) || (hexIndexPosition.x > window.innerWidth - (0.5*radii) );
+
+                if(!tooHighOrLowInY && !tooRightOrLeft) {
+                    drawIrisTriangles(radii + overlapHexPadding, hexIndexPosition, color, irisDistance)
+                }
+                else {
+                    drawHexagon(radii + overlapHexPadding, hexIndexPosition, color, angleOffset);
+                }
+                
+                
+            }
+            else if(doneWithIris) {
+                let tooHighOrLowInY = hexIndexPosition.y < (0.5*radii) || hexIndexPosition.y > window.innerHeight - (0.5*radii);
+                drawHexagon(radii + overlapHexPadding, hexIndexPosition, seisColores[(hexIndex*hexVertIndex)%seisColores.length], angleOffset);
+                drawHexagon(0.55*(radius - overlapHexPadding), hexIndexPosition, '#000000', angleOffset);
+
+                let tooRightOrLeft = hexIndexPosition.x < irisDistance || (hexIndexPosition.x > window.innerWidth - irisDistance && hexIndexPosition.x < window.innerWidth );
+
+                if(hexIndexPosition.x < irisDistance && !tooHighOrLowInY) {
+                    drawIrisTriangles(radii + overlapHexPadding, hexIndexPosition, color, Math.abs(hexIndexPosition.x%irisDistance), -2)
+                }
+                else if(hexIndexPosition.x > window.innerWidth - irisDistance && hexIndexPosition.x < window.innerWidth && !tooHighOrLowInY) {
+                    drawIrisTriangles(radii + overlapHexPadding, hexIndexPosition, color, ((window.innerWidth) - hexIndexPosition.x), 7)
+                    
+                }
+                else if(hexIndexPosition.x >= window.innerWidth) {
+                    drawIrisTriangles(radii + overlapHexPadding, hexIndexPosition, color, 0, -2)
+                }
+                else if(tooHighOrLowInY) {
+                    drawIrisTriangles(radii + overlapHexPadding, hexIndexPosition, color, 0, -2)
+
+                }
+                else {
+                    drawIrisTriangles(radii + overlapHexPadding, hexIndexPosition, color, irisDistance, 7)
+                }
+
             }
             else {
                 drawHexagon(radii + overlapHexPadding, hexIndexPosition, color, angleOffset);
@@ -125,19 +182,20 @@ function drawHexagon(radius, centerPositon, color, angleOffset = Math.PI/6) {
     ctx.fill();
 }
 
-function drawIrisTriangles(radius, centerPositon, color,irisMechanismDistanceFromCenter, angleOffset = Math.PI/6) {
+function drawIrisTriangles(radius, centerPositon, color,irisMechanismDistanceFromCenter, clearanceSpacing = 7, angleOffset = Math.PI/6) {
     
     for(let vertex = 0;vertex < 6;vertex++) {
-        ctx.fillStyle = seisColores[vertex];
+        ctx.fillStyle = color;
         ctx.beginPath();
         let percentageOpen = irisMechanismDistanceFromCenter/radius;
         let perpindicularToSideVector = {x: radius*Math.sin(vertex*Math.PI/3 + angleOffset) - radius*Math.sin((vertex+1)*Math.PI/3 + angleOffset), y: radius*Math.cos(vertex*Math.PI/3 + angleOffset) -  radius*Math.cos((vertex+1)*Math.PI/3 + angleOffset)}
         let perpindicularToSideVectorPrev = {x: radius*Math.sin((vertex-1)*Math.PI/3 + angleOffset) - radius*Math.sin((vertex)*Math.PI/3 + angleOffset), y: radius*Math.cos((vertex-1)*Math.PI/3 + angleOffset) -  radius*Math.cos((vertex)*Math.PI/3 + angleOffset)}
-   
-        ctx.moveTo(centerPositon.x + percentageOpen*perpindicularToSideVector.x, centerPositon.y + percentageOpen*perpindicularToSideVector.y);
+        let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + angleOffset) - Math.sin((vertex)*Math.PI/3 + angleOffset), y: Math.cos((vertex-1)*Math.PI/3 + angleOffset) - Math.cos((vertex)*Math.PI/3 + angleOffset)}
+        ctx.moveTo(centerPositon.x + percentageOpen*perpindicularToSideVector.x - clearanceSpacing*perpindicularToSideUnitVectorPrev.x, centerPositon.y + percentageOpen*perpindicularToSideVector.y - clearanceSpacing*perpindicularToSideUnitVectorPrev.y);
 
-        ctx.lineTo(centerPositon.x + radius*Math.sin((vertex)*Math.PI/3 + angleOffset) + (percentageOpen)*perpindicularToSideVectorPrev.x, centerPositon.y + radius*Math.cos((vertex)*Math.PI/3 + angleOffset) + (percentageOpen)*perpindicularToSideVectorPrev.y);
-        ctx.lineTo(centerPositon.x + radius*Math.sin((vertex)*Math.PI/3 + angleOffset) + (0)*perpindicularToSideVectorPrev.x, centerPositon.y + radius*Math.cos((vertex)*Math.PI/3 + angleOffset) + (0)*perpindicularToSideVectorPrev.y);
+        ctx.lineTo(centerPositon.x + radius*Math.sin((vertex)*Math.PI/3 + angleOffset) + (percentageOpen)*perpindicularToSideVectorPrev.x - clearanceSpacing*perpindicularToSideUnitVectorPrev.x, centerPositon.y + radius*Math.cos((vertex)*Math.PI/3 + angleOffset) + (percentageOpen)*perpindicularToSideVectorPrev.y - clearanceSpacing*perpindicularToSideUnitVectorPrev.y);
+        
+        ctx.lineTo(centerPositon.x + radius*Math.sin((vertex)*Math.PI/3 + angleOffset), centerPositon.y + radius*Math.cos((vertex)*Math.PI/3 + angleOffset));
 
         ctx.lineTo(centerPositon.x + radius*Math.sin((vertex+1)*Math.PI/3 + angleOffset) + percentageOpen*perpindicularToSideVector.x, centerPositon.y + radius*Math.cos((vertex+1)*Math.PI/3 + angleOffset) + percentageOpen*perpindicularToSideVector.y);
 
