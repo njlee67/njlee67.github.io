@@ -30,6 +30,7 @@ function drawBackground() {
 }
 
 var radius = Math.round(window.innerHeight/2.7);
+var imageLoaded = false;
 var overlapHexPadding = Math.round(radius/20);
 var dynamicOverlapHexPadding = overlapHexPadding;
 var doneWithShrink = false;
@@ -47,6 +48,18 @@ var seisColores = ['#FF0000',
 // for(let colo = 0;colo < 10;colo++){
 //     seisColores.push(getRandomColor());
 // }
+
+var img = new Image();
+img.onload = function(){ 
+    imageLoaded = true;   
+    //ctx.drawImage(img, window.innerWidth/2, window.innerHeight/2);           
+};
+
+img.src = "/images/fulls/LMBB v2.jpg";
+
+var percentOfRadiusIrisSize = 0.7;
+var shrinkHexSize = 0.9;
+
 function updateDisplay() {
     // Set the canvas width and height each time in case window size changes
     mainCanvas.width = window.innerWidth;
@@ -60,21 +73,21 @@ function updateDisplay() {
     
     // Animate Iris mechanism on each hexagon with main image of each project
     if(doneWithShrink == false
-    && (radius + dynamicOverlapHexPadding) > (0.9*radius) ) {
+    && (radius + dynamicOverlapHexPadding) > (shrinkHexSize*radius) ) {
 
         dynamicOverlapHexPadding--;
     }
     else if(doneWithShrink == false
-    && (radius + dynamicOverlapHexPadding) <= (0.9*radius) ) {
+    && (radius + dynamicOverlapHexPadding) <= (shrinkHexSize*radius) ) {
 
         doneWithShrink = true;
     }
 
     if(doneWithShrink == true
-    && irisDistance < 0.75*(radius - overlapHexPadding)){
-        irisDistance ++;
+    && irisDistance < shrinkHexSize*percentOfRadiusIrisSize*(radius - overlapHexPadding)){
+        irisDistance++;
     }
-    else if(irisDistance >= 0.75*(radius - overlapHexPadding)) {
+    else if(irisDistance >= shrinkHexSize*percentOfRadiusIrisSize*(radius - overlapHexPadding)) {
         doneWithIris = true;
     }
 
@@ -97,8 +110,8 @@ function updateDisplay() {
     
     drawHexagonTessalation(radius, '#37E300', dynamicOverlapHexPadding, startPose);
     // drawHexagonTessalation(radius, '#000000', dynamicOverlapHexPadding, startPose);
-
-
+    // ctx.drawImage(img, window.innerWidth/2 - 0.7*radius, window.innerHeight/2 - img.height*(0.7*radius/img.width), 2*0.7*radius, img.height*(2*0.7*radius/img.width));
+    
     //canvas
     requestAnimationFrame(updateDisplay);
 }
@@ -121,8 +134,9 @@ function drawHexagonTessalation(radii, color, overlapHexPadding, startPosition =
                 hexIndexPosition.y -= hexTesselationVerticalOffset;
             }
             if(doneWithShrink && !doneWithIris) {
-                drawHexagon(radii + overlapHexPadding, hexIndexPosition, seisColores[(hexIndex*hexVertIndex)%seisColores.length], angleOffset);
-                drawHexagon(0.55*(radius - overlapHexPadding), hexIndexPosition, '#000000', angleOffset);
+                // drawHexagon(0.55*(radius - overlapHexPadding), hexIndexPosition, '#000000', angleOffset);
+                drawHexagonBorderWindow(radius + overlapHexPadding, hexIndexPosition, seisColores[(hexIndex*hexVertIndex)%seisColores.length], shrinkHexSize*percentOfRadiusIrisSize, -1);
+                
 
                 let tooHighOrLowInY = hexIndexPosition.y < (0.5*radii) || hexIndexPosition.y > window.innerHeight - (0.5*radii);
                 let tooRightOrLeft = hexIndexPosition.x < (0.5*radii) || (hexIndexPosition.x > window.innerWidth - (0.5*radii) );
@@ -138,8 +152,9 @@ function drawHexagonTessalation(radii, color, overlapHexPadding, startPosition =
             }
             else if(doneWithIris) {
                 let tooHighOrLowInY = hexIndexPosition.y < (0.5*radii) || hexIndexPosition.y > window.innerHeight - (0.5*radii);
-                drawHexagon(radii + overlapHexPadding, hexIndexPosition, seisColores[(hexIndex*hexVertIndex)%seisColores.length], angleOffset);
-                drawHexagon(0.55*(radius - overlapHexPadding), hexIndexPosition, '#000000', angleOffset);
+                // drawHexagonBorderWindow(radii + overlapHexPadding, hexIndexPosition, seisColores[(hexIndex*hexVertIndex)%seisColores.length], angleOffset);
+                // drawHexagon(0.55*(radius - overlapHexPadding), hexIndexPosition, '#000000', angleOffset);
+                drawHexagonBorderWindow(radii + overlapHexPadding, hexIndexPosition, seisColores[(hexIndex*hexVertIndex)%seisColores.length], shrinkHexSize*percentOfRadiusIrisSize, -1);
 
                 let tooRightOrLeft = hexIndexPosition.x < irisDistance || (hexIndexPosition.x > window.innerWidth - irisDistance && hexIndexPosition.x < window.innerWidth );
 
@@ -183,11 +198,34 @@ function drawHexagon(radius, centerPositon, color, angleOffset = Math.PI/6) {
 }
 
 function drawIrisTriangles(radius, centerPositon, color,irisMechanismDistanceFromCenter, clearanceSpacing = 7, angleOffset = Math.PI/6) {
-    
+    // ctx.drawImage(img, centerPositon.x - 0.6*radius, centerPositon.y - img.height*(0.6*radius/img.width), 2*0.6*radius, img.height*(2*0.6*radius/img.width));
     for(let vertex = 0;vertex < 6;vertex++) {
         ctx.fillStyle = color;
         ctx.beginPath();
         let percentageOpen = irisMechanismDistanceFromCenter/radius;
+        let perpindicularToSideVector = {x: radius*Math.sin(vertex*Math.PI/3 + angleOffset) - radius*Math.sin((vertex+1)*Math.PI/3 + angleOffset), y: radius*Math.cos(vertex*Math.PI/3 + angleOffset) -  radius*Math.cos((vertex+1)*Math.PI/3 + angleOffset)}
+        let perpindicularToSideVectorPrev = {x: radius*Math.sin((vertex-1)*Math.PI/3 + angleOffset) - radius*Math.sin((vertex)*Math.PI/3 + angleOffset), y: radius*Math.cos((vertex-1)*Math.PI/3 + angleOffset) -  radius*Math.cos((vertex)*Math.PI/3 + angleOffset)}
+        let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + angleOffset) - Math.sin((vertex)*Math.PI/3 + angleOffset), y: Math.cos((vertex-1)*Math.PI/3 + angleOffset) - Math.cos((vertex)*Math.PI/3 + angleOffset)}
+        ctx.moveTo(centerPositon.x + percentageOpen*perpindicularToSideVector.x - clearanceSpacing*perpindicularToSideUnitVectorPrev.x, centerPositon.y + percentageOpen*perpindicularToSideVector.y - clearanceSpacing*perpindicularToSideUnitVectorPrev.y);
+
+        ctx.lineTo(centerPositon.x + radius*Math.sin((vertex)*Math.PI/3 + angleOffset) + (percentageOpen)*perpindicularToSideVectorPrev.x - clearanceSpacing*perpindicularToSideUnitVectorPrev.x, centerPositon.y + radius*Math.cos((vertex)*Math.PI/3 + angleOffset) + (percentageOpen)*perpindicularToSideVectorPrev.y - clearanceSpacing*perpindicularToSideUnitVectorPrev.y);
+        
+        ctx.lineTo(centerPositon.x + radius*Math.sin((vertex)*Math.PI/3 + angleOffset), centerPositon.y + radius*Math.cos((vertex)*Math.PI/3 + angleOffset));
+
+        ctx.lineTo(centerPositon.x + radius*Math.sin((vertex+1)*Math.PI/3 + angleOffset) + percentageOpen*perpindicularToSideVector.x, centerPositon.y + radius*Math.cos((vertex+1)*Math.PI/3 + angleOffset) + percentageOpen*perpindicularToSideVector.y);
+
+        ctx.closePath();
+        ctx.fill();
+    }
+
+}
+
+function drawHexagonBorderWindow(radius, centerPositon, color,percentageOpen, clearanceSpacing = 7, angleOffset = Math.PI/6) {
+    ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfRadiusIrisSize*radius, centerPositon.y - img.height*(shrinkHexSize*percentOfRadiusIrisSize*radius/img.width), 2*shrinkHexSize*percentOfRadiusIrisSize*radius, img.height*(2*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width));
+    for(let vertex = 0;vertex < 6;vertex++) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        // let percentageOpen = 0.6;
         let perpindicularToSideVector = {x: radius*Math.sin(vertex*Math.PI/3 + angleOffset) - radius*Math.sin((vertex+1)*Math.PI/3 + angleOffset), y: radius*Math.cos(vertex*Math.PI/3 + angleOffset) -  radius*Math.cos((vertex+1)*Math.PI/3 + angleOffset)}
         let perpindicularToSideVectorPrev = {x: radius*Math.sin((vertex-1)*Math.PI/3 + angleOffset) - radius*Math.sin((vertex)*Math.PI/3 + angleOffset), y: radius*Math.cos((vertex-1)*Math.PI/3 + angleOffset) -  radius*Math.cos((vertex)*Math.PI/3 + angleOffset)}
         let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + angleOffset) - Math.sin((vertex)*Math.PI/3 + angleOffset), y: Math.cos((vertex-1)*Math.PI/3 + angleOffset) - Math.cos((vertex)*Math.PI/3 + angleOffset)}
