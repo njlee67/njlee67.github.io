@@ -22,7 +22,7 @@ function setupCanvas() {
 
 window.addEventListener('load', setupCanvas);
 
-let bg_color = "#444444";
+let bg_color = "#00ee00";
 function drawBackground() {
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     ctx.fillStyle = bg_color;
@@ -108,8 +108,8 @@ function updateDisplay() {
     //     doneWithShrink = false;
     // }
     
-    drawHexagonTessalation(radius, '#37E300', dynamicOverlapHexPadding, startPose);
-    // drawHexagonTessalation(radius, '#000000', dynamicOverlapHexPadding, startPose);
+    // drawHexagonTessalation(radius, '#37E300', dynamicOverlapHexPadding, startPose);
+    drawHexagonTessalation(radius, '#000000', dynamicOverlapHexPadding, startPose);
     // ctx.drawImage(img, window.innerWidth/2 - 0.7*radius, window.innerHeight/2 - img.height*(0.7*radius/img.width), 2*0.7*radius, img.height*(2*0.7*radius/img.width));
     
     //canvas
