@@ -1,43 +1,34 @@
-// canvas and render context vars
+// Declare Canvas and Context Objects
 var mainCanvas;
 var ctx;
 
-// canvas manipulation
-// This method should only be called once!
-function setupCanvas() {
-    mainCanvas = document.getElementById("main-canvas");
-    ctx = mainCanvas.getContext("2d");
-    mainCanvas.width = window.innerWidth;
-    mainCanvas.height = window.innerHeight;
-    // mainCanvas.addEventListener('mousedown', UI.onPointerDown);
-    // mainCanvas.addEventListener('mousemove', UI.onPointerMove);
-    // mainCanvas.addEventListener('touchStart', (e) => handleTouch(e, UI.onPointerDown));
-    // mainCanvas.addEventListener('mouseup', UI.onPointerUp);
-    // mainCanvas.addEventListener('touchend', (e) => handleTouch(e, UI.onPointerUp));
-    // mainCanvas.addEventListener('mousemove', UI.onPointerMove);
-    // mainCanvas.addEventListener('touchmove', (e) => handleTouch(e, UI.onPointerMove));
-    // mainCanvas.addEventListener('wheel', (e) => UI.onMouseWheel(e));
-    updateDisplay();
-}
+// Global Variables
+let backgroundColor = "#00ff00";
 
-window.addEventListener('load', setupCanvas);
+// Animation Geometries that are incremented in updateCanvasAnimations() function to animate shapes
 
-let bg_color = "#00ee00";
-function drawBackground() {
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    ctx.fillStyle = bg_color;
-    ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
-}
-
+// radius is the distance from the center to a vertex of fully tesselated hexagons at the load screen 
 var radius = Math.round(window.innerHeight/2.7);
-var imageLoaded = false;
+
+// overlapHexPadding is a fraction of the radius to remove the thin line that shows the background during the iris mechanism animation
 var overlapHexPadding = Math.round(radius/20);
+
+// dynamicOverlapHexPadding is a variable that is decremented each frame to shrink the black hexagons at page loading
 var dynamicOverlapHexPadding = overlapHexPadding;
+
+// irisDistance is the distance from the center of a hexagon in the direction from the center of the hexagon to a vertex
+// iris animation is based on the iris mechanism similar to a camera shutter
+var irisDistance = 0;
+
+// startPose is the upper lefthand corner where the hexagon tessselation animation starts and is also decremented for the scrolling animation
+var startPose = {x: 0, y: 20};
+
+// Animation sequence states to know when to move on to the next stage of animation sequence
 var doneWithShrink = false;
 var doneWithIris = false;
-var startPose = {x: 0, y: 20};
-var irisDistance = 0;
-var seisColores = ['#FF0000', 
+var imageLoaded = false;
+
+var innerIrisMechnismBackgroundColors = ['#FF0000', 
                     '#FF0000',
                     '#FFFF00',
                     '#FF00FF',
@@ -45,75 +36,90 @@ var seisColores = ['#FF0000',
                     '#ffaa00'
                 ];
 
-// for(let colo = 0;colo < 10;colo++){
-//     seisColores.push(getRandomColor());
-// }
+// This method should only be called once!
+function setupCanvas() {
+    mainCanvas = document.getElementById("main-canvas");
+    ctx = mainCanvas.getContext("2d");
 
+    mainCanvas.width = window.innerWidth;
+    mainCanvas.height = window.innerHeight;
+    
+    // updateCanvasAnimations handles the sequence of the canvas animations
+    updateCanvasAnimations();
+}
+
+// Ensures setupCanvas() is run only once
+window.addEventListener('load', setupCanvas);
+
+// Draws background rectangle object on the canvas
+function drawBackground() {
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+}
+
+// List of thumbnail images for each project bordered by hexagonal iris mechanism 
+projectThumbnailImages = [];
+
+// Loading Images
 var img = new Image();
 img.onload = function(){ 
     imageLoaded = true;   
-    //ctx.drawImage(img, window.innerWidth/2, window.innerHeight/2);           
 };
 
 img.src = "/images/fulls/LMBB v2.jpg";
 
+// percentageOfRadiusIrisSize is what percentage of the radius variable the irisDistance should reduce to in animation
 var percentOfRadiusIrisSize = 0.7;
+
+// shrinkHexSize is the percentage of the original radius that the hexagons shirnk to in the beginning animation
 var shrinkHexSize = 0.9;
 
-function updateDisplay() {
+// Main Animation Loop using requestAnimationFrame function for each conditional on stage booleans declared above animation
+function updateCanvasAnimations() {
     // Set the canvas width and height each time in case window size changes
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
 
+    // Reset the background
     drawBackground();
 
-    // Start with lightgreen hexagons tessalated on entrie canvas so you can't see the edges
-    
-    //Animate the hexagons shrinking in front of dark grey background
-    
-    // Animate Iris mechanism on each hexagon with main image of each project
-    if(doneWithShrink == false
-    && (radius + dynamicOverlapHexPadding) > (shrinkHexSize*radius) ) {
+    // Conditionals for Animation Sequence
 
+    // At webpage loading the screen is seemingly filled completely black
+
+    // Shrink Tesselated Hexagons Animations: Decrement dynamicOverlapingHexPadding each frame for shrinking hexagon animation 
+    if(doneWithShrink == false && (radius + dynamicOverlapHexPadding) > (shrinkHexSize*radius) ) {
         dynamicOverlapHexPadding-= 0.25;
     }
-    else if(doneWithShrink == false
-    && (radius + dynamicOverlapHexPadding) <= (shrinkHexSize*radius) ) {
-
+    // Set doneWithShrink to true when shrinking is done...obviously lol
+    else if(doneWithShrink == false && (radius + dynamicOverlapHexPadding) <= (shrinkHexSize*radius) ) {
         doneWithShrink = true;
     }
 
-    if(doneWithShrink == true
-    && irisDistance < shrinkHexSize*percentOfRadiusIrisSize*(radius - overlapHexPadding)){
+    // Iris Mechanism Animation: Increment irisDistance to initially 'open' iris mechanism animation
+    if(doneWithShrink == true && irisDistance < shrinkHexSize*percentOfRadiusIrisSize*(radius - overlapHexPadding)){
         irisDistance++;
     }
     else if(irisDistance >= shrinkHexSize*percentOfRadiusIrisSize*(radius - overlapHexPadding)) {
         doneWithIris = true;
     }
 
+    // Scroll AnimationL as a project hexagon exits on the left it closes the iris mechanism and on the other side where entering the main window 
     if(doneWithShrink && doneWithIris && startPose.x > -window.innerWidth + 0.5*radius) {
         startPose.x --;
     }
     else {
+        // reset after scrolled window.innerWidth length to scroll in a loop
         startPose.x = 0;
     }
 
-    // else if(doneWithShrink == true
-    // && (radius + dynamicOverlapHexPadding) < (radius + overlapHexPadding)) {
-
-    //     dynamicOverlapHexPadding += 0.25;
-    // }
-    // else if(doneWithShrink == true
-    // && (radius + dynamicOverlapHexPadding) >= (radius + overlapHexPadding)){
-    //     doneWithShrink = false;
-    // }
-    
     // drawHexagonTessalation(radius, '#37E300', dynamicOverlapHexPadding, startPose);
     drawHexagonTessalation(radius, '#000000', dynamicOverlapHexPadding, startPose);
     // ctx.drawImage(img, window.innerWidth/2 - 0.7*radius, window.innerHeight/2 - img.height*(0.7*radius/img.width), 2*0.7*radius, img.height*(2*0.7*radius/img.width));
     
     //canvas
-    requestAnimationFrame(updateDisplay);
+    requestAnimationFrame(updateCanvasAnimations);
 }
 
 var closeIrisDuringScrollDistance = radius;
@@ -135,7 +141,7 @@ function drawHexagonTessalation(radii, color, overlapHexPadding, startPosition =
             }
             if(doneWithShrink && !doneWithIris) {
                 // drawHexagon(0.55*(radius - overlapHexPadding), hexIndexPosition, '#000000', angleOffset);
-                drawHexagonBorderWindow(radius + overlapHexPadding, hexIndexPosition, seisColores[(hexIndex*hexVertIndex)%seisColores.length], shrinkHexSize*percentOfRadiusIrisSize, -1);
+                drawHexagonBorderWindow(radius + overlapHexPadding, hexIndexPosition, innerIrisMechnismBackgroundColors[(hexIndex*hexVertIndex)%innerIrisMechnismBackgroundColors.length], shrinkHexSize*percentOfRadiusIrisSize, -1);
                 
 
                 let tooHighOrLowInY = hexIndexPosition.y < (0.5*radii) || hexIndexPosition.y > window.innerHeight - (0.5*radii);
@@ -152,9 +158,9 @@ function drawHexagonTessalation(radii, color, overlapHexPadding, startPosition =
             }
             else if(doneWithIris) {
                 let tooHighOrLowInY = hexIndexPosition.y < (0.5*radii) || hexIndexPosition.y > window.innerHeight - (0.5*radii);
-                // drawHexagonBorderWindow(radii + overlapHexPadding, hexIndexPosition, seisColores[(hexIndex*hexVertIndex)%seisColores.length], angleOffset);
+                // drawHexagonBorderWindow(radii + overlapHexPadding, hexIndexPosition, innerIrisMechnismBackgroundColors[(hexIndex*hexVertIndex)%innerIrisMechnismBackgroundColors.length], angleOffset);
                 // drawHexagon(0.55*(radius - overlapHexPadding), hexIndexPosition, '#000000', angleOffset);
-                drawHexagonBorderWindow(radii + overlapHexPadding, hexIndexPosition, seisColores[(hexIndex*hexVertIndex)%seisColores.length], shrinkHexSize*percentOfRadiusIrisSize, -1);
+                drawHexagonBorderWindow(radii + overlapHexPadding, hexIndexPosition, innerIrisMechnismBackgroundColors[(hexIndex*hexVertIndex)%innerIrisMechnismBackgroundColors.length], shrinkHexSize*percentOfRadiusIrisSize, -1);
 
                 let tooRightOrLeft = hexIndexPosition.x < irisDistance || (hexIndexPosition.x > window.innerWidth - irisDistance && hexIndexPosition.x < window.innerWidth );
 
