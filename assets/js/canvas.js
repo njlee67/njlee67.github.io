@@ -59,16 +59,39 @@ function drawBackground() {
 }
 
 // List of thumbnail images for each project bordered by hexagonal iris mechanism 
-projectThumbnailImages = [];
+projectThumbnailImagesPaths = [
+    // LMBBv2
+    '/images/fulls/LMBB v2.jpg',
+    'images/fulls/design-and-manufacturing-2-Yo-Yos.jpg',
+    'images/fulls/dont-stress-hoodie.jpg',
+    'images/fulls/LMBB v1.0.jpg',
+    'images/fulls/No-Cap-Hoodie.jpg',
+    'images/fulls/QUAD.PNG',
+    'images/fulls/youre-a-real-1-hoodie.jpg',
+    'images/fulls/LMBB v2.jpg',
+    'images/fulls/ALEEgators.jpg',
+    'images/fulls/SatchPack-v1.jpg'
+    // SatchPack
+    // Gazebo Walking Simulation
+    // Quadruped Robot QUAD
+    // STEM FriendLEE Tees
+    // 2.008 Yoyos
+    // Shoe Design
+    // Cosmic Clash
+];
+
+projectThumbnailImagesObjects = [];
 
 // Loading Images
-var img = new Image();
-img.onload = function(){ 
-    imageLoaded = true;   
-};
+for(let imageIndex = 0;imageIndex < projectThumbnailImagesPaths.length;imageIndex++) {
+    var img = new Image();
+    img.onload = function(){ 
+        imageLoaded = true;   
+    };
 
-img.src = "/images/fulls/LMBB v2.jpg";
-
+    img.src = projectThumbnailImagesPaths[imageIndex];
+    projectThumbnailImagesObjects.push(img);
+}
 // percentageOfRadiusIrisSize is what percentage of the radius variable the irisDistance should reduce to in animation
 var percentOfRadiusIrisSize = 0.7;
 
@@ -189,6 +212,7 @@ function drawHexagonTessalation(tesselationRadii, color, overlapHexPadding, star
     // 2 * hexTesselationVerticalOffset per vertical iteration so divide window.innerHeight by (2*hexTesselationVerticalOffset) to find number of needed rows
     let numberOfHexagonRows = Math.ceil(window.innerHeight/(2*hexTesselationVerticalOffset))+ 2;
 
+    var thumbNailIndex = 0;
     // Nested for loop to iterate through drawing rows anf columns of each hexagon or iris mechanism depending on the stage of the animation sequence
     // Loop through each row
     for(var verticalIndex = 0;verticalIndex < numberOfHexagonRows;verticalIndex++) {
@@ -205,18 +229,19 @@ function drawHexagonTessalation(tesselationRadii, color, overlapHexPadding, star
 
             // Conditional animations based on the stage of the canvas animation sequence controlled with incremented/decremented variables in the main loop updateCanvasAnimation
             // After the hexagons shrink animate the initial opening of the iris mechnisms
-            var removeThisBadVariableImageScaling = 0.95;
-            var backdropIrisOffset = 10;
+            var removeThisBadVariableImageScaling = 1;
+            var backdropIrisOffset = 15;
+            var irisBackdropColor = "red";
             if(doneWithShrink && !doneWithIris) {
                 // drawHexagonBorderWindow
-		        // drawHexagonBorderWindow(radius + overlapHexPadding, currentTessalationPosition, "#00FDFF", shrinkHexSize*percentOfRadiusIrisSize, -1);
-                ctx.drawImage(img, currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width));
-                drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, "#00FDFF", irisDistance - backdropIrisOffset, 0)
+		        // drawHexagonBorderWindow(radius + overlapHexPadding, currentTessalationPosition, irisBackdropColor, shrinkHexSize*percentOfRadiusIrisSize, -1);
+                ctx.drawImage(projectThumbnailImagesObjects[(horizontalIndex*verticalIndex)%projectThumbnailImagesObjects.length], currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width));
+                drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, irisDistance - backdropIrisOffset, 0)
                 let tooHighOrLowInY = currentTessalationPosition.y < (0.5*tesselationRadii) || currentTessalationPosition.y > window.innerHeight - (0.5*tesselationRadii);
                 let tooRightOrLeft = currentTessalationPosition.x < (0.5*tesselationRadii) || (currentTessalationPosition.x > window.innerWidth - (0.5*tesselationRadii) );
                 
                 if(!tooHighOrLowInY && !tooRightOrLeft) {
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, irisDistance, backdropIrisOffset)
+                    drawIrisTriangles(tesselationRadii + 0*overlapHexPadding, currentTessalationPosition, color, irisDistance, backdropIrisOffset)
                 }
                 else {
                     drawHexagon(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, angleOffset);
@@ -232,35 +257,57 @@ function drawHexagonTessalation(tesselationRadii, color, overlapHexPadding, star
                 
                 // Left edge of screen
                 if(currentTessalationPosition.x < irisDistance && currentTessalationPosition.x > backdropIrisOffset && !tooHighOrLowInY) {
-                    ctx.drawImage(img, currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width));
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, "#00FDFF", Math.abs(currentTessalationPosition.x%irisDistance) - backdropIrisOffset, 0);
+                    ctx.drawImage(projectThumbnailImagesObjects[(horizontalIndex*verticalIndex)%projectThumbnailImagesObjects.length], currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width));
+                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, Math.abs(currentTessalationPosition.x%irisDistance) - backdropIrisOffset, 0);
                     drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, Math.abs(currentTessalationPosition.x%irisDistance), backdropIrisOffset);
+                    if(thumbNailIndex < (projectThumbnailImagesObjects.length - 1)) {
+                        thumbNailIndex++;
+                    }
+                    else {
+                        thumbNailIndex = 0;
+                        console.log(thumbNailIndex);
+                    }
                 }
                 // right edge of screen
                 else if(currentTessalationPosition.x > window.innerWidth - irisDistance && currentTessalationPosition.x < window.innerWidth && !tooHighOrLowInY) {
-                    ctx.drawImage(img, currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width));
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, "#00FDFF", ((window.innerWidth) - currentTessalationPosition.x) - backdropIrisOffset, 0);
+                    ctx.drawImage(projectThumbnailImagesObjects[(horizontalIndex*verticalIndex)%projectThumbnailImagesObjects.length], currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width));
+                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, ((window.innerWidth) - currentTessalationPosition.x) - backdropIrisOffset, 0);
                     drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, ((window.innerWidth) - currentTessalationPosition.x), backdropIrisOffset);
+                    if(thumbNailIndex < (projectThumbnailImagesObjects.length - 1)) {
+                        thumbNailIndex++;
+                    }
+                    else {
+                        thumbNailIndex = 0;
+                        console.log(thumbNailIndex);
+                    }
                 }
                 
                 else if((currentTessalationPosition.x >= window.innerWidth || currentTessalationPosition.x <= backdropIrisOffset) && !tooHighOrLowInY) {
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, "#00FDFF", 0, 0);
+                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, 0, 0);
                     drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, backdropIrisOffset, backdropIrisOffset)
                     // drawHexagon(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, angleOffset);
                 }
                 // just hexagons at top screen
                 else if(tooHighOrLowInY) {
-                    // drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, "#00FDFF", 0, 0);
+                    // drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, 0, 0);
                     // drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color,-4)
                     drawHexagon(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, angleOffset);
                 }
                 // Fully opened irises mid screen
                 else {
-                    ctx.drawImage(img, currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width));
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, "#00FDFF", irisDistance - backdropIrisOffset, 0);
+                    ctx.drawImage(projectThumbnailImagesObjects[(horizontalIndex*verticalIndex)%projectThumbnailImagesObjects.length], currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfRadiusIrisSize*radius/img.width));
+                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, irisDistance - backdropIrisOffset, 0);
                     drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, irisDistance, backdropIrisOffset);
-                }
+                    if(thumbNailIndex < (projectThumbnailImagesObjects.length - 1)) {
+                        thumbNailIndex++;
+                    }
+                    else {
+                        console.log(thumbNailIndex);
+                        thumbNailIndex = 0;
+                    }
 
+                }
+                // console.log(projectThumbnailImagesObjects.length);
             }
             else {
                 drawHexagon(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, angleOffset);
