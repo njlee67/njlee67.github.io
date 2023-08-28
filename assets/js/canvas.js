@@ -47,42 +47,53 @@ class aperture {
 
         // Animation stage variables
         this.doneShrinking = false;
-        this.doneOpeningOrClosing = false;
+        this.doneExpanding = false;
+        this.doneOpening = false;
+        this.doneClosing = false;
     }
 
     toPixelsOfApothem(percentageOfApothem) {
         return Math.round((percentageOfApothem/100.0)*this.hexagonalApothem);
     }
 
-    checkDoneShrinking(setShrunkenSizeTo) {
-        console.log("setshrunksizeto: " + setShrunkenSizeTo
-                    + " fullyShrunkenPixels: " + this.fullyShrunkenSize);
-        let setShrunkenCommandIsWithinBounds = setShrunkenSizeTo >= this.fullyShrunkenSize && setShrunkenSizeTo <= this.hexagonalApothem;
+    checkIfShrinkingOutsideLimits(setShrunkenSizeTo) {
+        let setShrunkenCommandOutsideLimits = setShrunkenSizeTo >= this.fullyShrunkenSize && setShrunkenSizeTo <= this.hexagonalApothem;
         
-        if(!setShrunkenCommandIsWithinBounds) {
-            this.doneShrinking = true;
+        if(setShrunkenCommandOutsideLimits) {
+            return false;
+        }
+        else {
+            return true;
         }
     }
 
-    checkDoneOpeningOrClosing(setOpenPercentageTo) {
-        let setOpenCommandIsWithinBounds = this.toPixelsOfApothem(setOpenPercentageTo) >= 0 
-            && this.toPixelsOfApothem(setOpenPercentageTo) <= this.fullyOpenedDistance;
+    checkIfApertureHoleWithinLimits(setOpenDistanceTo) {
+        let setOpenCommandIsWithinLimits = setOpenDistanceTo >= 0 && setOpenDistanceTo <= this.fullyOpenedDistance;
         
-        if(!setOpenCommandIsWithinBounds) {
-            this.doneOpeningOrClosing = true;
+        if(setOpenCommandIsWithinLimits) {
+            return true;
+        }
+        else {
+            return false;
         }
     }
 
     shrinkAnimationStep() {
-        this.checkDoneShrinking(this.currentShrunkenSize - this.shrinkPixelsPerFrame);        
-        console.log("shrinkAnimationStep");
+        this.doneShrinking = this.checkIfShrinkingOutsideLimits(this.currentShrunkenSize - this.shrinkPixelsPerFrame);        
+        
         if(!this.doneShrinking) {
-            console.log("!donewithShrinking");
             this.currentShrunkenSize -= this.shrinkPixelsPerFrame;
             this.drawHexagon();
         }
+    }
 
-        return this.doneShrinking;
+    expandAnimationStep() {
+        this.doneExpanding = this.checkIfShrinkingOutsideLimits(this.currentShrunkenSize + this.shrinkPixelsPerFrame);        
+        
+        if(!this.doneExpanding) {
+            this.currentShrunkenSize += this.shrinkPixelsPerFrame;
+            this.drawHexagon();
+        }
     }
 
     openAnimationStep() {
@@ -126,7 +137,6 @@ class aperture {
     }
 
     drawHexagon() {
-        console.log("drawinghexagon");
         ctx.fillStyle = this.foregroundColor;
         
         // Draw hexagon filled shape using lineTo() and closePath() functions going from each vertex and back again in a loop
@@ -144,10 +154,10 @@ class aperture {
 // TODO set parameter for apeture constructor to has a duration of open/close/shrink instead of a pixels per frame speed based on the FPS and percentges
 var firstApeture = new aperture({x: window.innerWidth/2, y: window.innerHeight/2}, 
                                 hexagonApothem,
-                                50.0,
+                                85.0,
                                 70,
                                 5.0,
-                                1.0,
+                                0.5,
                                 1.0,
                                 "black",
                                 "red"
@@ -248,10 +258,15 @@ function updateCanvasAnimations() {
         firstApeture.shrinkAnimationStep();
     }
     
-    if(firstApeture.doneShrinking) {
-        firstApeture.drawHexagon();
+    if(firstApeture.doneShrinking && !firstApeture.doneExpanding) {
+        firstApeture.expandAnimationStep();
     }
 
+    if(firstApeture.doneShrinking && firstApeture.doneExpanding) {
+        firstApeture.drawHexagon();
+        firstApeture.doneShrinking = false;
+        firstApeture.doneExpanding = false;
+    }
     // Conditionals for Animation Sequence
 
     // At webpage loading the screen is seemingly filled completely black
