@@ -17,13 +17,13 @@ var hexagonApothem = Math.round(window.innerHeight/3);
 
 // apertureDistance is the distance from the center of a hexagon in the direction from the center of the hexagon to a vertex
 // iris animation is based on the iris mechanism similar to a camera shutter
-var apertureEdgeThickness = 15;
+var aperturefullEdgeThickness = 15;
 var apertureopenedPercentage = 0;
 var apertureDistance = 0;
 
 class aperture {
     
-    constructor(apertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, edgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, foregroundColor, backgroundColor) {
+    constructor(apertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor) {
         this.apertureCenter = apertureCenter;
 
         this.hexagonalApothem = hexagonalApothem;
@@ -31,15 +31,17 @@ class aperture {
         // Constant Variables
         this.fullyShrunkenSize = this.toPixelsOfApothem(fullyShrunkenPercentage);
         this.fullyOpenedDistance = this.toPixelsOfApothem(fullyOpenedPercentage);
-        this.edgeThickness = this.toPixelsOfApothem(edgeThicknessPercentage);
+        this.fullEdgeThickness = this.toPixelsOfApothem(fullEdgeThicknessPercentage);
 
         // Dynamic Variables
         this.currentShrunkenSize = hexagonalApothem;
-        this.currentOpenedDistance = this.toPixelsOfApothem(0);
+        this.currentOpenedDistance = 0;
+        this.currentEdgeThickness = 0;
 
         // Animation Speed Variables
         this.shrinkPixelsPerFrame = this.toPixelsOfApothem(shrinkPercentagePerFrame);
-        this.openPixelsPerFrame = this.toPixelsOfApothem(this.openPixelsPerFrame);
+        this.openPixelsPerFrame = this.toPixelsOfApothem(openPercentagePerFrame);
+        this.edgePixelsPerFrame = this.toPixelsOfApothem(edgePercentagePerFrame);
 
         // Colors
         this.foregroundColor = foregroundColor;
@@ -48,29 +50,44 @@ class aperture {
         // Animation stage variables
         this.doneShrinking = false;
         this.doneExpanding = false;
-        this.doneOpening = false;
-        this.doneClosing = false;
+        this.doneOpeningEdge = false;
+        this.doneClosingEdge = false;
+        this.doneOpeningApertureHole = false;
+        this.doneClosingApertureHole = false;
+        this.projectThumbnail = null;
+        this.projectThumbnailLoaded = false;
     }
 
     toPixelsOfApothem(percentageOfApothem) {
-        return Math.round((percentageOfApothem/100.0)*this.hexagonalApothem);
+        return ((percentageOfApothem/100.0)*this.hexagonalApothem);
     }
 
     checkIfShrinkingOutsideLimits(setShrunkenSizeTo) {
-        let setShrunkenCommandOutsideLimits = setShrunkenSizeTo >= this.fullyShrunkenSize && setShrunkenSizeTo <= this.hexagonalApothem;
+        let setShrunkenCommandOutsideLimits = setShrunkenSizeTo < this.fullyShrunkenSize || setShrunkenSizeTo > this.hexagonalApothem;
         
         if(setShrunkenCommandOutsideLimits) {
-            return false;
+            return true;
         }
         else {
-            return true;
+            return false;
         }
     }
 
-    checkIfApertureHoleWithinLimits(setOpenDistanceTo) {
-        let setOpenCommandIsWithinLimits = setOpenDistanceTo >= 0 && setOpenDistanceTo <= this.fullyOpenedDistance;
+    checkIfApertureHoleOutsideLimits(setOpenDistanceTo) {
+        let setOpenCommandIsOutsideLimits = setOpenDistanceTo < 0 || setOpenDistanceTo > this.fullyOpenedDistance;
         
-        if(setOpenCommandIsWithinLimits) {
+        if(setOpenCommandIsOutsideLimits) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    
+    checkIfEdgeThicknessOutsideLimits(setEdgeThicknessTo) {
+        let setEdgeCommandIsOutsideLimits = setEdgeThicknessTo < 0 || setEdgeThicknessTo > this.fullEdgeThickness;
+        
+        if(setEdgeCommandIsOutsideLimits) {
             return true;
         }
         else {
@@ -83,7 +100,7 @@ class aperture {
         
         if(!this.doneShrinking) {
             this.currentShrunkenSize -= this.shrinkPixelsPerFrame;
-            this.drawHexagon();
+            this.drawHexagon(this.foregroundColor);
         }
     }
 
@@ -96,27 +113,36 @@ class aperture {
         }
     }
 
-    openAnimationStep() {
-        this.checkDoneOpeningOrClosing(this.currentOpenedDistance + this.openPixelsPerFrame);        
+    edgeOpenAnimationStep() {
+        this.doneOpeningEdge = this.checkIfEdgeThicknessOutsideLimits(this.currentEdgeThickness + this.edgePixelsPerFrame);        
         
-        if(!this.doneOpeningOrClosing) {
-            this.currentOpenedDistance += this.openPixelsPerFrame;
-            //this.drawAperature();
+        if(!this.doneOpeningEdge) {
+            if(!this.checkIfApertureHoleOutsideLimits(this.currentOpenedDistance + this.edgePixelsPerFrame)) {
+                this.currentOpenedDistance += this.edgePixelsPerFrame;
+            }
+            this.currentEdgeThickness += this.edgePixelsPerFrame;
+            this.drawHexagon(this.backgroundColor);
+            this.drawForegroundAperatureQuadrilaterals();
         }
-
-        return this.doneOpeningOrClosing;
     }
 
-    closeAnimationStep() {
-        this.currentOpenedDistance += this.openPixelsPerFrame;
-
-        this.doneOpening = Math.abs(this.fullyOpenedDistance - this.currentOpenedDistance) <= 0;
-
-        if(!this.doneOpeningOrClosing) {
-            //this.drawAperature();
+    openAnimationStep() {
+        this.doneOpeningApertureHole = this.checkIfApertureHoleOutsideLimits(this.currentOpenedDistance + this.openPixelsPerFrame);        
+        
+        if(!this.doneOpeningApertureHole) {
+            this.currentOpenedDistance += this.openPixelsPerFrame;
+            this.drawBackgroundAperatureQuadrilaterals();
+            this.drawForegroundAperatureQuadrilaterals();
         }
-
-        return this.doneOpeningOrClosing;
+    }
+    
+    closeAnimationStep() {
+        this.doneClosingApertureHole = this.checkIfApertureHoleOutsideLimits(this.currentOpenedDistance - this.openPixelsPerFrame);   
+        
+        if(!this.doneClosingApertureHole) {
+            this.currentOpenedDistance -= this.openPixelsPerFrame;
+            this.drawForegroundAperatureQuadrilaterals();
+        }
     }
     
     setOpenedPercentage(setOpenPercentageTo) {
@@ -128,16 +154,16 @@ class aperture {
             this.currentOpenedDistance = setOpenPercentageTo;
         }
         else {
-            this.doneOpening = true;
+            this.doneOpeningApertureHole = true;
         }
 
-        if(!this.doneOpeningOrClosing) {
+        if(!this.doneOpeningApertureHoleOrClosing) {
             //this.drawAperature();
         }
     }
 
-    drawHexagon() {
-        ctx.fillStyle = this.foregroundColor;
+    drawHexagon(color) {
+        ctx.fillStyle = color;
         
         // Draw hexagon filled shape using lineTo() and closePath() functions going from each vertex and back again in a loop
         ctx.beginPath();
@@ -150,43 +176,127 @@ class aperture {
         ctx.closePath();
         ctx.fill();
     }
+
+    drawForegroundAperatureQuadrilaterals() {
+        // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
+        // Loop and draw the 6 quadrilaterals
+        for(let vertex = 0;vertex < 6;vertex++) {
+            ctx.fillStyle = this.foregroundColor;
+            ctx.beginPath();
+    
+            // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
+            // so when the irisMechanismDistance is 0 the irisMechanism animation is completely closed and when it  = hexagonApothem it is completely open but we use it as a border, so it never equals the hexagonApothem
+    
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem variable
+            let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
+            
+            // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
+            let parallelToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
+            
+            // perpindicularToSideUnitVectorPrev is the unit vector with a magnitude of 1
+            let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
+            
+            // Draw the lines that make up each quadrilateral
+            ctx.moveTo(this.apertureCenter.x + this.currentOpenedDistance*parallelToSideUnitVector.x - this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.x, this.apertureCenter.y + this.currentOpenedDistance*parallelToSideUnitVector.y - this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.y);
+    
+            ctx.lineTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVectorPrev.x - this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.x, 
+                        this.apertureCenter.y + this.currentShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVectorPrev.y - this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.y);
+            
+            ctx.lineTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
+                        this.apertureCenter.y + this.currentShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
+    
+            ctx.lineTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVector.x, 
+                        this.apertureCenter.y + this.currentShrunkenSize*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVector.y);
+    
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+
+    drawBackgroundAperatureQuadrilaterals() {
+        // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
+        // Loop and draw the 6 quadrilaterals
+        for(let vertex = 0;vertex < 6;vertex++) {
+            ctx.fillStyle = this.backgroundColor;
+            ctx.beginPath();
+    
+            // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
+            // so when the irisMechanismDistance is 0 the irisMechanism animation is completely closed and when it  = hexagonApothem it is completely open but we use it as a border, so it never equals the hexagonApothem
+    
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem variable
+            let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
+            
+            // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
+            let parallelToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
+            
+            // perpindicularToSideUnitVectorPrev is the unit vector with a magnitude of 1
+            let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
+            
+            // Draw the lines that make up each quadrilateral
+            ctx.moveTo(this.apertureCenter.x + this.currentOpenedDistance*parallelToSideUnitVector.x - this.currentEdgeThickness*parallelToSideUnitVector.x, 
+                        this.apertureCenter.y + this.currentOpenedDistance*parallelToSideUnitVector.y - this.currentEdgeThickness*parallelToSideUnitVector.y);
+    
+            ctx.lineTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVectorPrev.x, 
+                        this.apertureCenter.y + this.currentShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVectorPrev.y);
+            
+            ctx.lineTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
+                        this.apertureCenter.y + this.currentShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
+    
+            ctx.lineTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVector.x - this.currentEdgeThickness*parallelToSideUnitVector.x, 
+                        this.apertureCenter.y + this.currentShrunkenSize*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVector.y - this.currentEdgeThickness*parallelToSideUnitVector.y);
+    
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+
+    // TODO: make the tesselation as long as needed to fit all thumbnail project 
+    // images and travel that distance when scrolling left/right to se all and not have to have a shifting cache then reset transition
+    attachThumbnaiil(relativeFilePath) {
+        this.projectThumbnail = new Image();
+        this.projectThumbnail.onload = function(){ 
+        };
+        this.projectThumbnail.src = relativeFilePath;
+        
+    }
+    
+    drawThumbnail() {
+        if(this.projectThumbnail != null) {
+            var croppedWidth = this.projectThumbnail.width;
+            var croppedHeight = this.projectThumbnail.height;
+
+            if(this.projectThumbnail.width > this.projectThumbnail.height) {
+                croppedWidth = (2/Math.sqrt(3)) * croppedHeight;
+            }
+            else {
+                croppedHeight = (Math.sqrt(3)/2) * croppedWidth;
+            }
+            ctx.drawImage(this.projectThumbnail,0, 0, croppedWidth, croppedHeight, this.apertureCenter.x - this.fullyOpenedDistance, this.apertureCenter.y - (Math.sqrt(3)/2)*(this.fullyOpenedDistance), 2*(this.fullyOpenedDistance), Math.sqrt(3)*(this.fullyOpenedDistance))
+        }
+    }
+
 }
 // TODO set parameter for apeture constructor to has a duration of open/close/shrink instead of a pixels per frame speed based on the FPS and percentges
-var firstApeture = new aperture({x: window.innerWidth/2, y: window.innerHeight/2}, 
-                                hexagonApothem,
-                                85.0,
-                                70,
-                                5.0,
-                                0.5,
-                                1.0,
-                                "black",
-                                "red"
-                                );
 
-// startPose is the upper lefthand corner where the hexagon tessselation animation starts and is also decremented for the scrolling animation
-var startPose = {x: 0, y: 20};
+let firstHexApothem = window.innerWidth/2;
+let shrinkPercent = 85;
+let openPercent = 55;
+let edgePercent = 4;
+let shrinkSpeed = 0.3;
+let openSpeed = 1;
+let edgeSpeed = 0.1;
+let backColor = "blue";
+let frontColor = "black";
 
-// Animation sequence states to know when to move on to the next stage of animation sequence
-var doneWithShrink = false;
-var doneWithIris = false;
-var imageLoaded = false;
+var firstApeture = new aperture({x: window.innerWidth/2, y: window.innerHeight/2}, hexagonApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
 
-var innerIrisMechnismBackgroundColors = ['#FF0000', 
-                    '#FF0000',
-                    '#FFFF00',
-                    '#FF00FF',
-                    '#0000FF',
-                    '#ffaa00'
-                ];
-
-// This method should only be called once!
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
     ctx = mainCanvas.getContext("2d");
 
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
-    
+    firstApeture.attachThumbnaiil(projectThumbnailImagesPaths[4]);
     // updateCanvasAnimations handles the sequence of the canvas animations
     updateCanvasAnimations();
 }
@@ -194,7 +304,7 @@ function setupCanvas() {
 // Ensures setupCanvas() is run only once
 window.addEventListener('load', setupCanvas);
 
-// Draws background rectangle object on the canvas
+// Draws background rectangle on the canvas
 function drawBackground() {
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     ctx.fillStyle = backgroundColor;
@@ -223,8 +333,6 @@ projectThumbnailImagesPaths = [
     // Cosmic Clash
 ];
 
-projectThumbnailImagesObjects = [];
-
 // Loading Images
 for(let imageIndex = 0;imageIndex < projectThumbnailImagesPaths.length;imageIndex++) {
     var img = new Image();
@@ -233,16 +341,9 @@ for(let imageIndex = 0;imageIndex < projectThumbnailImagesPaths.length;imageInde
     };
 
     img.src = projectThumbnailImagesPaths[imageIndex];
-    projectThumbnailImagesObjects.push(img);
+    // projectThumbnailImagesObjects.push(img);
 }
-// percentageOfhexagonApothemIrisSize is what percentage of the hexagonApothem variable the apertureDistance should reduce to in animation
-var percentOfhexagonApothemIrisSize = 0.7;
 
-// shrinkHexSize is the percentage of the original hexagonApothem that the hexagons shirnk to in the beginning animation
-var shrinkHexSize = 0.9;
-var currentThumbnailScrollingCache = [];
-
-var imageCacheCurrentInut = 0;
 var numRadiiFitInWindowWidth = (Math.ceil(window.innerWidth/(hexagonApothem*1.5)) - 1);
 
 // Main Animation Loop using requestAnimationFrame function for each conditional on stage booleans declared above animation
@@ -258,54 +359,20 @@ function updateCanvasAnimations() {
         firstApeture.shrinkAnimationStep();
     }
     
-    if(firstApeture.doneShrinking && !firstApeture.doneExpanding) {
-        firstApeture.expandAnimationStep();
+    if(firstApeture.doneShrinking && !firstApeture.doneOpeningEdge) {
+        firstApeture.edgeOpenAnimationStep();
     }
-
-    if(firstApeture.doneShrinking && firstApeture.doneExpanding) {
-        firstApeture.drawHexagon();
-        firstApeture.doneShrinking = false;
-        firstApeture.doneExpanding = false;
+    
+    if(firstApeture.doneOpeningEdge && !firstApeture.doneOpeningApertureHole){
+        firstApeture.drawThumbnail();
+        firstApeture.openAnimationStep();
     }
-    // Conditionals for Animation Sequence
-
-    // At webpage loading the screen is seemingly filled completely black
-
-    // Shrink Tesselated Hexagons Animations: Decrement dynamicOverlapingHexPadding each frame for shrinking hexagon animation 
-    // if(doneWithShrink == false && (hexagonApothem + dynamicOverlapHexPadding) > (shrinkHexSize*hexagonApothem) ) {
-    //     dynamicOverlapHexPadding-= 0.25;
-    // }
-    // // Set doneWithShrink to true when shrinking is done...obviously lol
-    // else if(doneWithShrink == false && (hexagonApothem + dynamicOverlapHexPadding) <= (shrinkHexSize*hexagonApothem) ) {
-    //     doneWithShrink = true;
-    // }
-
-    // // Iris Mechanism Animation: Increment apertureDistance to initially 'open' iris mechanism animation
-    // if(doneWithShrink == true && apertureDistance < shrinkHexSize*percentOfhexagonApothemIrisSize*(hexagonApothem - overlapHexPadding)){
-    //     apertureDistance++;
-    // }
-    // else if(apertureDistance >= shrinkHexSize*percentOfhexagonApothemIrisSize*(hexagonApothem - overlapHexPadding)) {
-    //     doneWithIris = true;
-    // }
-    // var offsetRenameThis = (window.innerWidth/hexagonApothem) - Math.floor(window.innerWidth/hexagonApothem);
-    // // Scroll AnimationL as a project hexagon exits on the left it closes the iris mechanism and on the other side where entering the main window 
-
-    // if(doneWithShrink && doneWithIris && startPose.x >= -hexagonApothem*1.5*numRadiiFitInWindowWidth) {
-    //     for(var cachIndex = 0;cachIndex < numRadiiFitInWindowWidth;cachIndex++) {
-    //         currentThumbnailScrollingCache.push(projectThumbnailImagesObjects[imageCacheCurrentInut + cachIndex]);
-    //     }
-        
-    //     imageCacheCurrentInut+= numRadiiFitInWindowWidth;
-    //     if(imageCacheCurrentInut > projectThumbnailImagesObjects.length -1) {
-    //         imageCacheCurrentInut = imageCacheCurrentInut%projectThumbnailImagesObjects.length;
-    //         currentThumbnailScrollingCache = [];
-    //     }
-    //     startPose.x -=1;
-    // }
-    // else {
-    //     // reset after scrolled window.innerWidth length to scroll in a loop
-    //     startPose.x = 0;
-    // }
+    
+    if(firstApeture.doneOpeningApertureHole) {
+        firstApeture.drawThumbnail();
+        firstApeture.drawBackgroundAperatureQuadrilaterals();
+        firstApeture.drawForegroundAperatureQuadrilaterals();
+    }
 
     // // drawHexagonTessalation draws the repeating pattern of hexagons and irisMechanisms dynamically
     // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
@@ -313,59 +380,6 @@ function updateCanvasAnimations() {
     
     // Canvas Animation
     requestAnimationFrame(updateCanvasAnimations);
-}
-
-// draws a single hexagon on the canvas with the centerPosition being the center of the regular hexagonand angleOffset being the rotation from where the first hexagon vertex is placed
-function drawHexagon(hexagonApothem, centerPositon, color, angleOffset = Math.PI/6) {
-    ctx.fillStyle = color;
-    
-    // Draw hexagon filled shape using lineTo() and closePath() functions going from each vertex and back again in a loop
-    ctx.beginPath();
-    ctx.moveTo(centerPositon.x + hexagonApothem*Math.sin(angleOffset), centerPositon.y + hexagonApothem*Math.cos(angleOffset));
-
-    for(let vertex = 0;vertex < 6;vertex++) {
-        ctx.lineTo(centerPositon.x + hexagonApothem*Math.sin(vertex*Math.PI/3 + angleOffset), centerPositon.y + hexagonApothem*Math.cos(vertex*Math.PI/3 + angleOffset));
-    }
-
-    ctx.closePath();
-    ctx.fill();
-}
-
-// drawIrisTriangles draws the 6 irregular quadrilaterals that make up a single iris mechanism
-// irisMechnismDistanceFromCenter is the variable that controls how open or closed the irisMechanism Animation is
-function drawIrisTriangles(hexagonApothem, centerPositon, color,irisMechanismDistanceFromCenter, clearanceSpacing = 7, angleOffset = Math.PI/6) {
-    // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
-    // Loop and draw the 6 quadrilaterals
-    for(let vertex = 0;vertex < 6;vertex++) {
-        ctx.fillStyle = color;
-        ctx.beginPath();
-
-        // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
-        // so when the irisMechanismDistance is 0 the irisMechanism animation is completely closed and when it  = hexagonApothem it is completely open but we use it as a border, so it never equals the hexagonApothem
-        let openedPercentage = irisMechanismDistanceFromCenter/hexagonApothem;
-
-        // The parallelToSideVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem variable
-        let parallelToSideVector = {x: hexagonApothem*Math.sin(vertex*Math.PI/3 + angleOffset) - hexagonApothem*Math.sin((vertex+1)*Math.PI/3 + angleOffset), y: hexagonApothem*Math.cos(vertex*Math.PI/3 + angleOffset) -  hexagonApothem*Math.cos((vertex+1)*Math.PI/3 + angleOffset)}
-        
-        // The parallelToSideVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
-        let parallelToSideVectorPrev = {x: hexagonApothem*Math.sin((vertex-1)*Math.PI/3 + angleOffset) - hexagonApothem*Math.sin((vertex)*Math.PI/3 + angleOffset), y: hexagonApothem*Math.cos((vertex-1)*Math.PI/3 + angleOffset) -  hexagonApothem*Math.cos((vertex)*Math.PI/3 + angleOffset)}
-        
-        // perpindicularToSideUnitVectorPrev is the unit vector with a magnitude of 1
-        let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + angleOffset) - Math.sin((vertex)*Math.PI/3 + angleOffset), y: Math.cos((vertex-1)*Math.PI/3 + angleOffset) - Math.cos((vertex)*Math.PI/3 + angleOffset)}
-        
-        // Draw the lines that make up each quadrilateral
-        ctx.moveTo(centerPositon.x + openedPercentage*parallelToSideVector.x - clearanceSpacing*perpindicularToSideUnitVectorPrev.x, centerPositon.y + openedPercentage*parallelToSideVector.y - clearanceSpacing*perpindicularToSideUnitVectorPrev.y);
-
-        ctx.lineTo(centerPositon.x + hexagonApothem*Math.sin((vertex)*Math.PI/3 + angleOffset) + (openedPercentage)*parallelToSideVectorPrev.x - clearanceSpacing*perpindicularToSideUnitVectorPrev.x, centerPositon.y + hexagonApothem*Math.cos((vertex)*Math.PI/3 + angleOffset) + (openedPercentage)*parallelToSideVectorPrev.y - clearanceSpacing*perpindicularToSideUnitVectorPrev.y);
-        
-        ctx.lineTo(centerPositon.x + hexagonApothem*Math.sin((vertex)*Math.PI/3 + angleOffset), centerPositon.y + hexagonApothem*Math.cos((vertex)*Math.PI/3 + angleOffset));
-
-        ctx.lineTo(centerPositon.x + hexagonApothem*Math.sin((vertex+1)*Math.PI/3 + angleOffset) + openedPercentage*parallelToSideVector.x, centerPositon.y + hexagonApothem*Math.cos((vertex+1)*Math.PI/3 + angleOffset) + openedPercentage*parallelToSideVector.y);
-
-        ctx.closePath();
-        ctx.fill();
-    }
-
 }
 
 // drawHexagonTessalation() draws the repeating pattern of hexagons on the canvas with the origin at the startPosition
@@ -490,29 +504,6 @@ function drawHexagonTessalation(tesselationRadii, color, overlapHexPadding, star
             }
         }
     }
-}
-
-
-function drawHexagonBorderWindow(hexagonApothem, centerPositon, color,openedPercentage, clearanceSpacing = backdropApertureOffset, angleOffset = Math.PI/6) {
-    for(let vertex = 0;vertex < 6;vertex++) {
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        // let openedPercentage = 0.6;
-        let parallelToSideVector = {x: hexagonApothem*Math.sin(vertex*Math.PI/3 + angleOffset) - hexagonApothem*Math.sin((vertex+1)*Math.PI/3 + angleOffset), y: hexagonApothem*Math.cos(vertex*Math.PI/3 + angleOffset) -  hexagonApothem*Math.cos((vertex+1)*Math.PI/3 + angleOffset)}
-        let parallelToSideVectorPrev = {x: hexagonApothem*Math.sin((vertex-1)*Math.PI/3 + angleOffset) - hexagonApothem*Math.sin((vertex)*Math.PI/3 + angleOffset), y: hexagonApothem*Math.cos((vertex-1)*Math.PI/3 + angleOffset) -  hexagonApothem*Math.cos((vertex)*Math.PI/3 + angleOffset)}
-        let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + angleOffset) - Math.sin((vertex)*Math.PI/3 + angleOffset), y: Math.cos((vertex-1)*Math.PI/3 + angleOffset) - Math.cos((vertex)*Math.PI/3 + angleOffset)}
-        ctx.moveTo(centerPositon.x + openedPercentage*parallelToSideVector.x - clearanceSpacing*perpindicularToSideUnitVectorPrev.x, centerPositon.y + openedPercentage*parallelToSideVector.y - clearanceSpacing*perpindicularToSideUnitVectorPrev.y);
-
-        ctx.lineTo(centerPositon.x + hexagonApothem*Math.sin((vertex)*Math.PI/3 + angleOffset) + (openedPercentage)*parallelToSideVectorPrev.x - clearanceSpacing*perpindicularToSideUnitVectorPrev.x, centerPositon.y + hexagonApothem*Math.cos((vertex)*Math.PI/3 + angleOffset) + (openedPercentage)*parallelToSideVectorPrev.y - clearanceSpacing*perpindicularToSideUnitVectorPrev.y);
-        
-        ctx.lineTo(centerPositon.x + hexagonApothem*Math.sin((vertex)*Math.PI/3 + angleOffset), centerPositon.y + hexagonApothem*Math.cos((vertex)*Math.PI/3 + angleOffset));
-
-        ctx.lineTo(centerPositon.x + hexagonApothem*Math.sin((vertex+1)*Math.PI/3 + angleOffset) + openedPercentage*parallelToSideVector.x, centerPositon.y + hexagonApothem*Math.cos((vertex+1)*Math.PI/3 + angleOffset) + openedPercentage*parallelToSideVector.y);
-
-        ctx.closePath();
-        ctx.fill();
-    }
-
 }
 
 // https://stackoverflow.com/questions/1484506/random-color-generator
