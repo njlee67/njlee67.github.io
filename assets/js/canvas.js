@@ -3,7 +3,9 @@ var mainCanvas;
 var ctx;
 
 // Global Variables
-let backgroundColor = "#00ff00";
+// let backgroundColor = "#FEFF0B";
+let backgroundColor = "#00cc00";
+// let backgroundColor = "#777777";
 
 // Animation Geometries that are incremented in updateCanvasAnimations() function to animate shapes
 // hexagonApothem is the distance from the center to a vertex of fully tesselated hexagons at the load screen 
@@ -14,6 +16,20 @@ var hexagonApothem = Math.round(window.innerHeight/3);
 
 // dynamicOverlapHexPadding is a variable that is decremented each frame to shrink the black hexagons at page loading
 // var dynamicOverlapHexPadding = overlapHexPadding;
+
+// List of thumbnail images for each project bordered by hexagonal iris mechanism 
+projectThumbnailImagesPaths = [
+    '/images/fulls/LMBB v2.jpg',
+    'images/fulls/design-and-manufacturing-2-Yo-Yos.jpg',
+    'images/fulls/dont-stress-hoodie.jpg',
+    'images/fulls/LMBB v1.0.jpg',
+    'images/fulls/No-Cap-Hoodie.jpg',
+    'images/fulls/QUAD.PNG',
+    'images/fulls/SatchPack-v1.jpg',
+    'images/fulls/youre-a-real-1-hoodie.jpg',
+    'images/fulls/ALEEgators.jpg'
+    // Gazebo Walking Simulation
+];
 
 // apertureDistance is the distance from the center of a hexagon in the direction from the center of the hexagon to a vertex
 // iris animation is based on the iris mechanism similar to a camera shutter
@@ -198,15 +214,19 @@ class aperture {
             this.drawThumbnail();
         }
 
-        if(this.currentEdgeThickness > 0) {
+        if(this.projectThumbnail != null && this.currentEdgeThickness > 0) {
             this.drawBackgroundAperatureQuadrilaterals();
         }
-        if(this.currentOpenedDistance > 0) {
+        if(this.projectThumbnail != null && this.currentOpenedDistance > 0) {
             this.drawForegroundAperatureQuadrilaterals();
         }
         else {
             this.drawHexagon();
         }
+    }
+
+    setApertureCenter(newApertureCenter) {
+        this.apertureCenter = newApertureCenter;
     }
 
     drawHexagon() {
@@ -329,19 +349,110 @@ class aperture {
     }
 
 }
+
+class apertureTesselation {
+    constructor(thumbnailRelativeImagePathList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor) {
+        this.tesselationOriginPosition = tesselationOriginPosition;
+        this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(hexagonalApothem, 2) - Math.pow(hexagonalApothem/2, 2));
+        this.hexTesselationHorizontalOffset = 1.5*hexagonalApothem; 
+
+        this.numberVerticalApertures = Math.ceil((window.innerHeight - this.tesselationOriginPosition.y)/this.hexTesselationVerticalOffset) + 1;
+
+        this.numberHorizontalApertures = 0;
+        this.aperturesList = [];
+
+        this.thumbnailRelativeImagePathList = thumbnailRelativeImagePathList;
+
+
+        var numberOfThumnailsWithoutAnAperture = this.thumbnailRelativeImagePathList.length;
+
+        while(numberOfThumnailsWithoutAnAperture > 0) {
+            var nextColumnInitialIndex = this.numberHorizontalApertures * this.numberVerticalApertures;
+            // Loop through each column 
+            for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
+                var nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
+                if(this.numberHorizontalApertures%2 != 0) {
+                    nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
+                }
+                this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor));
+            
+                let nextApertureIsTooHighForThumbnail = this.aperturesList[verticalIndex + nextColumnInitialIndex].apertureCenter.y < this.hexTesselationVerticalOffset/2;
+                let nextApertureIsTooLowForThumbnail = this.aperturesList[verticalIndex + nextColumnInitialIndex].apertureCenter.y > window.innerHeight - this.hexTesselationVerticalOffset/2;
+
+                if(!nextApertureIsTooHighForThumbnail && !nextApertureIsTooLowForThumbnail) {
+                    this.aperturesList[verticalIndex + nextColumnInitialIndex].attachThumbnaiil(thumbnailRelativeImagePathList[thumbnailRelativeImagePathList.length - numberOfThumnailsWithoutAnAperture]);
+                    numberOfThumnailsWithoutAnAperture--;
+                }
+            }
+            this.numberHorizontalApertures++;
+        }
+        
+        if(this.numberVerticalApertures%2 != 0) {
+            for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
+                var nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
+                if(this.numberHorizontalApertures%2 != 0) {
+                    nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
+                }
+                this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor));
+            }
+            this.numberHorizontalApertures++;
+        }
+    }
+
+    toPixelsOfApothem(percentageOfApothem) {
+        return ((percentageOfApothem/100.0)*this.hexagonalApothem);
+    }
+    
+    scrollToLeftAnimationStep() {
+        for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
+            if(this.aperturesList[0].apertureCenter.x > -(this.hexTesselationHorizontalOffset * this.numberHorizontalApertures)) {
+                this.aperturesList[apertureIndex].apertureCenter.x -= 0.1;
+            }
+
+            if(this.aperturesList[apertureIndex].apertureCenter.x < -(this.hexTesselationHorizontalOffset)) {
+                this.aperturesList[apertureIndex].apertureCenter.x += (this.numberHorizontalApertures)*this.hexTesselationHorizontalOffset;
+            }
+        }
+    }
+
+    drawTesselation() {
+        for(var apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
+            if(!this.aperturesList[apertureIndex].doneShrinking) {
+                this.aperturesList[apertureIndex].shrinkAnimationStep();
+            }
+            
+            if(this.aperturesList[apertureIndex].doneShrinking && !this.aperturesList[apertureIndex].doneOpeningEdge) {
+                this.aperturesList[apertureIndex].edgeOpenAnimationStep();
+            }
+            
+            if(this.aperturesList[apertureIndex].doneOpeningEdge && !this.aperturesList[apertureIndex].doneOpeningApertureHole){
+                this.aperturesList[apertureIndex].openAnimationStep();
+            }
+            
+            if(this.aperturesList[apertureIndex].doneOpeningApertureHole) {
+                this.aperturesList[apertureIndex].drawCurrent();
+                this.scrollToLeftAnimationStep();
+            }
+        }
+
+    }
+
+}
 // TODO set parameter for apeture constructor to has a duration of open/close/shrink instead of a pixels per frame speed based on the FPS and percentges
 
-let firstHexApothem = window.innerWidth/6;
+let firstHexApothem = window.innerHeight/2.6;
 let shrinkPercent = 90;
 let openPercent = 60;
-let edgePercent = 7;
-let shrinkSpeed = 0.3;
-let openSpeed = 0.5;
-let edgeSpeed = 0.1;
-let backColor = "gray";
+let edgePercent = 6;
+let shrinkSpeed = 0.1;
+let openSpeed = 1;
+let edgeSpeed = 0.2;
+let backColor = "#00ff00";
 let frontColor = "black";
 
-var firstApeture = new aperture({x: window.innerWidth/2, y: window.innerHeight/2}, firstHexApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
+var mainApertureTesselation = new apertureTesselation(projectThumbnailImagesPaths, {x: 0, y: 0}, firstHexApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
+
+var firstApeture = new aperture( {x: window.innerWidth/2, y: window.innerHeight/2}, firstHexApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
@@ -349,7 +460,9 @@ function setupCanvas() {
 
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
+
     firstApeture.attachThumbnaiil(projectThumbnailImagesPaths[0]);
+
     // updateCanvasAnimations handles the sequence of the canvas animations
     updateCanvasAnimations();
 }
@@ -364,19 +477,6 @@ function drawBackground() {
     ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
 }
 
-// List of thumbnail images for each project bordered by hexagonal iris mechanism 
-projectThumbnailImagesPaths = [
-    '/images/fulls/LMBB v2.jpg',
-    'images/fulls/design-and-manufacturing-2-Yo-Yos.jpg',
-    'images/fulls/dont-stress-hoodie.jpg',
-    'images/fulls/LMBB v1.0.jpg',
-    'images/fulls/No-Cap-Hoodie.jpg',
-    'images/fulls/QUAD.PNG',
-    'images/fulls/youre-a-real-1-hoodie.jpg',
-    'images/fulls/ALEEgators.jpg',
-    'images/fulls/SatchPack-v1.jpg'
-    // Gazebo Walking Simulation
-];
 
 // Main Animation Loop using requestAnimationFrame function for each conditional on stage booleans declared above animation
 function updateCanvasAnimations() {
@@ -387,31 +487,8 @@ function updateCanvasAnimations() {
     // Reset the background
     drawBackground();
 
-    if(!firstApeture.doneShrinking) {
-        firstApeture.shrinkAnimationStep();
-    }
-    
-    if(firstApeture.doneShrinking && !firstApeture.doneOpeningEdge) {
-        firstApeture.edgeOpenAnimationStep();
-    }
-    
-    if(firstApeture.doneOpeningEdge && !firstApeture.doneOpeningApertureHole){
-        firstApeture.openAnimationStep();
-    }
-    
-    if(firstApeture.doneOpeningApertureHole && (!firstApeture.doneClosingApertureHole || !firstApeture.doneClosingEdge)) {
-        firstApeture.closeAnimationStep();
-        firstApeture.edgeCloseAnimationStep();
-    }
-
-    if(firstApeture.doneClosingEdge) {
-        firstApeture.drawCurrent();
-    }
-
-
-    // // drawHexagonTessalation draws the repeating pattern of hexagons and irisMechanisms dynamically
+    mainApertureTesselation.drawTesselation();
     // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
-    // drawHexagonTessalation(hexagonApothem, '#000000', dynamicOverlapHexPadding, startPose);
     
     // Canvas Animation
     requestAnimationFrame(updateCanvasAnimations);
@@ -470,7 +547,6 @@ function drawHexagonTessalation(tesselationRadii, color, overlapHexPadding, star
                 }
                 else {
                     thumbNailIndex = 0;
-                    console.log(thumbNailIndex);
                 }
             }
             else if(doneWithIris) {
@@ -481,7 +557,6 @@ function drawHexagonTessalation(tesselationRadii, color, overlapHexPadding, star
                 
                 // Left edge of screen
                 if(currentTessalationPosition.x < apertureDistance && currentTessalationPosition.x > backdropApertureOffset && !tooHighOrLowInY) {
-                    console.log("imageCacheCurrentInut: " + imageCacheCurrentInut + " thumbNailIndex: " + thumbNailIndex);
                     ctx.drawImage(projectThumbnailImagesObjects[imageCacheCurrentInut + thumbNailIndex], currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
                     drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, Math.abs(currentTessalationPosition.x%apertureDistance) - backdropApertureOffset, 0);
                     drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, Math.abs(currentTessalationPosition.x%apertureDistance), backdropApertureOffset);
