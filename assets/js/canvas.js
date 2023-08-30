@@ -3,7 +3,9 @@ var mainCanvas;
 var ctx;
 
 // Global Variables
-let backgroundColor = "yellow";
+// let backgroundColor = "#FEFF0B";
+let backgroundColor = "#00cc00";
+// let backgroundColor = "#777777";
 
 // Animation Geometries that are incremented in updateCanvasAnimations() function to animate shapes
 // hexagonApothem is the distance from the center to a vertex of fully tesselated hexagons at the load screen 
@@ -402,7 +404,6 @@ class apertureTesselation {
     }
     
     scrollToLeftAnimationStep() {
-        var farthestRightApertureIndex = this.aperturesList.length-1
         for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
             if(this.aperturesList[0].apertureCenter.x > -(this.hexTesselationHorizontalOffset * this.numberHorizontalApertures)) {
                 this.aperturesList[apertureIndex].apertureCenter.x -= 0.1;
@@ -439,15 +440,15 @@ class apertureTesselation {
 }
 // TODO set parameter for apeture constructor to has a duration of open/close/shrink instead of a pixels per frame speed based on the FPS and percentges
 
-let firstHexApothem = Math.max(window.innerWidth, window.innerHeight)/6;
+let firstHexApothem = window.innerHeight/2.6;
 let shrinkPercent = 90;
 let openPercent = 60;
 let edgePercent = 6;
 let shrinkSpeed = 0.1;
 let openSpeed = 1;
 let edgeSpeed = 0.2;
-let backColor = "yellow";
-let frontColor = "#00bb00";
+let backColor = "#00ff00";
+let frontColor = "black";
 
 var mainApertureTesselation = new apertureTesselation(projectThumbnailImagesPaths, {x: 0, y: 0}, firstHexApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
 
