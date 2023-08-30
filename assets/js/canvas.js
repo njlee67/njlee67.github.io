@@ -66,6 +66,12 @@ class aperture {
         let setShrunkenCommandOutsideLimits = setShrunkenSizeTo < this.fullyShrunkenSize || setShrunkenSizeTo > this.hexagonalApothem;
         
         if(setShrunkenCommandOutsideLimits) {
+            if(setShrunkenSizeTo < this.fullyShrunkenSize) {
+                this.currentShrunkenSize = this.fullyShrunkenSize;
+            }
+            else if(setShrunkenSizeTo > this.hexagonalApothem) {
+                this.currentShrunkenSize = this.hexagonalApothem;
+            }
             return true;
         }
         else {
@@ -77,6 +83,13 @@ class aperture {
         let setOpenCommandIsOutsideLimits = setOpenDistanceTo < 0 || setOpenDistanceTo > this.fullyOpenedDistance;
         
         if(setOpenCommandIsOutsideLimits) {
+            if(setOpenDistanceTo < 0) {
+                this.currentOpenedDistance = 0;
+            }
+            else if(setOpenDistanceTo > this.fullyOpenedDistance) {
+                this.currentOpenedDistance = this.fullyOpenedDistance;
+            }
+
             return true;
         }
         else {
@@ -88,6 +101,13 @@ class aperture {
         let setEdgeCommandIsOutsideLimits = setEdgeThicknessTo < 0 || setEdgeThicknessTo > this.fullEdgeThickness;
         
         if(setEdgeCommandIsOutsideLimits) {
+            if(setEdgeThicknessTo < 0) {
+                this.currentEdgeThickness = 0;
+            }
+            else if(setEdgeThicknessTo > this.fullEdgeThickness) {
+                this.currentEdgeThickness = this.fullEdgeThickness;
+            }
+
             return true;
         }
         else {
@@ -100,7 +120,7 @@ class aperture {
         
         if(!this.doneShrinking) {
             this.currentShrunkenSize -= this.shrinkPixelsPerFrame;
-            this.drawHexagon(this.foregroundColor);
+            this.drawCurrent();
         }
     }
 
@@ -109,7 +129,7 @@ class aperture {
         
         if(!this.doneExpanding) {
             this.currentShrunkenSize += this.shrinkPixelsPerFrame;
-            this.drawHexagon();
+            this.drawCurrent();
         }
     }
 
@@ -121,8 +141,20 @@ class aperture {
                 this.currentOpenedDistance += this.edgePixelsPerFrame;
             }
             this.currentEdgeThickness += this.edgePixelsPerFrame;
-            this.drawHexagon(this.backgroundColor);
-            this.drawForegroundAperatureQuadrilaterals();
+            this.drawCurrent();
+        }
+    }
+    
+    // TODO: remove the pixelsperframe needed in the checkifoutsidelimits methods cuz it's confusing to remember the +/-
+    edgeCloseAnimationStep() {
+        this.doneClosingEdge = this.checkIfEdgeThicknessOutsideLimits(this.currentEdgeThickness);        
+        
+        if(!this.doneClosingEdge) {
+            if(!this.checkIfApertureHoleOutsideLimits(this.currentOpenedDistance)) {
+                this.currentOpenedDistance -= this.edgePixelsPerFrame;
+            }
+            this.currentEdgeThickness -= this.edgePixelsPerFrame;
+            this.drawCurrent();
         }
     }
 
@@ -131,17 +163,16 @@ class aperture {
         
         if(!this.doneOpeningApertureHole) {
             this.currentOpenedDistance += this.openPixelsPerFrame;
-            this.drawBackgroundAperatureQuadrilaterals();
-            this.drawForegroundAperatureQuadrilaterals();
+            this.drawCurrent();
         }
     }
     
     closeAnimationStep() {
-        this.doneClosingApertureHole = this.checkIfApertureHoleOutsideLimits(this.currentOpenedDistance - this.openPixelsPerFrame);   
+        this.doneClosingApertureHole = this.checkIfApertureHoleOutsideLimits(this.currentOpenedDistance);   
         
         if(!this.doneClosingApertureHole) {
             this.currentOpenedDistance -= this.openPixelsPerFrame;
-            this.drawForegroundAperatureQuadrilaterals();
+            this.drawCurrent();
         }
     }
     
@@ -162,8 +193,24 @@ class aperture {
         }
     }
 
-    drawHexagon(color) {
-        ctx.fillStyle = color;
+    drawCurrent() {
+        if(this.projectThumbnail != null && this.currentOpenedDistance > 0) {
+            this.drawThumbnail();
+        }
+
+        if(this.currentEdgeThickness > 0) {
+            this.drawBackgroundAperatureQuadrilaterals();
+        }
+        if(this.currentOpenedDistance > 0) {
+            this.drawForegroundAperatureQuadrilaterals();
+        }
+        else {
+            this.drawHexagon();
+        }
+    }
+
+    drawHexagon() {
+        ctx.fillStyle = this.foregroundColor;
         
         // Draw hexagon filled shape using lineTo() and closePath() functions going from each vertex and back again in a loop
         ctx.beginPath();
@@ -263,14 +310,20 @@ class aperture {
     drawThumbnail() {
         if(this.projectThumbnail != null) {
             var croppedWidth = this.projectThumbnail.width;
-            var croppedHeight = this.projectThumbnail.height;
+            var croppedHeight = (Math.sqrt(3)/2) * croppedWidth;
 
             if(this.projectThumbnail.width > this.projectThumbnail.height) {
-                croppedWidth = (2/Math.sqrt(3)) * croppedHeight;
+                croppedHeight = (Math.sqrt(3)/2) * croppedWidth;
+
+                if(this.projectThumbnail.height < croppedHeight) {
+                    croppedHeight = this.projectThumbnail.height;
+                    croppedWidth = (2/Math.sqrt(3)) * croppedHeight;
+                }
             }
             else {
-                croppedHeight = (Math.sqrt(3)/2) * croppedWidth;
+                croppedWidth = (2/Math.sqrt(3)) * croppedHeight;
             }
+
             ctx.drawImage(this.projectThumbnail,0, 0, croppedWidth, croppedHeight, this.apertureCenter.x - this.fullyOpenedDistance, this.apertureCenter.y - (Math.sqrt(3)/2)*(this.fullyOpenedDistance), 2*(this.fullyOpenedDistance), Math.sqrt(3)*(this.fullyOpenedDistance))
         }
     }
@@ -278,17 +331,17 @@ class aperture {
 }
 // TODO set parameter for apeture constructor to has a duration of open/close/shrink instead of a pixels per frame speed based on the FPS and percentges
 
-let firstHexApothem = window.innerWidth/2;
-let shrinkPercent = 85;
-let openPercent = 55;
-let edgePercent = 4;
+let firstHexApothem = window.innerWidth/6;
+let shrinkPercent = 90;
+let openPercent = 60;
+let edgePercent = 7;
 let shrinkSpeed = 0.3;
-let openSpeed = 1;
+let openSpeed = 0.5;
 let edgeSpeed = 0.1;
-let backColor = "blue";
+let backColor = "gray";
 let frontColor = "black";
 
-var firstApeture = new aperture({x: window.innerWidth/2, y: window.innerHeight/2}, hexagonApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
+var firstApeture = new aperture({x: window.innerWidth/2, y: window.innerHeight/2}, firstHexApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
@@ -296,7 +349,7 @@ function setupCanvas() {
 
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
-    firstApeture.attachThumbnaiil(projectThumbnailImagesPaths[4]);
+    firstApeture.attachThumbnaiil(projectThumbnailImagesPaths[0]);
     // updateCanvasAnimations handles the sequence of the canvas animations
     updateCanvasAnimations();
 }
@@ -313,7 +366,6 @@ function drawBackground() {
 
 // List of thumbnail images for each project bordered by hexagonal iris mechanism 
 projectThumbnailImagesPaths = [
-    // LMBBv2
     '/images/fulls/LMBB v2.jpg',
     'images/fulls/design-and-manufacturing-2-Yo-Yos.jpg',
     'images/fulls/dont-stress-hoodie.jpg',
@@ -321,30 +373,10 @@ projectThumbnailImagesPaths = [
     'images/fulls/No-Cap-Hoodie.jpg',
     'images/fulls/QUAD.PNG',
     'images/fulls/youre-a-real-1-hoodie.jpg',
-    'images/fulls/LMBB v2.jpg',
     'images/fulls/ALEEgators.jpg',
     'images/fulls/SatchPack-v1.jpg'
-    // SatchPack
     // Gazebo Walking Simulation
-    // Quadruped Robot QUAD
-    // STEM FriendLEE Tees
-    // 2.008 Yoyos
-    // Shoe Design
-    // Cosmic Clash
 ];
-
-// Loading Images
-for(let imageIndex = 0;imageIndex < projectThumbnailImagesPaths.length;imageIndex++) {
-    var img = new Image();
-    img.onload = function(){ 
-        imageLoaded = true;   
-    };
-
-    img.src = projectThumbnailImagesPaths[imageIndex];
-    // projectThumbnailImagesObjects.push(img);
-}
-
-var numRadiiFitInWindowWidth = (Math.ceil(window.innerWidth/(hexagonApothem*1.5)) - 1);
 
 // Main Animation Loop using requestAnimationFrame function for each conditional on stage booleans declared above animation
 function updateCanvasAnimations() {
@@ -364,15 +396,18 @@ function updateCanvasAnimations() {
     }
     
     if(firstApeture.doneOpeningEdge && !firstApeture.doneOpeningApertureHole){
-        firstApeture.drawThumbnail();
         firstApeture.openAnimationStep();
     }
     
-    if(firstApeture.doneOpeningApertureHole) {
-        firstApeture.drawThumbnail();
-        firstApeture.drawBackgroundAperatureQuadrilaterals();
-        firstApeture.drawForegroundAperatureQuadrilaterals();
+    if(firstApeture.doneOpeningApertureHole && (!firstApeture.doneClosingApertureHole || !firstApeture.doneClosingEdge)) {
+        firstApeture.closeAnimationStep();
+        firstApeture.edgeCloseAnimationStep();
     }
+
+    if(firstApeture.doneClosingEdge) {
+        firstApeture.drawCurrent();
+    }
+
 
     // // drawHexagonTessalation draws the repeating pattern of hexagons and irisMechanisms dynamically
     // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
