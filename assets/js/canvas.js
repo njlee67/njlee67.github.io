@@ -3,7 +3,7 @@ var mainCanvas;
 var ctx;
 
 // Global Variables
-let backgroundColor = "#00ff00";
+let backgroundColor = "yellow";
 
 // Animation Geometries that are incremented in updateCanvasAnimations() function to animate shapes
 // hexagonApothem is the distance from the center to a vertex of fully tesselated hexagons at the load screen 
@@ -23,9 +23,9 @@ projectThumbnailImagesPaths = [
     'images/fulls/LMBB v1.0.jpg',
     'images/fulls/No-Cap-Hoodie.jpg',
     'images/fulls/QUAD.PNG',
+    'images/fulls/SatchPack-v1.jpg',
     'images/fulls/youre-a-real-1-hoodie.jpg',
-    'images/fulls/ALEEgators.jpg',
-    'images/fulls/SatchPack-v1.jpg'
+    'images/fulls/ALEEgators.jpg'
     // Gazebo Walking Simulation
 ];
 
@@ -212,15 +212,19 @@ class aperture {
             this.drawThumbnail();
         }
 
-        if(this.currentEdgeThickness > 0) {
+        if(this.projectThumbnail != null && this.currentEdgeThickness > 0) {
             this.drawBackgroundAperatureQuadrilaterals();
         }
-        if(this.currentOpenedDistance > 0) {
+        if(this.projectThumbnail != null && this.currentOpenedDistance > 0) {
             this.drawForegroundAperatureQuadrilaterals();
         }
         else {
             this.drawHexagon();
         }
+    }
+
+    setApertureCenter(newApertureCenter) {
+        this.apertureCenter = newApertureCenter;
     }
 
     drawHexagon() {
@@ -346,56 +350,87 @@ class aperture {
 
 class apertureTesselation {
     constructor(thumbnailRelativeImagePathList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor) {
-        this.apertureTemplate = new aperture(tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor);
+        this.tesselationOriginPosition = tesselationOriginPosition;
+        this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(hexagonalApothem, 2) - Math.pow(hexagonalApothem/2, 2));
+        this.hexTesselationHorizontalOffset = 1.5*hexagonalApothem; 
 
-        var hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(hexagonalApothem, 2) - Math.pow(hexagonalApothem/2, 2));
-        
-        this.numberVerticalApertures = Math.ceil((window.innerHeight - this.apertureTemplate.apertureCenter.y)/hexTesselationVerticalOffset);
+        this.numberVerticalApertures = Math.ceil((window.innerHeight - this.tesselationOriginPosition.y)/this.hexTesselationVerticalOffset) + 1;
 
-        this.numberHorizontalApertures = 1;
+        this.numberHorizontalApertures = 0;
         this.aperturesList = [];
 
-        for(var horizontalIndex = 0;horizontalIndex < this.numberHorizontalApertures;horizontalIndex++) {
+        this.thumbnailRelativeImagePathList = thumbnailRelativeImagePathList;
+
+
+        var numberOfThumnailsWithoutAnAperture = this.thumbnailRelativeImagePathList.length;
+
+        while(numberOfThumnailsWithoutAnAperture > 0) {
+            var nextColumnInitialIndex = this.numberHorizontalApertures * this.numberVerticalApertures;
             // Loop through each column 
             for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
-                var nextApertureCenter = {x:tesselationOriginPosition.x,y:  verticalIndex*hexTesselationVerticalOffset};
+                var nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
+                if(this.numberHorizontalApertures%2 != 0) {
+                    nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
+                }
                 this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor));
-                console.log(this.aperturesList[verticalIndex].apertureCenter.y)
+            
+                let nextApertureIsTooHighForThumbnail = this.aperturesList[verticalIndex + nextColumnInitialIndex].apertureCenter.y < this.hexTesselationVerticalOffset/2;
+                let nextApertureIsTooLowForThumbnail = this.aperturesList[verticalIndex + nextColumnInitialIndex].apertureCenter.y > window.innerHeight - this.hexTesselationVerticalOffset/2;
+
+                if(!nextApertureIsTooHighForThumbnail && !nextApertureIsTooLowForThumbnail) {
+                    this.aperturesList[verticalIndex + nextColumnInitialIndex].attachThumbnaiil(thumbnailRelativeImagePathList[thumbnailRelativeImagePathList.length - numberOfThumnailsWithoutAnAperture]);
+                    numberOfThumnailsWithoutAnAperture--;
+                }
             }
-            console.log("after   loop")
-            console.log(this.aperturesList[0].apertureCenter.y)
-            console.log(this.aperturesList[1].apertureCenter.y)
-            console.log(this.aperturesList[2].apertureCenter.y)
+            this.numberHorizontalApertures++;
         }
-        console.log(this.aperturesList.length)
-        console.log(this.aperturesList[0].apertureCenter.y)
+        
+        if(this.numberVerticalApertures%2 != 0) {
+            for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
+                var nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
+                if(this.numberHorizontalApertures%2 != 0) {
+                    nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
+                }
+                this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor));
+            }
+            this.numberHorizontalApertures++;
+        }
     }
 
     toPixelsOfApothem(percentageOfApothem) {
         return ((percentageOfApothem/100.0)*this.hexagonalApothem);
     }
     
-    drawTesselation() {
-        for(var horizontalIndex = 0;horizontalIndex < (this.numberHorizontalApertures);horizontalIndex++) {
-            // Loop through each column 
-            for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
-                // console.log(this.aperturesList[verticalIndex+horizontalIndex].apertureCenter.y)
+    scrollToLeftAnimationStep() {
+        var farthestRightApertureIndex = this.aperturesList.length-1
+        for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
+            if(this.aperturesList[0].apertureCenter.x > -(this.hexTesselationHorizontalOffset * this.numberHorizontalApertures)) {
+                this.aperturesList[apertureIndex].apertureCenter.x -= 0.1;
+            }
 
-                if(!this.aperturesList[verticalIndex+horizontalIndex].doneShrinking) {
-                    this.aperturesList[verticalIndex+horizontalIndex].shrinkAnimationStep();
-                }
-                
-                if(this.aperturesList[verticalIndex+horizontalIndex].doneShrinking && !this.aperturesList[verticalIndex+horizontalIndex].doneOpeningEdge) {
-                    this.aperturesList[verticalIndex+horizontalIndex].edgeOpenAnimationStep();
-                }
-                
-                if(this.aperturesList[verticalIndex+horizontalIndex].doneOpeningEdge && !this.aperturesList[verticalIndex+horizontalIndex].doneOpeningApertureHole){
-                    this.aperturesList[verticalIndex+horizontalIndex].openAnimationStep();
-                }
-                
-                if(this.aperturesList[verticalIndex+horizontalIndex].doneOpeningApertureHole) {
-                    this.aperturesList[verticalIndex+horizontalIndex].drawCurrent();
-                }
+            if(this.aperturesList[apertureIndex].apertureCenter.x < -(this.hexTesselationHorizontalOffset)) {
+                this.aperturesList[apertureIndex].apertureCenter.x += (this.numberHorizontalApertures)*this.hexTesselationHorizontalOffset;
+            }
+        }
+    }
+
+    drawTesselation() {
+        for(var apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
+            if(!this.aperturesList[apertureIndex].doneShrinking) {
+                this.aperturesList[apertureIndex].shrinkAnimationStep();
+            }
+            
+            if(this.aperturesList[apertureIndex].doneShrinking && !this.aperturesList[apertureIndex].doneOpeningEdge) {
+                this.aperturesList[apertureIndex].edgeOpenAnimationStep();
+            }
+            
+            if(this.aperturesList[apertureIndex].doneOpeningEdge && !this.aperturesList[apertureIndex].doneOpeningApertureHole){
+                this.aperturesList[apertureIndex].openAnimationStep();
+            }
+            
+            if(this.aperturesList[apertureIndex].doneOpeningApertureHole) {
+                this.aperturesList[apertureIndex].drawCurrent();
+                this.scrollToLeftAnimationStep();
             }
         }
 
@@ -404,17 +439,17 @@ class apertureTesselation {
 }
 // TODO set parameter for apeture constructor to has a duration of open/close/shrink instead of a pixels per frame speed based on the FPS and percentges
 
-let firstHexApothem = window.innerWidth/6;
+let firstHexApothem = Math.max(window.innerWidth, window.innerHeight)/6;
 let shrinkPercent = 90;
 let openPercent = 60;
 let edgePercent = 6;
-let shrinkSpeed = 0.3;
-let openSpeed = 0.5;
-let edgeSpeed = 0.1;
-let backColor = "gray";
-let frontColor = "black";
+let shrinkSpeed = 0.1;
+let openSpeed = 1;
+let edgeSpeed = 0.2;
+let backColor = "yellow";
+let frontColor = "#00bb00";
 
-var firstTesselation = new apertureTesselation(projectThumbnailImagesPaths, {x: window.innerWidth/2, y: 0}, firstHexApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
+var mainApertureTesselation = new apertureTesselation(projectThumbnailImagesPaths, {x: 0, y: 0}, firstHexApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
 
 var firstApeture = new aperture( {x: window.innerWidth/2, y: window.innerHeight/2}, firstHexApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
 
@@ -451,26 +486,8 @@ function updateCanvasAnimations() {
     // Reset the background
     drawBackground();
 
-    firstTesselation.drawTesselation();
-    // if(!firstApeture.doneShrinking) {
-    //     firstApeture.shrinkAnimationStep();
-    // }
-    
-    // if(firstApeture.doneShrinking && !firstApeture.doneOpeningEdge) {
-    //     firstApeture.edgeOpenAnimationStep();
-    // }
-    
-    // if(firstApeture.doneOpeningEdge && !firstApeture.doneOpeningApertureHole){
-    //     firstApeture.openAnimationStep();
-    // }
-    
-    // if(firstApeture.doneOpeningApertureHole) {
-    //     firstApeture.drawCurrent();
-    // }
-
-    // // drawHexagonTessalation draws the repeating pattern of hexagons and irisMechanisms dynamically
+    mainApertureTesselation.drawTesselation();
     // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
-    // drawHexagonTessalation(hexagonApothem, '#000000', dynamicOverlapHexPadding, startPose);
     
     // Canvas Animation
     requestAnimationFrame(updateCanvasAnimations);
@@ -529,7 +546,6 @@ function drawHexagonTessalation(tesselationRadii, color, overlapHexPadding, star
                 }
                 else {
                     thumbNailIndex = 0;
-                    console.log(thumbNailIndex);
                 }
             }
             else if(doneWithIris) {
@@ -540,7 +556,6 @@ function drawHexagonTessalation(tesselationRadii, color, overlapHexPadding, star
                 
                 // Left edge of screen
                 if(currentTessalationPosition.x < apertureDistance && currentTessalationPosition.x > backdropApertureOffset && !tooHighOrLowInY) {
-                    console.log("imageCacheCurrentInut: " + imageCacheCurrentInut + " thumbNailIndex: " + thumbNailIndex);
                     ctx.drawImage(projectThumbnailImagesObjects[imageCacheCurrentInut + thumbNailIndex], currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
                     drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, Math.abs(currentTessalationPosition.x%apertureDistance) - backdropApertureOffset, 0);
                     drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, Math.abs(currentTessalationPosition.x%apertureDistance), backdropApertureOffset);
