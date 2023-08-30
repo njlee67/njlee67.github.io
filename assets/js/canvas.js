@@ -15,6 +15,20 @@ var hexagonApothem = Math.round(window.innerHeight/3);
 // dynamicOverlapHexPadding is a variable that is decremented each frame to shrink the black hexagons at page loading
 // var dynamicOverlapHexPadding = overlapHexPadding;
 
+// List of thumbnail images for each project bordered by hexagonal iris mechanism 
+projectThumbnailImagesPaths = [
+    '/images/fulls/LMBB v2.jpg',
+    'images/fulls/design-and-manufacturing-2-Yo-Yos.jpg',
+    'images/fulls/dont-stress-hoodie.jpg',
+    'images/fulls/LMBB v1.0.jpg',
+    'images/fulls/No-Cap-Hoodie.jpg',
+    'images/fulls/QUAD.PNG',
+    'images/fulls/youre-a-real-1-hoodie.jpg',
+    'images/fulls/ALEEgators.jpg',
+    'images/fulls/SatchPack-v1.jpg'
+    // Gazebo Walking Simulation
+];
+
 // apertureDistance is the distance from the center of a hexagon in the direction from the center of the hexagon to a vertex
 // iris animation is based on the iris mechanism similar to a camera shutter
 var aperturefullEdgeThickness = 15;
@@ -329,19 +343,80 @@ class aperture {
     }
 
 }
+
+class apertureTesselation {
+    constructor(thumbnailRelativeImagePathList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor) {
+        this.apertureTemplate = new aperture(tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor);
+
+        var hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(hexagonalApothem, 2) - Math.pow(hexagonalApothem/2, 2));
+        
+        this.numberVerticalApertures = Math.ceil((window.innerHeight - this.apertureTemplate.apertureCenter.y)/hexTesselationVerticalOffset);
+
+        this.numberHorizontalApertures = 1;
+        this.aperturesList = [];
+
+        for(var horizontalIndex = 0;horizontalIndex < this.numberHorizontalApertures;horizontalIndex++) {
+            // Loop through each column 
+            for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
+                var nextApertureCenter = {x:tesselationOriginPosition.x,y:  verticalIndex*hexTesselationVerticalOffset};
+                this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor));
+                console.log(this.aperturesList[verticalIndex].apertureCenter.y)
+            }
+            console.log("after   loop")
+            console.log(this.aperturesList[0].apertureCenter.y)
+            console.log(this.aperturesList[1].apertureCenter.y)
+            console.log(this.aperturesList[2].apertureCenter.y)
+        }
+        console.log(this.aperturesList.length)
+        console.log(this.aperturesList[0].apertureCenter.y)
+    }
+
+    toPixelsOfApothem(percentageOfApothem) {
+        return ((percentageOfApothem/100.0)*this.hexagonalApothem);
+    }
+    
+    drawTesselation() {
+        for(var horizontalIndex = 0;horizontalIndex < (this.numberHorizontalApertures);horizontalIndex++) {
+            // Loop through each column 
+            for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
+                // console.log(this.aperturesList[verticalIndex+horizontalIndex].apertureCenter.y)
+
+                if(!this.aperturesList[verticalIndex+horizontalIndex].doneShrinking) {
+                    this.aperturesList[verticalIndex+horizontalIndex].shrinkAnimationStep();
+                }
+                
+                if(this.aperturesList[verticalIndex+horizontalIndex].doneShrinking && !this.aperturesList[verticalIndex+horizontalIndex].doneOpeningEdge) {
+                    this.aperturesList[verticalIndex+horizontalIndex].edgeOpenAnimationStep();
+                }
+                
+                if(this.aperturesList[verticalIndex+horizontalIndex].doneOpeningEdge && !this.aperturesList[verticalIndex+horizontalIndex].doneOpeningApertureHole){
+                    this.aperturesList[verticalIndex+horizontalIndex].openAnimationStep();
+                }
+                
+                if(this.aperturesList[verticalIndex+horizontalIndex].doneOpeningApertureHole) {
+                    this.aperturesList[verticalIndex+horizontalIndex].drawCurrent();
+                }
+            }
+        }
+
+    }
+
+}
 // TODO set parameter for apeture constructor to has a duration of open/close/shrink instead of a pixels per frame speed based on the FPS and percentges
 
 let firstHexApothem = window.innerWidth/6;
 let shrinkPercent = 90;
 let openPercent = 60;
-let edgePercent = 7;
+let edgePercent = 6;
 let shrinkSpeed = 0.3;
 let openSpeed = 0.5;
 let edgeSpeed = 0.1;
 let backColor = "gray";
 let frontColor = "black";
 
-var firstApeture = new aperture({x: window.innerWidth/2, y: window.innerHeight/2}, firstHexApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
+var firstTesselation = new apertureTesselation(projectThumbnailImagesPaths, {x: window.innerWidth/2, y: 0}, firstHexApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
+
+var firstApeture = new aperture( {x: window.innerWidth/2, y: window.innerHeight/2}, firstHexApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
@@ -349,7 +424,9 @@ function setupCanvas() {
 
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
+
     firstApeture.attachThumbnaiil(projectThumbnailImagesPaths[0]);
+
     // updateCanvasAnimations handles the sequence of the canvas animations
     updateCanvasAnimations();
 }
@@ -364,19 +441,6 @@ function drawBackground() {
     ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
 }
 
-// List of thumbnail images for each project bordered by hexagonal iris mechanism 
-projectThumbnailImagesPaths = [
-    '/images/fulls/LMBB v2.jpg',
-    'images/fulls/design-and-manufacturing-2-Yo-Yos.jpg',
-    'images/fulls/dont-stress-hoodie.jpg',
-    'images/fulls/LMBB v1.0.jpg',
-    'images/fulls/No-Cap-Hoodie.jpg',
-    'images/fulls/QUAD.PNG',
-    'images/fulls/youre-a-real-1-hoodie.jpg',
-    'images/fulls/ALEEgators.jpg',
-    'images/fulls/SatchPack-v1.jpg'
-    // Gazebo Walking Simulation
-];
 
 // Main Animation Loop using requestAnimationFrame function for each conditional on stage booleans declared above animation
 function updateCanvasAnimations() {
@@ -387,27 +451,22 @@ function updateCanvasAnimations() {
     // Reset the background
     drawBackground();
 
-    if(!firstApeture.doneShrinking) {
-        firstApeture.shrinkAnimationStep();
-    }
+    firstTesselation.drawTesselation();
+    // if(!firstApeture.doneShrinking) {
+    //     firstApeture.shrinkAnimationStep();
+    // }
     
-    if(firstApeture.doneShrinking && !firstApeture.doneOpeningEdge) {
-        firstApeture.edgeOpenAnimationStep();
-    }
+    // if(firstApeture.doneShrinking && !firstApeture.doneOpeningEdge) {
+    //     firstApeture.edgeOpenAnimationStep();
+    // }
     
-    if(firstApeture.doneOpeningEdge && !firstApeture.doneOpeningApertureHole){
-        firstApeture.openAnimationStep();
-    }
+    // if(firstApeture.doneOpeningEdge && !firstApeture.doneOpeningApertureHole){
+    //     firstApeture.openAnimationStep();
+    // }
     
-    if(firstApeture.doneOpeningApertureHole && (!firstApeture.doneClosingApertureHole || !firstApeture.doneClosingEdge)) {
-        firstApeture.closeAnimationStep();
-        firstApeture.edgeCloseAnimationStep();
-    }
-
-    if(firstApeture.doneClosingEdge) {
-        firstApeture.drawCurrent();
-    }
-
+    // if(firstApeture.doneOpeningApertureHole) {
+    //     firstApeture.drawCurrent();
+    // }
 
     // // drawHexagonTessalation draws the repeating pattern of hexagons and irisMechanisms dynamically
     // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
