@@ -72,6 +72,7 @@ class aperture {
         this.doneClosingApertureHole = false;
         this.projectThumbnail = null;
         this.projectThumbnailLoaded = false;
+        this.isNJLClosedAperture = false;
     }
 
     toPixelsOfApothem(percentageOfApothem) {
@@ -222,6 +223,19 @@ class aperture {
         }
         else {
             this.drawHexagon();
+            if(this.isNJLClosedAperture) {
+                ctx.fillStyle = backgroundColor;
+                console.log(Math.round(this.toPixelsOfApothem(65)).toString())
+                var fontSizeFractionOfApothem = Math.round(this.toPixelsOfApothem(70));
+                ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
+                var initials = 'njL';
+                var initialsWidth = ctx.measureText(initials).width;
+                var initialsHeight = fontSizeFractionOfApothem;
+                console.log("width: "+ initialsWidth);
+                console.log("height: "+ initialsHeight);
+                // ctx.fillText(initials, this.apertureCenter.x - (initialsWidth/2), this.apertureCenter.y + initialsHeight/2)
+                ctx.fillText(initials, this.apertureCenter.x - (initialsWidth/2), this.apertureCenter.y + (initialsHeight/4) )
+            }
         }
     }
 
@@ -387,16 +401,31 @@ class apertureTesselation {
             this.numberHorizontalApertures++;
         }
         
-        if(this.numberVerticalApertures%2 != 0) {
+        if(this.numberHorizontalApertures%2 != 0) {
             for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
                 var nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
                 if(this.numberHorizontalApertures%2 != 0) {
                     nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                 }
                 this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor));
+                this.aperturesList[this.aperturesList.length-1].isNJLClosedAperture = true;
             }
             this.numberHorizontalApertures++;
         }
+        else {
+            for(var njLColumns = 0;njLColumns < 2;njLColumns++) {
+                for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
+                    var nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
+                    if(this.numberHorizontalApertures%2 != 0) {
+                        nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
+                    }
+                    this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor));
+                    this.aperturesList[this.aperturesList.length-1].isNJLClosedAperture = true;
+                }
+                this.numberHorizontalApertures++;
+            }
+        }
+
     }
 
     toPixelsOfApothem(percentageOfApothem) {
@@ -440,19 +469,17 @@ class apertureTesselation {
 }
 // TODO set parameter for apeture constructor to has a duration of open/close/shrink instead of a pixels per frame speed based on the FPS and percentges
 
-let firstHexApothem = window.innerHeight/2.6;
 let shrinkPercent = 90;
 let openPercent = 60;
 let edgePercent = 6;
 let shrinkSpeed = 0.1;
 let openSpeed = 1;
 let edgeSpeed = 0.2;
-let backColor = "#00ff00";
+// let backColor = "#00ff00";
+let backColor = backgroundColor;
 let frontColor = "black";
 
-var mainApertureTesselation = new apertureTesselation(projectThumbnailImagesPaths, {x: 0, y: 0}, firstHexApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
-
-var firstApeture = new aperture( {x: window.innerWidth/2, y: window.innerHeight/2}, firstHexApothem, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
+var mainApertureTesselation = new apertureTesselation(projectThumbnailImagesPaths, {x: 0, y: 0}, window.innerHeight/2.6, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
@@ -460,8 +487,6 @@ function setupCanvas() {
 
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
-
-    firstApeture.attachThumbnaiil(projectThumbnailImagesPaths[0]);
 
     // updateCanvasAnimations handles the sequence of the canvas animations
     updateCanvasAnimations();
