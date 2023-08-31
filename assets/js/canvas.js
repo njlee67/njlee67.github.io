@@ -222,7 +222,6 @@ class aperture {
             this.drawHexagon();
             if(this.isNJLClosedAperture) {
                 ctx.fillStyle = backgroundColor;
-                console.log(Math.round(this.toPixelsOfApothem(65)).toString())
                 var fontSizeFractionOfApothem = Math.round(this.toPixelsOfApothem(70));
                 ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
                 var initials = 'njL';
