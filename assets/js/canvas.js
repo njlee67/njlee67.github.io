@@ -4,7 +4,7 @@ var ctx;
 
 // Global Variables
 // let backgroundColor = "#FEFF0B";
-let backgroundColor = "#00cc00";
+let backgroundColor = "#00ff00";
 // let backgroundColor = "#777777";
 
 // Animation Geometries that are incremented in updateCanvasAnimations() function to animate shapes
@@ -19,23 +19,20 @@ var hexagonApothem = Math.round(window.innerHeight/3);
 
 // List of thumbnail images for each project bordered by hexagonal iris mechanism 
 projectThumbnailImagesPaths = [
-    '/images/fulls/LMBB v2.jpg',
-    'images/fulls/design-and-manufacturing-2-Yo-Yos.jpg',
-    'images/fulls/dont-stress-hoodie.jpg',
-    'images/fulls/LMBB v1.0.jpg',
-    'images/fulls/No-Cap-Hoodie.jpg',
-    'images/fulls/QUAD.PNG',
-    'images/fulls/SatchPack-v1.jpg',
-    'images/fulls/youre-a-real-1-hoodie.jpg',
-    'images/fulls/ALEEgators.jpg'
+    '/images/thumbnails/LMBB v2.jpg',
+    'images/thumbnails/design-and-manufacturing-2-Yo-Yos.jpg',
+    'images/thumbnails/dont-stress-hoodie.jpg',
+    'images/thumbnails/LMBB v1.0.jpg',
+    'images/thumbnails/No-Cap-Hoodie.jpg',
+    'images/thumbnails/QUAD.PNG',
+    'images/thumbnails/SatchPack-v1.jpg',
+    'images/thumbnails/youre-a-real-1-hoodie.jpg',
+    'images/thumbnails/ALEEgators.jpg'
     // Gazebo Walking Simulation
 ];
 
 // apertureDistance is the distance from the center of a hexagon in the direction from the center of the hexagon to a vertex
 // iris animation is based on the iris mechanism similar to a camera shutter
-var aperturefullEdgeThickness = 15;
-var apertureopenedPercentage = 0;
-var apertureDistance = 0;
 
 class aperture {
     
@@ -231,10 +228,12 @@ class aperture {
                 var initials = 'njL';
                 var initialsWidth = ctx.measureText(initials).width;
                 var initialsHeight = fontSizeFractionOfApothem;
-                console.log("width: "+ initialsWidth);
-                console.log("height: "+ initialsHeight);
-                // ctx.fillText(initials, this.apertureCenter.x - (initialsWidth/2), this.apertureCenter.y + initialsHeight/2)
-                ctx.fillText(initials, this.apertureCenter.x - (initialsWidth/2), this.apertureCenter.y + (initialsHeight/4) )
+                ctx.fillText(initials, this.apertureCenter.x - (initialsWidth/2), this.apertureCenter.y + Math.round(this.toPixelsOfApothem(5)) )
+                fontSizeFractionOfApothem = Math.round(this.toPixelsOfApothem(20));
+                ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
+                var portfolioWidth = ctx.measureText('portfolio').width;
+                ctx.fillText('portfolio', this.apertureCenter.x - (portfolioWidth/2), this.apertureCenter.y + (Math.round(this.toPixelsOfApothem(45))) )
+
             }
         }
     }
@@ -472,7 +471,7 @@ class apertureTesselation {
 let shrinkPercent = 90;
 let openPercent = 60;
 let edgePercent = 6;
-let shrinkSpeed = 0.1;
+let shrinkSpeed = 0.2;
 let openSpeed = 1;
 let edgeSpeed = 0.2;
 // let backColor = "#00ff00";
@@ -517,128 +516,6 @@ function updateCanvasAnimations() {
     
     // Canvas Animation
     requestAnimationFrame(updateCanvasAnimations);
-}
-
-// drawHexagonTessalation() draws the repeating pattern of hexagons on the canvas with the origin at the startPosition
-function drawHexagonTessalation(tesselationRadii, color, overlapHexPadding, startPosition = {x: 0, y: 0}, angleOffset = Math.PI/6) {
-    // hexTesselationVerticalOffset is the vertical component of the vector from the center of one hexagon to an adjacent hexagon in a tessalation
-    var hexTesselationVerticalOffset = Math.sqrt(Math.pow(tesselationRadii, 2) - Math.pow(tesselationRadii/2, 2));
-
-    // hexTesselationHorizontalOffset is the horizontal component of the vector from the center of one hexagon to an adjacent hexagon in a tessalation
-    var hexTesselationHorizontalOffset = 1.5*tesselationRadii; 
-
-    // 1.5 * hexagonApothem per iteration, so divide window.innerWidth by (1.5*hexagonApothem) to find number of coumns needed to fill the width
-    let numberOfHexagonColumns = Math.ceil(window.innerWidth/(0.75*tesselationRadii)) +1;
-
-    // 2 * hexTesselationVerticalOffset per vertical iteration so divide window.innerHeight by (2*hexTesselationVerticalOffset) to find number of needed rows
-    let numberOfHexagonRows = Math.ceil(window.innerHeight/(2*hexTesselationVerticalOffset))+ 2;
-
-    // Nested for loop to iterate through drawing rows anf columns of each hexagon or iris mechanism depending on the stage of the animation sequence
-    // Loop through each row
-    var thumbNailIndex = imageCacheCurrentInut;
-    for(var verticalIndex = 0;verticalIndex < numberOfHexagonRows;verticalIndex++) {
-        // Loop through each column 
-        for(var horizontalIndex = 0;horizontalIndex < numberOfHexagonColumns;horizontalIndex++) {
-            // currentTessalationPosition uses the vertical and horizontal indices to determine the center of the hexagon or Iris in the tessalation
-            let currentTessalationPosition = {x: startPosition.x + (1.5*tesselationRadii) * horizontalIndex, y: startPosition.y + 2*hexTesselationVerticalOffset*(verticalIndex)};
-            
-            // If the horizontalIndexIsOdd then the loop will conditionally draw two hexagons or iris mechanisms -hexTesselationVerticalOffset
-            var horizontalIndexIsOdd = horizontalIndex % 2 > 0
-            if(horizontalIndexIsOdd) {
-                currentTessalationPosition.y -= hexTesselationVerticalOffset;
-            }
-
-            // Conditional animations based on the stage of the canvas animation sequence controlled with incremented/decremented variables in the main loop updateCanvasAnimation
-            // After the hexagons shrink animate the initial opening of the iris mechnisms
-            var removeThisBadVariableImageScaling = 1;
-            var irisBackdropColor = "red";
-            if(doneWithShrink && !doneWithIris) {
-                // drawHexagonBorderWindow
-		        // drawHexagonBorderWindow(hexagonApothem + overlapHexPadding, currentTessalationPosition, irisBackdropColor, shrinkHexSize*percentOfhexagonApothemIrisSize, -1);
-                ctx.drawImage(projectThumbnailImagesObjects[(imageCacheCurrentInut + thumbNailIndex)%projectThumbnailImagesObjects.length], currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
-                drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, apertureDistance - backdropApertureOffset, 0)
-                let tooHighOrLowInY = currentTessalationPosition.y < (0.5*tesselationRadii) || currentTessalationPosition.y > window.innerHeight - (0.5*tesselationRadii);
-                let tooRightOrLeft = currentTessalationPosition.x < (0.5*tesselationRadii) || (currentTessalationPosition.x > window.innerWidth - (0.5*tesselationRadii) );
-                
-                if(!tooHighOrLowInY && !tooRightOrLeft) {
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, apertureDistance, backdropApertureOffset)
-                }
-                else {
-                    drawHexagon(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, angleOffset);
-                }
-                
-                if(thumbNailIndex < numRadiiFitInWindowWidth-1) {
-                    thumbNailIndex++;
-                }
-                else {
-                    thumbNailIndex = 0;
-                }
-            }
-            else if(doneWithIris) {
-                let tooHighOrLowInY = currentTessalationPosition.y < (0.5*tesselationRadii) || currentTessalationPosition.y > window.innerHeight - (0.5*tesselationRadii);
-                
-                
-                let tooRightOrLeft = currentTessalationPosition.x < apertureDistance || (currentTessalationPosition.x > window.innerWidth - apertureDistance && currentTessalationPosition.x < window.innerWidth );
-                
-                // Left edge of screen
-                if(currentTessalationPosition.x < apertureDistance && currentTessalationPosition.x > backdropApertureOffset && !tooHighOrLowInY) {
-                    ctx.drawImage(projectThumbnailImagesObjects[imageCacheCurrentInut + thumbNailIndex], currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, Math.abs(currentTessalationPosition.x%apertureDistance) - backdropApertureOffset, 0);
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, Math.abs(currentTessalationPosition.x%apertureDistance), backdropApertureOffset);
-                    if(thumbNailIndex < numRadiiFitInWindowWidth - 1) {
-                        thumbNailIndex++;
-                    }
-                    else {
-                        thumbNailIndex = 0;
-                        console.log(thumbNailIndex);
-                    }
-                }
-                // right edge of screen
-                else if(currentTessalationPosition.x > window.innerWidth - apertureDistance && currentTessalationPosition.x < window.innerWidth - backdropApertureOffset && !tooHighOrLowInY) {
-                    console.log("imageCacheCurrentInut: " + imageCacheCurrentInut + " thumbNailIndex: " + thumbNailIndex);
-                    ctx.drawImage(projectThumbnailImagesObjects[imageCacheCurrentInut + thumbNailIndex], currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, ((window.innerWidth) - currentTessalationPosition.x) - backdropApertureOffset, 0);
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, ((window.innerWidth) - currentTessalationPosition.x), backdropApertureOffset);
-                    if(thumbNailIndex < numRadiiFitInWindowWidth -1  ) {
-                        thumbNailIndex++;
-                    }
-                    else {
-                        thumbNailIndex = 0;
-                    }
-                }
-                
-                else if((currentTessalationPosition.x >= window.innerWidth - backdropApertureOffset || currentTessalationPosition.x <= backdropApertureOffset) && !tooHighOrLowInY) {
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, 0, 0);
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, backdropApertureOffset, backdropApertureOffset)
-                    // drawHexagon(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, angleOffset);
-                }
-                // just hexagons at top screen
-                else if(tooHighOrLowInY) {
-                    // drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, 0, 0);
-                    // drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color,-4)
-                    drawHexagon(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, angleOffset);
-                }
-                // Fully opened irises mid screen
-                else {
-                    console.log("imageCacheCurrentInut: " + imageCacheCurrentInut + " thumbNailIndex: " + thumbNailIndex);
-                    ctx.drawImage(projectThumbnailImagesObjects[imageCacheCurrentInut + thumbNailIndex], currentTessalationPosition.x - removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, currentTessalationPosition.y - img.height*(removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*removeThisBadVariableImageScaling*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, irisBackdropColor, apertureDistance - backdropApertureOffset, 0);
-                    drawIrisTriangles(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, apertureDistance, backdropApertureOffset);
-                    if(thumbNailIndex < numRadiiFitInWindowWidth-1 ) {
-                        thumbNailIndex++;
-                    }
-                    else {
-                        thumbNailIndex = 0;
-                    }
-
-                }
-                // console.log(projectThumbnailImagesObjects.length);
-            }
-            else {
-                drawHexagon(tesselationRadii + overlapHexPadding, currentTessalationPosition, color, angleOffset);
-            }
-        }
-    }
 }
 
 // https://stackoverflow.com/questions/1484506/random-color-generator
