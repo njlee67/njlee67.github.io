@@ -41,13 +41,13 @@ class projectInfo {
     }
     
 }
-var lmbbV2 = new projectInfo(projectThumbnailImagesPaths[0], 'LMBB', 'v2.0', 'BT Speaker');
+var lmbbV2 = new projectInfo(projectThumbnailImagesPaths[0], 'LMBB v2', 'v2.0', 'BT Speaker');
 var yoyos = new projectInfo(projectThumbnailImagesPaths[1], '2.008 YoYos', '', 'Class Project');
 var noStress = new projectInfo(projectThumbnailImagesPaths[2], "Don't Stress", 'v1.0', 'Custom Apparel');
-var lmbbV1 = new projectInfo(projectThumbnailImagesPaths[3], 'LMBB', 'v1.0', 'BT Speaker');
+var lmbbV1 = new projectInfo(projectThumbnailImagesPaths[3], 'LMBB v1', 'v1.0', 'BT Speaker');
 var noCap = new projectInfo(projectThumbnailImagesPaths[4], 'No Cap', 'v1.0', 'Custom Apparel');
 var QUAD = new projectInfo(projectThumbnailImagesPaths[5], 'QUAD', 'v1.0', 'Legged Robot');
-var satchPackV1 = new projectInfo(projectThumbnailImagesPaths[6], 'SatchPack', 'v1.0', 'Satchel/Backpack');
+var satchPackV1 = new projectInfo(projectThumbnailImagesPaths[6], 'SatchPack', 'v1.0', 'Backpack/Desk');
 var uAreal1 = new projectInfo(projectThumbnailImagesPaths[7], 'Ur a Real 1', 'v1.0', 'Custom Apparel');
 var ALEEgators = new projectInfo(projectThumbnailImagesPaths[8], 'ALEEgators', 'v1.0', 'Custom Footwear');
 
@@ -102,6 +102,7 @@ class aperture {
         this.projectThumbnailLoaded = false;
         this.isNJLClosedAperture = false;
         this.projectInfoObject = null;
+        this.projectTextCurrentFadeValue = 0;
     }
 
     toPixelsOfApothem(percentageOfApothem) {
@@ -154,6 +155,23 @@ class aperture {
                 this.currentEdgeThickness = this.fullEdgeThickness;
             }
 
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    checkIfProjectInfoIsFadedIn(setProjectInfoTextTransparency) {
+        let setProjectInfoTextTransparencyOutsideLimits = setProjectInfoTextTransparency < 0 || setProjectInfoTextTransparency > 255;
+
+        if(setProjectInfoTextTransparencyOutsideLimits) {
+            if(setProjectInfoTextTransparencyOutsideLimits < 0) {
+                this.projectTextCurrentFadeValue = 0;
+            }
+            else if(setProjectInfoTextTransparencyOutsideLimits > 255) {
+                this.projectTextCurrentFadeValue = 255;
+            }
             return true;
         }
         else {
@@ -221,6 +239,17 @@ class aperture {
             this.drawCurrent();
         }
     }
+
+    fadeProjectinfoTextAnimationStep() {
+        var speedOfFade = 2;
+        this.doneFadeInProjectInfoText = this.checkIfProjectInfoIsFadedIn(this.projectTextCurrentFadeValue + speedOfFade);
+
+        if(!this.doneFadeInProjectInfoText) {
+            this.projectTextCurrentFadeValue += speedOfFade;
+            // this.projectTextCurrentFadeValue = Math.floor(this.projectTextCurrentFadeValue);
+            this.drawCurrent();
+        }
+    }
     
     setOpenedPercentage(setOpenPercentageTo) {
 
@@ -272,7 +301,12 @@ class aperture {
     }
 
     drawProjectInfo() {
-        ctx.fillStyle = backgroundColor;
+        if(this.projectTextCurrentFadeValue.toString(16).length > 1) {
+            ctx.fillStyle = backgroundColor + this.projectTextCurrentFadeValue.toString(16);
+        }
+        else {
+            ctx.fillStyle = backgroundColor + '0' + this.projectTextCurrentFadeValue.toString(16);
+        }
         var projectInfoTextSize = this.fullEdgeThickness*2.5;
         ctx.font = projectInfoTextSize.toString() + "px Arial";
         var projectNameText = this.projectInfoObject.projectName;
@@ -283,7 +317,6 @@ class aperture {
 
         ctx.fillText(projectNameText, this.apertureCenter.x - this.fullyShrunkenSize/2 + 0*projectNameWidth/2 + this.fullEdgeThickness, this.apertureCenter.y + projectNameHeight/2 - (Math.sqrt(3)/2)*((this.fullyShrunkenSize + this.fullyOpenedDistance)/2));
         
-        ctx.fillStyle = backgroundColor;
         var projectThemeTextSize = this.fullEdgeThickness*1.9;
         ctx.font = projectThemeTextSize.toString() + "px Arial";
         var projectTopicWidth = ctx.measureText(this.projectInfoObject.projectInfo).width;
@@ -546,10 +579,15 @@ class apertureTesselation {
                 this.aperturesList[apertureIndex].openAnimationStep();
             }
             
-            if(this.aperturesList[apertureIndex].doneOpeningApertureHole) {
+            if(this.aperturesList[apertureIndex].doneOpeningApertureHole && !this.aperturesList[apertureIndex].doneFadeInProjectInfoText) {
+                this.aperturesList[apertureIndex].fadeProjectinfoTextAnimationStep();
+            }
+
+            if(this.aperturesList[apertureIndex].doneFadeInProjectInfoText) {
                 this.aperturesList[apertureIndex].drawCurrent();
                 this.scrollToLeftAnimationStep();
             }
+
         }
 
     }
