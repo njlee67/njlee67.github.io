@@ -31,6 +31,37 @@ projectThumbnailImagesPaths = [
     // Gazebo Walking Simulation
 ];
 
+
+class projectInfo {
+    constructor(relativeFilePath, projectName, projectVersion, projectTopic) {
+        this.relativeFilePath = relativeFilePath;
+        this.projectName = projectName;
+        this.projectVersion = projectVersion;
+        this.projectTopic = projectTopic;
+    }
+    
+}
+var lmbbV2 = new projectInfo(projectThumbnailImagesPaths[0], 'LMBB v2', 'v2.0', 'BT Speaker');
+var yoyos = new projectInfo(projectThumbnailImagesPaths[1], '2.008 YoYos', '', 'Class Project');
+var noStress = new projectInfo(projectThumbnailImagesPaths[2], "Don't Stress", 'v1.0', 'Custom Apparel');
+var lmbbV1 = new projectInfo(projectThumbnailImagesPaths[3], 'LMBB v1', 'v1.0', 'BT Speaker');
+var noCap = new projectInfo(projectThumbnailImagesPaths[4], 'No Cap', 'v1.0', 'Custom Apparel');
+var QUAD = new projectInfo(projectThumbnailImagesPaths[5], 'QUAD', 'v1.0', 'Legged Robot');
+var satchPackV1 = new projectInfo(projectThumbnailImagesPaths[6], 'SatchPack', 'v1.0', 'Backpack/Desk');
+var uAreal1 = new projectInfo(projectThumbnailImagesPaths[7], 'Ur a Real 1', 'v1.0', 'Custom Apparel');
+var ALEEgators = new projectInfo(projectThumbnailImagesPaths[8], 'ALEEgators', 'v1.0', 'Custom Footwear');
+
+var projectInfoObjectList = [
+lmbbV1,
+yoyos,
+noStress,
+lmbbV2,
+noCap,
+QUAD,
+satchPackV1,
+uAreal1,
+ALEEgators
+]
 // apertureDistance is the distance from the center of a hexagon in the direction from the center of the hexagon to a vertex
 // iris animation is based on the iris mechanism similar to a camera shutter
 
@@ -70,6 +101,8 @@ class aperture {
         this.projectThumbnail = null;
         this.projectThumbnailLoaded = false;
         this.isNJLClosedAperture = false;
+        this.projectInfoObject = null;
+        this.projectTextCurrentFadeValue = 0;
     }
 
     toPixelsOfApothem(percentageOfApothem) {
@@ -122,6 +155,23 @@ class aperture {
                 this.currentEdgeThickness = this.fullEdgeThickness;
             }
 
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    checkIfProjectInfoIsFadedIn(setProjectInfoTextTransparency) {
+        let setProjectInfoTextTransparencyOutsideLimits = setProjectInfoTextTransparency < 0 || setProjectInfoTextTransparency > 255;
+
+        if(setProjectInfoTextTransparencyOutsideLimits) {
+            if(setProjectInfoTextTransparencyOutsideLimits < 0) {
+                this.projectTextCurrentFadeValue = 0;
+            }
+            else if(setProjectInfoTextTransparencyOutsideLimits > 255) {
+                this.projectTextCurrentFadeValue = 255;
+            }
             return true;
         }
         else {
@@ -189,6 +239,17 @@ class aperture {
             this.drawCurrent();
         }
     }
+
+    fadeProjectinfoTextAnimationStep() {
+        var speedOfFade = 2;
+        this.doneFadeInProjectInfoText = this.checkIfProjectInfoIsFadedIn(this.projectTextCurrentFadeValue + speedOfFade);
+
+        if(!this.doneFadeInProjectInfoText) {
+            this.projectTextCurrentFadeValue += speedOfFade;
+            // this.projectTextCurrentFadeValue = Math.floor(this.projectTextCurrentFadeValue);
+            this.drawCurrent();
+        }
+    }
     
     setOpenedPercentage(setOpenPercentageTo) {
 
@@ -217,6 +278,8 @@ class aperture {
         }
         if(this.projectThumbnail != null && this.currentOpenedDistance > 0) {
             this.drawForegroundAperatureQuadrilaterals();
+            this.drawHexagonBorderWindow();
+            this.drawProjectInfo()
         }
         else {
             this.drawHexagon();
@@ -237,6 +300,31 @@ class aperture {
         }
     }
 
+    drawProjectInfo() {
+        if(this.projectTextCurrentFadeValue.toString(16).length > 1) {
+            ctx.fillStyle = backgroundColor + this.projectTextCurrentFadeValue.toString(16);
+        }
+        else {
+            ctx.fillStyle = backgroundColor + '0' + this.projectTextCurrentFadeValue.toString(16);
+        }
+        var projectInfoTextSize = this.fullEdgeThickness*2.5;
+        ctx.font = projectInfoTextSize.toString() + "px Arial";
+        var projectNameText = this.projectInfoObject.projectName;
+        projectNameText.bold();
+        var projectNameWidth = ctx.measureText(projectNameText).width;
+        var projectNameHeight = ctx.measureText(projectNameText).actualBoundingBoxAscent + ctx.measureText(projectNameText).actualBoundingBoxDescent;
+        // console.log(projectNameHeight)
+
+        ctx.fillText(projectNameText, this.apertureCenter.x - this.fullyShrunkenSize/2 + 0*projectNameWidth/2 + this.fullEdgeThickness, this.apertureCenter.y + projectNameHeight/2 - (Math.sqrt(3)/2)*((this.fullyShrunkenSize + this.fullyOpenedDistance)/2));
+        
+        var projectThemeTextSize = this.fullEdgeThickness*1.9;
+        ctx.font = projectThemeTextSize.toString() + "px Arial";
+        var projectTopicWidth = ctx.measureText(this.projectInfoObject.projectInfo).width;
+        var projectTopicHeight = ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxAscent + ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxDescent;
+
+        ctx.fillText(this.projectInfoObject.projectTopic, this.apertureCenter.x - this.fullyShrunkenSize/6 + 0*projectTopicWidth/2 + this.fullEdgeThickness, this.apertureCenter.y + projectTopicHeight/4 + (Math.sqrt(3)/2)*((this.fullyShrunkenSize + this.fullyOpenedDistance)/2));
+    }
+
     setApertureCenter(newApertureCenter) {
         this.apertureCenter = newApertureCenter;
     }
@@ -254,6 +342,41 @@ class aperture {
     
         ctx.closePath();
         ctx.fill();
+    }
+
+    drawHexagonBorderWindow() {
+        
+        for(let vertex = 0;vertex < 6;vertex++) {
+            ctx.fillStyle = this.foregroundColor;
+            ctx.beginPath();
+            
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem variable
+            let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
+            
+            // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
+            let parallelToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
+            
+            // perpindicularToSideUnitVectorPrev is the unit vector with a magnitude of 1
+            let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
+            
+            // Draw the lines that make up each quadrilateral
+            ctx.moveTo(this.apertureCenter.x + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.x - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.x,
+                         this.apertureCenter.y + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.y - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.y);
+        
+            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVectorPrev.x - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.x, 
+                        this.apertureCenter.y + this.fullyShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVectorPrev.y - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.y);
+            
+            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
+                        this.apertureCenter.y + this.fullyShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
+        
+            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenSize*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.x, 
+                        this.apertureCenter.y + this.fullyShrunkenSize*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.y);
+                        
+            ctx.closePath();
+            ctx.fill();
+        }
+
+    
     }
 
     drawForegroundAperatureQuadrilaterals() {
@@ -296,7 +419,7 @@ class aperture {
         // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.fillStyle = this.backgroundColor;
+            ctx.fillStyle = 'red';
             ctx.beginPath();
     
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
@@ -331,12 +454,12 @@ class aperture {
 
     // TODO: make the tesselation as long as needed to fit all thumbnail project 
     // images and travel that distance when scrolling left/right to se all and not have to have a shifting cache then reset transition
-    attachThumbnaiil(relativeFilePath) {
+    attachThumbnaiil(projectInfoObject) {
         this.projectThumbnail = new Image();
         this.projectThumbnail.onload = function(){ 
         };
-        this.projectThumbnail.src = relativeFilePath;
-        
+        this.projectThumbnail.src = projectInfoObject.relativeFilePath;
+        this.projectInfoObject = projectInfoObject;
     }
     
     drawThumbnail() {
@@ -363,7 +486,7 @@ class aperture {
 }
 
 class apertureTesselation {
-    constructor(thumbnailRelativeImagePathList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor) {
+    constructor(projectInfoList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor) {
         this.tesselationOriginPosition = tesselationOriginPosition;
         this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(hexagonalApothem, 2) - Math.pow(hexagonalApothem/2, 2));
         this.hexTesselationHorizontalOffset = 1.5*hexagonalApothem; 
@@ -373,10 +496,10 @@ class apertureTesselation {
         this.numberHorizontalApertures = 0;
         this.aperturesList = [];
 
-        this.thumbnailRelativeImagePathList = thumbnailRelativeImagePathList;
+        this.projectInfoList = projectInfoList;
 
 
-        var numberOfThumnailsWithoutAnAperture = this.thumbnailRelativeImagePathList.length;
+        var numberOfThumnailsWithoutAnAperture = this.projectInfoList.length;
 
         while(numberOfThumnailsWithoutAnAperture > 0) {
             var nextColumnInitialIndex = this.numberHorizontalApertures * this.numberVerticalApertures;
@@ -392,7 +515,7 @@ class apertureTesselation {
                 let nextApertureIsTooLowForThumbnail = this.aperturesList[verticalIndex + nextColumnInitialIndex].apertureCenter.y > window.innerHeight - this.hexTesselationVerticalOffset/2;
 
                 if(!nextApertureIsTooHighForThumbnail && !nextApertureIsTooLowForThumbnail) {
-                    this.aperturesList[verticalIndex + nextColumnInitialIndex].attachThumbnaiil(thumbnailRelativeImagePathList[thumbnailRelativeImagePathList.length - numberOfThumnailsWithoutAnAperture]);
+                    this.aperturesList[verticalIndex + nextColumnInitialIndex].attachThumbnaiil(projectInfoList[projectInfoList.length - numberOfThumnailsWithoutAnAperture]);
                     numberOfThumnailsWithoutAnAperture--;
                 }
             }
@@ -456,10 +579,15 @@ class apertureTesselation {
                 this.aperturesList[apertureIndex].openAnimationStep();
             }
             
-            if(this.aperturesList[apertureIndex].doneOpeningApertureHole) {
+            if(this.aperturesList[apertureIndex].doneOpeningApertureHole && !this.aperturesList[apertureIndex].doneFadeInProjectInfoText) {
+                this.aperturesList[apertureIndex].fadeProjectinfoTextAnimationStep();
+            }
+
+            if(this.aperturesList[apertureIndex].doneFadeInProjectInfoText) {
                 this.aperturesList[apertureIndex].drawCurrent();
                 this.scrollToLeftAnimationStep();
             }
+
         }
 
     }
@@ -469,7 +597,7 @@ class apertureTesselation {
 
 let shrinkPercent = 90;
 let openPercent = 60;
-let edgePercent = 6;
+let edgePercent = 4;
 let shrinkSpeed = 0.2;
 let openSpeed = 1;
 let edgeSpeed = 0.2;
@@ -477,7 +605,7 @@ let edgeSpeed = 0.2;
 let backColor = backgroundColor;
 let frontColor = "black";
 
-var mainApertureTesselation = new apertureTesselation(projectThumbnailImagesPaths, {x: 0, y: 0}, window.innerHeight/2.6, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
+var mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: 0}, window.innerHeight/2.6, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
