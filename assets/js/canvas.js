@@ -235,6 +235,7 @@ class aperture {
 
             }
         }
+        this.drawHexagonBorderWindow();
     }
 
     setApertureCenter(newApertureCenter) {
@@ -254,6 +255,41 @@ class aperture {
     
         ctx.closePath();
         ctx.fill();
+    }
+
+    drawHexagonBorderWindow() {
+        
+        for(let vertex = 0;vertex < 6;vertex++) {
+            ctx.fillStyle = this.foregroundColor;
+            ctx.beginPath();
+            
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem variable
+            let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
+            
+            // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
+            let parallelToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
+            
+            // perpindicularToSideUnitVectorPrev is the unit vector with a magnitude of 1
+            let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
+            
+            // Draw the lines that make up each quadrilateral
+            ctx.moveTo(this.apertureCenter.x + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.x - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.x,
+                         this.apertureCenter.y + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.y - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.y);
+        
+            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVectorPrev.x - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.x, 
+                        this.apertureCenter.y + this.fullyShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVectorPrev.y - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.y);
+            
+            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
+                        this.apertureCenter.y + this.fullyShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
+        
+            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenSize*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.x, 
+                        this.apertureCenter.y + this.fullyShrunkenSize*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.y);
+                        
+            ctx.closePath();
+            ctx.fill();
+        }
+
+    
     }
 
     drawForegroundAperatureQuadrilaterals() {
@@ -296,7 +332,7 @@ class aperture {
         // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.fillStyle = this.backgroundColor;
+            ctx.fillStyle = 'red';
             ctx.beginPath();
     
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
@@ -469,7 +505,7 @@ class apertureTesselation {
 
 let shrinkPercent = 90;
 let openPercent = 60;
-let edgePercent = 6;
+let edgePercent = 4;
 let shrinkSpeed = 0.2;
 let openSpeed = 1;
 let edgeSpeed = 0.2;
