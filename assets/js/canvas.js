@@ -235,6 +235,7 @@ class aperture {
 
             }
         }
+        this.drawHexagonBorderWindow();
     }
 
     setApertureCenter(newApertureCenter) {
@@ -254,6 +255,41 @@ class aperture {
     
         ctx.closePath();
         ctx.fill();
+    }
+
+    drawHexagonBorderWindow() {
+        
+        for(let vertex = 0;vertex < 6;vertex++) {
+            ctx.fillStyle = this.foregroundColor;
+            ctx.beginPath();
+            
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem variable
+            let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
+            
+            // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
+            let parallelToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
+            
+            // perpindicularToSideUnitVectorPrev is the unit vector with a magnitude of 1
+            let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
+            
+            // Draw the lines that make up each quadrilateral
+            ctx.moveTo(this.apertureCenter.x + (this.fullyShrunkenSize - this.fullEdgeThickness)*parallelToSideUnitVector.x - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.x,
+                         this.apertureCenter.y + (this.fullyShrunkenSize - this.fullEdgeThickness)*parallelToSideUnitVector.y - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.y);
+        
+            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - this.fullEdgeThickness)*parallelToSideUnitVectorPrev.x - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.x, 
+                        this.apertureCenter.y + this.fullyShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - this.fullEdgeThickness)*parallelToSideUnitVectorPrev.y - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.y);
+            
+            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
+                        this.apertureCenter.y + this.fullyShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
+        
+            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenSize*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - this.fullEdgeThickness)*parallelToSideUnitVector.x, 
+                        this.apertureCenter.y + this.fullyShrunkenSize*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - this.fullEdgeThickness)*parallelToSideUnitVector.y);
+                        
+            ctx.closePath();
+            ctx.fill();
+        }
+
+    
     }
 
     drawForegroundAperatureQuadrilaterals() {
