@@ -240,16 +240,16 @@ class aperture {
         }
     }
 
-    fadeProjectinfoTextAnimationStep() {
-        var speedOfFade = 2;
-        this.doneFadeInProjectInfoText = this.checkIfProjectInfoIsFadedIn(this.projectTextCurrentFadeValue + speedOfFade);
+    // fadeProjectinfoTextAnimationStep() {
+    //     var speedOfFade = 2;
+    //     this.doneFadeInProjectInfoText = this.checkIfProjectInfoIsFadedIn(this.projectTextCurrentFadeValue + speedOfFade);
 
-        if(!this.doneFadeInProjectInfoText) {
-            this.projectTextCurrentFadeValue += speedOfFade;
-            // this.projectTextCurrentFadeValue = Math.floor(this.projectTextCurrentFadeValue);
-            this.drawCurrent();
-        }
-    }
+    //     if(!this.doneFadeInProjectInfoText) {
+    //         this.projectTextCurrentFadeValue += speedOfFade;
+    //         // this.projectTextCurrentFadeValue = Math.floor(this.projectTextCurrentFadeValue);
+    //         this.drawCurrent();
+    //     }
+    // }
     
     setOpenedPercentage(setOpenPercentageTo) {
 
@@ -269,6 +269,9 @@ class aperture {
     }
 
     drawCurrent() {
+        if(this.projectThumbnail != null) {
+            this.drawProjectInfo()
+        }
         if(this.projectThumbnail != null && this.currentOpenedDistance > 0) {
             this.drawThumbnail();
         }
@@ -279,7 +282,6 @@ class aperture {
         if(this.projectThumbnail != null && this.currentOpenedDistance > 0) {
             this.drawForegroundAperatureQuadrilaterals();
             this.drawHexagonBorderWindow();
-            this.drawProjectInfo()
         }
         else {
             this.drawHexagon();
@@ -302,27 +304,26 @@ class aperture {
 
     drawProjectInfo() {
         if(this.projectTextCurrentFadeValue.toString(16).length > 1) {
-            ctx.fillStyle = backgroundColor + this.projectTextCurrentFadeValue.toString(16);
+            ctx.fillStyle = this.foregroundColor; 
         }
         else {
-            ctx.fillStyle = backgroundColor + '0' + this.projectTextCurrentFadeValue.toString(16);
+            ctx.fillStyle = this.foregroundColor;
         }
         var projectInfoTextSize = this.fullEdgeThickness*2.5;
-        ctx.font = projectInfoTextSize.toString() + "px Arial";
+        ctx.font = '900 ' + projectInfoTextSize.toString() + "px Arial";
+       
         var projectNameText = this.projectInfoObject.projectName;
-        projectNameText.bold();
         var projectNameWidth = ctx.measureText(projectNameText).width;
         var projectNameHeight = ctx.measureText(projectNameText).actualBoundingBoxAscent + ctx.measureText(projectNameText).actualBoundingBoxDescent;
         // console.log(projectNameHeight)
 
-        ctx.fillText(projectNameText, this.apertureCenter.x - this.fullyShrunkenSize/2 + 0*projectNameWidth/2 + this.fullEdgeThickness, this.apertureCenter.y + projectNameHeight/2 - (Math.sqrt(3)/2)*((this.fullyShrunkenSize + this.fullyOpenedDistance)/2));
+        ctx.fillText(projectNameText, this.apertureCenter.x -  projectNameWidth/2, this.apertureCenter.y + projectNameHeight/2 - (Math.sqrt(3)/2)*((this.hexagonalApothem)));
         
-        var projectThemeTextSize = this.fullEdgeThickness*1.9;
-        ctx.font = projectThemeTextSize.toString() + "px Arial";
-        var projectTopicWidth = ctx.measureText(this.projectInfoObject.projectInfo).width;
+        var projectThemeTextSize = this.fullEdgeThickness*2.5;
+        var projectTopicWidth = ctx.measureText(this.projectInfoObject.projectTopic).width;
         var projectTopicHeight = ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxAscent + ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxDescent;
 
-        ctx.fillText(this.projectInfoObject.projectTopic, this.apertureCenter.x - this.fullyShrunkenSize/6 + 0*projectTopicWidth/2 + this.fullEdgeThickness, this.apertureCenter.y + projectTopicHeight/4 + (Math.sqrt(3)/2)*((this.fullyShrunkenSize + this.fullyOpenedDistance)/2));
+        ctx.fillText(this.projectInfoObject.projectTopic, this.apertureCenter.x - projectTopicWidth/2, this.apertureCenter.y + projectTopicHeight/2 +  (Math.sqrt(3)/2)*((this.hexagonalApothem)));
     }
 
     setApertureCenter(newApertureCenter) {
@@ -419,7 +420,7 @@ class aperture {
         // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.fillStyle = 'red';
+            ctx.fillStyle = 'lightblue';
             ctx.beginPath();
     
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
@@ -550,8 +551,8 @@ class apertureTesselation {
         // Adding one more row on top so that the tesselation gets extended to the gap for projectInfotext
         for(var horizontalIndex = 0;horizontalIndex < this.numberHorizontalApertures;horizontalIndex++) {
             var nextApertureCenter = {x:this.tesselationOriginPosition.x + (horizontalIndex+1)*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y -0.5* this.hexTesselationVerticalOffset};
-            if(this.numberHorizontalApertures%2 != 0) {
-                nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
+            if(horizontalIndex%2 != 0) {
+                nextApertureCenter.y -= this.hexTesselationVerticalOffset/2;
             }
             this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor));
             this.aperturesList[this.aperturesList.length-1].isNJLClosedAperture = true;
@@ -589,11 +590,11 @@ class apertureTesselation {
                 this.aperturesList[apertureIndex].openAnimationStep();
             }
             
-            if(this.aperturesList[apertureIndex].doneOpeningApertureHole && !this.aperturesList[apertureIndex].doneFadeInProjectInfoText) {
-                this.aperturesList[apertureIndex].fadeProjectinfoTextAnimationStep();
-            }
+            // if(this.aperturesList[apertureIndex].doneOpeningApertureHole && !this.aperturesList[apertureIndex].doneFadeInProjectInfoText) {
+            //     this.aperturesList[apertureIndex].fadeProjectinfoTextAnimationStep();
+            // }
 
-            if(this.aperturesList[apertureIndex].doneFadeInProjectInfoText) {
+            if(this.aperturesList[apertureIndex].doneOpeningApertureHole) {
                 this.aperturesList[apertureIndex].drawCurrent();
                 this.scrollToLeftAnimationStep();
             }
@@ -615,7 +616,7 @@ let edgeSpeed = 0.2;
 let backColor = backgroundColor;
 let frontColor = "black";
 
-var mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: 40}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
+var mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
