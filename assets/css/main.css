@@ -321,8 +321,9 @@ input, select, textarea {
 			grid-row: 1;
 			grid-column: 1;
 			overflow: hidden;
+            font-weight: bolder;
 		}
-
+      
 /* Scroll Zone */
 
 	.scrollZone {
