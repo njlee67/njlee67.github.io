@@ -546,6 +546,16 @@ class apertureTesselation {
                 this.numberHorizontalApertures++;
             }
         }
+        
+        // Adding one more row on top so that the tesselation gets extended to the gap for projectInfotext
+        for(var horizontalIndex = 0;horizontalIndex < this.numberHorizontalApertures;horizontalIndex++) {
+            var nextApertureCenter = {x:this.tesselationOriginPosition.x + (horizontalIndex+1)*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y -0.5* this.hexTesselationVerticalOffset};
+            if(this.numberHorizontalApertures%2 != 0) {
+                nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
+            }
+            this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor));
+            this.aperturesList[this.aperturesList.length-1].isNJLClosedAperture = true;
+        }
 
     }
 
@@ -605,7 +615,7 @@ let edgeSpeed = 0.2;
 let backColor = backgroundColor;
 let frontColor = "black";
 
-var mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: 0}, window.innerHeight/2.6, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
+var mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: 40}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
