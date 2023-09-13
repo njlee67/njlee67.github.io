@@ -487,11 +487,11 @@ class aperture {
 }
 
 class apertureTesselation {
-    constructor(projectInfoList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor) {
+    constructor(projectInfoList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor, maximumScrollPixelsPerFrame) {
         this.tesselationOriginPosition = tesselationOriginPosition;
         this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(hexagonalApothem, 2) - Math.pow(hexagonalApothem/2, 2));
         this.hexTesselationHorizontalOffset = 1.5*hexagonalApothem; 
-
+        this.maximumScrollPixelsPerFrame = maximumScrollPixelsPerFrame;
         this.numberVerticalApertures = Math.ceil((window.innerHeight - this.tesselationOriginPosition.y)/this.hexTesselationVerticalOffset) + 1;
 
         this.numberHorizontalApertures = 0;
@@ -564,10 +564,10 @@ class apertureTesselation {
         return ((percentageOfApothem/100.0)*this.hexagonalApothem);
     }
     
-    scrollToLeftAnimationStep() {
+    scrollToLeftAnimationStep(scrollSpeedInPercentageGlobal) {
         for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
             if(this.aperturesList[0].apertureCenter.x > -(this.hexTesselationHorizontalOffset * this.numberHorizontalApertures)) {
-                this.aperturesList[apertureIndex].apertureCenter.x -= 0.1;
+                this.aperturesList[apertureIndex].apertureCenter.x += Math.abs(this.maximumScrollPixelsPerFrame)*scrollSpeedInPercentageGlobal;
             }
 
             if(this.aperturesList[apertureIndex].apertureCenter.x < -(this.hexTesselationHorizontalOffset)) {
@@ -596,7 +596,8 @@ class apertureTesselation {
 
             if(this.aperturesList[apertureIndex].doneOpeningApertureHole) {
                 this.aperturesList[apertureIndex].drawCurrent();
-                this.scrollToLeftAnimationStep();
+                console.log("scrollspeedPercent: " + scrollSpeedInPercentage);
+                this.scrollToLeftAnimationStep(scrollSpeedInPercentage);
             }
 
         }
@@ -616,7 +617,7 @@ let edgeSpeed = 0.2;
 let backColor = backgroundColor;
 let frontColor = "black";
 
-var mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor);
+var mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor, 0.2);
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
@@ -625,8 +626,47 @@ function setupCanvas() {
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
 
+    mainCanvas.addEventListener('mousemove', onPointerMove);
+
     // updateCanvasAnimations handles the sequence of the canvas animations
     updateCanvasAnimations();
+}
+
+function getEventLocation(e)
+{
+    if (e.touches && e.touches.length == 1) {
+        return { 
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY
+        }
+    }
+    else if (e.clientX && e.clientY) {
+        return {
+            x: e.clientX,
+            y: e.clientY
+        }
+    }
+}
+
+var scrollSpeedInPercentage = -0.5;
+
+function onPointerMove(e) {
+    var mouseLocationOnMove = getEventLocation(e);
+
+    if(mouseLocationOnMove != undefined && mouseLocationOnMove != null) {
+        if(mouseLocationOnMove.x > (2/3)*mainCanvas.width) {
+            scrollSpeedInPercentage = ((mouseLocationOnMove.x-((2/3)*mainCanvas.width))/((1/3)*mainCanvas.width))
+            console.log("scroll right at " + scrollSpeedInPercentage);
+        }
+        else if(mouseLocationOnMove.x < (1/3)*mainCanvas.width) {
+            scrollSpeedInPercentage = -(1-(mouseLocationOnMove.x/((1/3)*mainCanvas.width)))
+            console.log("scroll left at " + scrollSpeedInPercentage);
+        }
+        else {
+            scrollSpeedInPercentage = 0;
+            console.log("no scroll at " + scrollSpeedInPercentage);
+        }
+    }
 }
 
 // Ensures setupCanvas() is run only once
