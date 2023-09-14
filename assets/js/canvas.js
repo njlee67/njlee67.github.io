@@ -315,7 +315,6 @@ class aperture {
         var projectNameText = this.projectInfoObject.projectName;
         var projectNameWidth = ctx.measureText(projectNameText).width;
         var projectNameHeight = ctx.measureText(projectNameText).actualBoundingBoxAscent + ctx.measureText(projectNameText).actualBoundingBoxDescent;
-        // console.log(projectNameHeight)
 
         ctx.fillText(projectNameText, this.apertureCenter.x -  projectNameWidth/2, this.apertureCenter.y + projectNameHeight/2 - (Math.sqrt(3)/2)*((this.hexagonalApothem)));
         
@@ -420,7 +419,7 @@ class aperture {
         // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.fillStyle = 'lightblue';
+            ctx.fillStyle = '#bb0000';
             ctx.beginPath();
     
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
@@ -498,7 +497,6 @@ class apertureTesselation {
         this.aperturesList = [];
 
         this.projectInfoList = projectInfoList;
-
 
         var numberOfThumnailsWithoutAnAperture = this.projectInfoList.length;
 
@@ -600,7 +598,6 @@ class apertureTesselation {
 
             if(this.aperturesList[apertureIndex].doneOpeningApertureHole) {
                 this.aperturesList[apertureIndex].drawCurrent();
-                console.log("scrollspeedPercent: " + scrollSpeedInPercentage);
                 this.scrollToLeftAnimationStep(scrollSpeedInPercentage);
             }
 
@@ -614,14 +611,17 @@ class apertureTesselation {
 let shrinkPercent = 90;
 let openPercent = 60;
 let edgePercent = 4;
-let shrinkSpeed = 0.2;
-let openSpeed = 1;
+let shrinkSpeed = 0.075;
+let openSpeed = 0.5;
 let edgeSpeed = 0.2;
 // let backColor = "#00ff00";
 let backColor = backgroundColor;
 let frontColor = "black";
 
 var mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor, 0.2);
+
+var initialPageOpenTime = new Date();
+let delayInitialPauseTimeInSeconds = 1; 
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
@@ -632,6 +632,7 @@ function setupCanvas() {
 
     mainCanvas.addEventListener('mousemove', onPointerMove);
 
+    initialPageOpenTime = new Date();
     // updateCanvasAnimations handles the sequence of the canvas animations
     updateCanvasAnimations();
 }
@@ -660,15 +661,12 @@ function onPointerMove(e) {
     if(mouseLocationOnMove != undefined && mouseLocationOnMove != null) {
         if(mouseLocationOnMove.x > (2/3)*mainCanvas.width) {
             scrollSpeedInPercentage = ((mouseLocationOnMove.x-((2/3)*mainCanvas.width))/((1/3)*mainCanvas.width))
-            console.log("scroll right at " + scrollSpeedInPercentage);
         }
         else if(mouseLocationOnMove.x < (1/3)*mainCanvas.width) {
             scrollSpeedInPercentage = -(1-(mouseLocationOnMove.x/((1/3)*mainCanvas.width)))
-            console.log("scroll left at " + scrollSpeedInPercentage);
         }
         else {
             scrollSpeedInPercentage = 0;
-            console.log("no scroll at " + scrollSpeedInPercentage);
         }
     }
 }
@@ -677,9 +675,9 @@ function onPointerMove(e) {
 window.addEventListener('load', setupCanvas);
 
 // Draws background rectangle on the canvas
-function drawBackground() {
+function drawBackground(color = backgroundColor) {
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    ctx.fillStyle = backgroundColor;
+    ctx.fillStyle = color;
     ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
 }
 
@@ -690,10 +688,15 @@ function updateCanvasAnimations() {
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
 
+    var endInitialPauseTimer = new Date();
     // Reset the background
-    drawBackground();
-
-    mainApertureTesselation.drawTesselation();
+    if((endInitialPauseTimer.getTime()) - initialPageOpenTime.getTime() > 1500) {
+        drawBackground();
+        mainApertureTesselation.drawTesselation();
+    }
+    else {
+        drawBackground("black");
+    }
     // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
     
     // Canvas Animation
