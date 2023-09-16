@@ -1,36 +1,15 @@
-// Declare Canvas and Context Objects
-var mainCanvas;
-var ctx;
+'use strict';
 
-// Global Variables
-// let backgroundColor = "#FEFF0B";
+// Declare Canvas and Context Objects
+let mainCanvas;
+let ctx;
+
+// Global letiables
 let backgroundColor = "gray";
-// let backgroundColor = "#777777";
 
 // Animation Geometries that are incremented in updateCanvasAnimations() function to animate shapes
 // hexagonApothem is the distance from the center to a vertex of fully tesselated hexagons at the load screen 
-var hexagonApothem = Math.round(window.innerHeight/3);
-
-// overlapHexPadding is a fraction of the hexagonApothem to remove the thin line that shows the background during the iris mechanism animation
-// var overlapHexPadding = Math.round(hexagonApothem/20);
-
-// dynamicOverlapHexPadding is a variable that is decremented each frame to shrink the black hexagons at page loading
-// var dynamicOverlapHexPadding = overlapHexPadding;
-
-// List of thumbnail images for each project bordered by hexagonal iris mechanism 
-projectThumbnailImagesPaths = [
-    '/images/thumbnails/LMBB v2.jpg',
-    'images/thumbnails/design-and-manufacturing-2-Yo-Yos.jpg',
-    'images/thumbnails/dont-stress-hoodie.jpg',
-    'images/thumbnails/LMBB v1.0.jpg',
-    'images/thumbnails/No-Cap-Hoodie.jpg',
-    'images/thumbnails/QUAD.PNG',
-    'images/thumbnails/SatchPack-v1.jpg',
-    'images/thumbnails/youre-a-real-1-hoodie.jpg',
-    'images/thumbnails/ALEEgators.jpg'
-    // Gazebo Walking Simulation
-];
-
+let hexagonApothem = Math.round(window.innerHeight/3);
 
 class projectInfo {
     constructor(relativeFilePath, projectName, projectVersion, projectTopic) {
@@ -41,17 +20,17 @@ class projectInfo {
     }
     
 }
-var lmbbV2 = new projectInfo(projectThumbnailImagesPaths[0], 'LMBB v2', 'v2.0', 'BT Speaker');
-var yoyos = new projectInfo(projectThumbnailImagesPaths[1], '2.008 YoYos', '', 'Class Project');
-var noStress = new projectInfo(projectThumbnailImagesPaths[2], "Don't Stress", 'v1.0', 'Custom Apparel');
-var lmbbV1 = new projectInfo(projectThumbnailImagesPaths[3], 'LMBB v1', 'v1.0', 'BT Speaker');
-var noCap = new projectInfo(projectThumbnailImagesPaths[4], 'No Cap', 'v1.0', 'Custom Apparel');
-var QUAD = new projectInfo(projectThumbnailImagesPaths[5], 'QUAD', 'v1.0', 'Legged Robot');
-var satchPackV1 = new projectInfo(projectThumbnailImagesPaths[6], 'SatchPack', 'v1.0', 'Backpack/Desk');
-var uAreal1 = new projectInfo(projectThumbnailImagesPaths[7], 'Ur a Real 1', 'v1.0', 'Custom Apparel');
-var ALEEgators = new projectInfo(projectThumbnailImagesPaths[8], 'ALEEgators', 'v1.0', 'Custom Footwear');
+let lmbbV2 = new projectInfo('/images/thumbnails/LMBB v2.jpg', 'LMBB v2', 'v2.0', 'BT Speaker');
+let yoyos = new projectInfo('images/thumbnails/design-and-manufacturing-2-Yo-Yos.jpg', '2.008 YoYos', '', 'Class Project');
+let noStress = new projectInfo('images/thumbnails/dont-stress-hoodie.jpg', "Don't Stress", 'v1.0', 'Custom Apparel');
+let lmbbV1 = new projectInfo('images/thumbnails/LMBB v1.0.jpg', 'LMBB v1', 'v1.0', 'BT Speaker');
+let noCap = new projectInfo('images/thumbnails/No-Cap-Hoodie.jpg', 'No Cap', 'v1.0', 'Custom Apparel');
+let QUAD = new projectInfo('images/thumbnails/QUAD.PNG', 'QUAD', 'v1.0', 'Legged Robot');
+let satchPackV1 = new projectInfo('images/thumbnails/SatchPack-v1.jpg', 'SatchPack', 'v1.0', 'Backpack/Desk');
+let uAreal1 = new projectInfo('images/thumbnails/youre-a-real-1-hoodie.jpg', 'Ur a Real 1', 'v1.0', 'Custom Apparel');
+let ALEEgators = new projectInfo('images/thumbnails/ALEEgators.jpg', 'ALEEgators', 'v1.0', 'Custom Footwear');
 
-var projectInfoObjectList = [
+let projectInfoObjectList = [
 lmbbV1,
 yoyos,
 noStress,
@@ -72,17 +51,17 @@ class aperture {
 
         this.hexagonalApothem = hexagonalApothem;
 
-        // Constant Variables
+        // Constant letiables
         this.fullyShrunkenSize = this.toPixelsOfApothem(fullyShrunkenPercentage);
         this.fullyOpenedDistance = this.toPixelsOfApothem(fullyOpenedPercentage);
         this.fullEdgeThickness = this.toPixelsOfApothem(fullEdgeThicknessPercentage);
 
-        // Dynamic Variables
+        // Dynamic letiables
         this.currentShrunkenSize = hexagonalApothem;
         this.currentOpenedDistance = 0;
         this.currentEdgeThickness = 0;
 
-        // Animation Speed Variables
+        // Animation Speed letiables
         this.shrinkPixelsPerFrame = this.toPixelsOfApothem(shrinkPercentagePerFrame);
         this.openPixelsPerFrame = this.toPixelsOfApothem(openPercentagePerFrame);
         this.edgePixelsPerFrame = this.toPixelsOfApothem(edgePercentagePerFrame);
@@ -91,7 +70,7 @@ class aperture {
         this.foregroundColor = foregroundColor;
         this.backgroundColor = backgroundColor;
 
-        // Animation stage variables
+        // Animation stage letiables
         this.doneShrinking = false;
         this.doneExpanding = false;
         this.doneOpeningEdge = false;
@@ -241,7 +220,7 @@ class aperture {
     }
 
     // fadeProjectinfoTextAnimationStep() {
-    //     var speedOfFade = 2;
+    //     let speedOfFade = 2;
     //     this.doneFadeInProjectInfoText = this.checkIfProjectInfoIsFadedIn(this.projectTextCurrentFadeValue + speedOfFade);
 
     //     if(!this.doneFadeInProjectInfoText) {
@@ -287,15 +266,15 @@ class aperture {
             this.drawHexagon();
             if(this.isNJLClosedAperture) {
                 ctx.fillStyle = backgroundColor;
-                var fontSizeFractionOfApothem = Math.round(this.toPixelsOfApothem(70));
+                let fontSizeFractionOfApothem = Math.round(this.toPixelsOfApothem(70));
                 ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
-                var initials = 'njL';
-                var initialsWidth = ctx.measureText(initials).width;
-                var initialsHeight = fontSizeFractionOfApothem;
+                let initials = 'njL';
+                let initialsWidth = ctx.measureText(initials).width;
+                let initialsHeight = fontSizeFractionOfApothem;
                 ctx.fillText(initials, this.apertureCenter.x - (initialsWidth/2), this.apertureCenter.y + Math.round(this.toPixelsOfApothem(5)) )
                 fontSizeFractionOfApothem = Math.round(this.toPixelsOfApothem(20));
                 ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
-                var portfolioWidth = ctx.measureText('portfolio').width;
+                let portfolioWidth = ctx.measureText('portfolio').width;
                 ctx.fillText('portfolio', this.apertureCenter.x - (portfolioWidth/2), this.apertureCenter.y + (Math.round(this.toPixelsOfApothem(45))) )
 
             }
@@ -309,18 +288,18 @@ class aperture {
         else {
             ctx.fillStyle = this.foregroundColor;
         }
-        var projectInfoTextSize = this.fullEdgeThickness*2.5;
+        let projectInfoTextSize = this.fullEdgeThickness*2.5;
         ctx.font = '900 ' + projectInfoTextSize.toString() + "px Arial";
        
-        var projectNameText = this.projectInfoObject.projectName;
-        var projectNameWidth = ctx.measureText(projectNameText).width;
-        var projectNameHeight = ctx.measureText(projectNameText).actualBoundingBoxAscent + ctx.measureText(projectNameText).actualBoundingBoxDescent;
+        let projectNameText = this.projectInfoObject.projectName;
+        let projectNameWidth = ctx.measureText(projectNameText).width;
+        let projectNameHeight = ctx.measureText(projectNameText).actualBoundingBoxAscent + ctx.measureText(projectNameText).actualBoundingBoxDescent;
 
         ctx.fillText(projectNameText, this.apertureCenter.x -  projectNameWidth/2, this.apertureCenter.y + projectNameHeight/2 - (Math.sqrt(3)/2)*((this.hexagonalApothem)));
         
-        var projectThemeTextSize = this.fullEdgeThickness*2.5;
-        var projectTopicWidth = ctx.measureText(this.projectInfoObject.projectTopic).width;
-        var projectTopicHeight = ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxAscent + ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxDescent;
+        let projectThemeTextSize = this.fullEdgeThickness*2.5;
+        let projectTopicWidth = ctx.measureText(this.projectInfoObject.projectTopic).width;
+        let projectTopicHeight = ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxAscent + ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxDescent;
 
         ctx.fillText(this.projectInfoObject.projectTopic, this.apertureCenter.x - projectTopicWidth/2, this.apertureCenter.y + projectTopicHeight/2 +  (Math.sqrt(3)/2)*((this.hexagonalApothem)));
     }
@@ -350,7 +329,7 @@ class aperture {
             ctx.fillStyle = this.foregroundColor;
             ctx.beginPath();
             
-            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem variable
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem letiable
             let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
             
             // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
@@ -389,7 +368,7 @@ class aperture {
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
             // so when the irisMechanismDistance is 0 the irisMechanism animation is completely closed and when it  = hexagonApothem it is completely open but we use it as a border, so it never equals the hexagonApothem
     
-            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem variable
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem letiable
             let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
             
             // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
@@ -419,13 +398,13 @@ class aperture {
         // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.fillStyle = '#aaaaaa'; 
+            ctx.fillStyle = '#ff0000'; 
             ctx.beginPath();
     
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
             // so when the irisMechanismDistance is 0 the irisMechanism animation is completely closed and when it  = hexagonApothem it is completely open but we use it as a border, so it never equals the hexagonApothem
     
-            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem variable
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem letiable
             let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
             
             // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
@@ -464,8 +443,8 @@ class aperture {
     
     drawThumbnail() {
         if(this.projectThumbnail != null) {
-            var croppedWidth = this.projectThumbnail.width;
-            var croppedHeight = (Math.sqrt(3)/2) * croppedWidth;
+            let croppedWidth = this.projectThumbnail.width;
+            let croppedHeight = (Math.sqrt(3)/2) * croppedWidth;
 
             if(this.projectThumbnail.width > this.projectThumbnail.height) {
                 croppedHeight = (Math.sqrt(3)/2) * croppedWidth;
@@ -498,13 +477,13 @@ class apertureTesselation {
 
         this.projectInfoList = projectInfoList;
 
-        var numberOfThumnailsWithoutAnAperture = this.projectInfoList.length;
+        let numberOfThumnailsWithoutAnAperture = this.projectInfoList.length;
 
         while(numberOfThumnailsWithoutAnAperture > 0) {
-            var nextColumnInitialIndex = this.numberHorizontalApertures * this.numberVerticalApertures;
+            let nextColumnInitialIndex = this.numberHorizontalApertures * this.numberVerticalApertures;
             // Loop through each column 
-            for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
-                var nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
+            for(let verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
+                let nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
                 if(this.numberHorizontalApertures%2 != 0) {
                     nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                 }
@@ -522,8 +501,8 @@ class apertureTesselation {
         }
         
         if(this.numberHorizontalApertures%2 != 0) {
-            for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
-                var nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
+            for(let verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
+                let nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
                 if(this.numberHorizontalApertures%2 != 0) {
                     nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                 }
@@ -533,9 +512,9 @@ class apertureTesselation {
             this.numberHorizontalApertures++;
         }
         else {
-            for(var njLColumns = 0;njLColumns < 2;njLColumns++) {
-                for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
-                    var nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
+            for(let njLColumns = 0;njLColumns < 2;njLColumns++) {
+                for(let verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
+                    let nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
                     if(this.numberHorizontalApertures%2 != 0) {
                         nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                     }
@@ -547,8 +526,8 @@ class apertureTesselation {
         }
         
         // Adding one more row on top so that the tesselation gets extended to the gap for projectInfotext
-        for(var horizontalIndex = 0;horizontalIndex < this.numberHorizontalApertures;horizontalIndex++) {
-            var nextApertureCenter = {x:this.tesselationOriginPosition.x + (horizontalIndex+1)*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y -0.5* this.hexTesselationVerticalOffset};
+        for(let horizontalIndex = 0;horizontalIndex < this.numberHorizontalApertures;horizontalIndex++) {
+            let nextApertureCenter = {x:this.tesselationOriginPosition.x + (horizontalIndex+1)*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y -0.5* this.hexTesselationVerticalOffset};
             if(horizontalIndex%2 != 0) {
                 nextApertureCenter.y -= this.hexTesselationVerticalOffset/2;
             }
@@ -579,7 +558,7 @@ class apertureTesselation {
     }
 
     drawTesselation() {
-        for(var apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
+        for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
             if(!this.aperturesList[apertureIndex].doneShrinking) {
                 this.aperturesList[apertureIndex].shrinkAnimationStep();
             }
@@ -618,9 +597,9 @@ let edgeSpeed = 0.2;
 let backColor = backgroundColor;
 let frontColor = "black";
 
-var mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor, 0.2);
+let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor, 0.2);
 
-var initialPageOpenTime = new Date();
+let initialPageOpenTime = new Date();
 let delayInitialPauseTimeInSeconds = 1; 
 
 function setupCanvas() {
@@ -653,10 +632,10 @@ function getEventLocation(e)
     }
 }
 
-var scrollSpeedInPercentage = -0.5;
+let scrollSpeedInPercentage = -0.5;
 
 function onPointerMove(e) {
-    var mouseLocationOnMove = getEventLocation(e);
+    let mouseLocationOnMove = getEventLocation(e);
 
     if(mouseLocationOnMove != undefined && mouseLocationOnMove != null) {
         if(mouseLocationOnMove.x > (2/3)*mainCanvas.width) {
@@ -688,7 +667,7 @@ function updateCanvasAnimations() {
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
 
-    var endInitialPauseTimer = new Date();
+    let endInitialPauseTimer = new Date();
     // Reset the background
     if((endInitialPauseTimer.getTime()) - initialPageOpenTime.getTime() > 1500) {
         drawBackground();
@@ -705,9 +684,9 @@ function updateCanvasAnimations() {
 
 // https://stackoverflow.com/questions/1484506/random-color-generator
 function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
+    let letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
       color += letters[Math.floor(Math.random() * 16)];
     }
     return color;
