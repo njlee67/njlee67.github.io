@@ -134,12 +134,12 @@ class aperture {
     }
 
     updateAnimationStageBooleans() {
-        this.doneShrinking = this.AnimationStages.Shrink.currentStageVariable <= this.fullyShrunkenHexagonSize;
-        this.doneExpanding = this.AnimationStages.Shrink.currentStageVariable >= this.hexagonalApothem;
-        this.doneOpeningEdge = this.AnimationStages.OpenEdge.currentStageVariable >= this.fullEdgeThickness;
-        this.doneClosingEdge = this.AnimationStages.OpenEdge.currentStageVariable <= 0;
-        this.doneOpeningApertureHole = this.AnimationStages.OpenHole.currentStageVariable >= this.fullyOpenedDistance;
-        this.doneClosingApertureHole = this.AnimationStages.OpenHole.currentStageVariable <= 0;
+        this.AnimationStages.Shrink.doneWithStageBoolean = this.AnimationStages.Shrink.currentStageVariable <= this.fullyShrunkenHexagonSize;
+        this.AnimationStages.Expand.doneWithStageBoolean = this.AnimationStages.Shrink.currentStageVariable >= this.hexagonalApothem;
+        this.AnimationStages.OpenEdge.doneWithStageBoolean = this.AnimationStages.OpenEdge.currentStageVariable >= this.fullEdgeThickness;
+        this.AnimationStages.CloseEdge.doneWithStageBoolean = this.AnimationStages.OpenEdge.currentStageVariable <= 0;
+        this.AnimationStages.OpenHole.doneWithStageBoolean = this.AnimationStages.OpenHole.currentStageVariable >= this.fullyOpenedDistance;
+        this.AnimationStages.CloseHole.doneWithStageBoolean = this.AnimationStages.OpenHole.currentStageVariable <= 0;
     }
 
     specificAnimationStageStep(AnimationStageEnum, alternatePixelsPerFrame = AnimationStageEnum.pixelsPerFrame) {
@@ -152,20 +152,12 @@ class aperture {
     
     drawCurrent() {
         if(this.projectThumbnail != null) {
-            this.drawProjectInfo()
-        }
-        if(this.projectThumbnail != null && this.AnimationStages.OpenHole.currentStageVariable > 0) {
+            this.drawProjectInfo();
             this.drawThumbnail();
-        }
-
-        if(this.projectThumbnail != null && this.AnimationStages.OpenEdge.currentStageVariable > 0) {
             this.drawBackgroundAperatureQuadrilaterals();
-        }
-        if(this.projectThumbnail != null && this.AnimationStages.OpenHole.currentStageVariable > 0) {
-            this.drawForegroundAperatureQuadrilaterals();
             this.drawHexagonBorderWindow();
-        }
-        else {
+            this.drawForegroundAperatureQuadrilaterals();
+        } else {
             this.drawHexagon();
             if(this.isNJLClosedAperture) {
                 ctx.fillStyle = edgeColor;
@@ -179,10 +171,24 @@ class aperture {
                 ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
                 let portfolioWidth = ctx.measureText('portfolio').width;
                 ctx.fillText('portfolio', this.apertureCenter.x - (portfolioWidth/2), this.apertureCenter.y + (Math.round(this.percentageToPixelsOfApothem(45))) )
-
+                
             }
         }
     }
+    // TODO: drawText()
+    // drawText(textString, percentageOfApothem, color, x_relative, y_relative) {
+    //     ctx.fillStyle = color;
+    //     let fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(percentageOfApothem));
+    //     ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
+    //     let textWidth = ctx.measureText(textString).width;
+    //     let textHeight = fontSizeFractionOfApothem;
+    //     ctx.fillText(textString, this.apertureCenter.x + x_relative, this.apertureCenter.y + y_relative);
+    //     fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(20));
+    //     ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
+    //     let portfolioWidth = ctx.measureText('portfolio').width;
+    //     ctx.fillText('portfolio', this.apertureCenter.x - (portfolioWidth/2), this.apertureCenter.y + (Math.round(this.percentageToPixelsOfApothem(45))) )
+
+    // }
 
     drawProjectInfo() {
         if(this.projectTextCurrentFadeValue.toString(16).length > 1) {
@@ -205,6 +211,11 @@ class aperture {
         let projectTopicHeight = ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxAscent + ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxDescent;
 
         ctx.fillText(this.projectInfoObject.projectTopic, this.apertureCenter.x - projectTopicWidth/2, this.apertureCenter.y + projectTopicHeight/2 +  (Math.sqrt(3)/2)*((this.hexagonalApothem)));
+    }
+
+    setAnimationVariable(setValue, AnimationStageEnum) {
+        AnimationStageEnum.currentStageVariable = setValue;
+        this.drawCurrent();
     }
 
     setApertureCenter(newApertureCenter) {
@@ -382,6 +393,7 @@ class apertureTesselation {
 
         let numberOfThumnailsWithoutAnAperture = this.projectInfoList.length;
 
+        // Using projectInfoObject.length determine how many total aperture/hexagon aperture class objects are needed
         while(numberOfThumnailsWithoutAnAperture > 0) {
             let nextColumnInitialIndex = this.numberHorizontalApertures * this.numberVerticalApertures;
             // Loop through each column 
@@ -403,6 +415,7 @@ class apertureTesselation {
             this.numberHorizontalApertures++;
         }
         
+        // Adding extra column if the number of columns in the tesselation is not even
         if(this.numberHorizontalApertures%2 != 0) {
             for(let verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
                 let nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
@@ -440,6 +453,7 @@ class apertureTesselation {
 
     }
 
+    // TODO: should really use the aperture class version of this duplicate
     percentageToPixelsOfApothem(percentageOfApothem) {
         return ((percentageOfApothem/100.0)*this.hexagonalApothem);
     }
@@ -462,26 +476,61 @@ class apertureTesselation {
 
     drawTesselation() {
         for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
-            if(!this.aperturesList[apertureIndex].doneShrinking) {
+            // if((this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullyOpenedDistance
+            // && this.aperturesList[apertureIndex].apertureCenter.x < mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance)
+            // || this.aperturesList[apertureIndex].projectThumbnail == null) {
+            if(!this.aperturesList[apertureIndex].AnimationStages.Shrink.doneWithStageBoolean) {
                 this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.Shrink);
             }
             
-            if(this.aperturesList[apertureIndex].doneShrinking && !this.aperturesList[apertureIndex].doneOpeningEdge) {
+            if(this.aperturesList[apertureIndex].AnimationStages.Shrink.doneWithStageBoolean && !this.aperturesList[apertureIndex].AnimationStages.OpenEdge.doneWithStageBoolean) {
                 this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenEdge);
                 this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole,this.aperturesList[apertureIndex].AnimationStages.OpenEdge.pixelsPerFrame);
             }
             
-            if(this.aperturesList[apertureIndex].doneOpeningEdge && !this.aperturesList[apertureIndex].doneOpeningApertureHole){
-                this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole);
+            if(this.aperturesList[apertureIndex].AnimationStages.OpenEdge.doneWithStageBoolean && !this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean){
+                if((this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullyOpenedDistance
+                && this.aperturesList[apertureIndex].apertureCenter.x < mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance)
+                || this.aperturesList[apertureIndex].projectThumbnail == null) {
+                    this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole);
+                }
+                else {
+                    if(this.aperturesList[apertureIndex].apertureCenter.x <= this.aperturesList[apertureIndex].fullyOpenedDistance){
+                        if(this.aperturesList[apertureIndex].AnimationStages.OpenHole.currentStageVariable <= this.aperturesList[apertureIndex].apertureCenter.x) {
+                            this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole);
+                        }
+                        else {
+                            this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean = true;
+                            this.aperturesList[apertureIndex].drawCurrent();
+                        }
+                    }else if(this.aperturesList[apertureIndex].apertureCenter.x >= mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance){
+                        if(this.aperturesList[apertureIndex].AnimationStages.OpenHole.currentStageVariable <= mainCanvas.width - this.aperturesList[apertureIndex].apertureCenter.x) {
+                            this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole);
+                        }
+                        else {
+                            this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean = true;
+
+                            this.aperturesList[apertureIndex].drawCurrent();
+                        }
+                    }
+                }
             }
 
-            if(this.aperturesList[apertureIndex].doneOpeningApertureHole) {
+            if(this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean) {
                 this.aperturesList[apertureIndex].drawCurrent();
+                if(this.aperturesList[apertureIndex].apertureCenter.x < this.aperturesList[apertureIndex].fullyOpenedDistance
+                && this.aperturesList[apertureIndex].apertureCenter.x > 0) {
+                        this.aperturesList[apertureIndex].setAnimationVariable(this.aperturesList[apertureIndex].apertureCenter.x, this.aperturesList[apertureIndex].AnimationStages.OpenHole);
+                    }
+                else if(this.aperturesList[apertureIndex].apertureCenter.x >=  mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance
+                && this.aperturesList[apertureIndex].apertureCenter.x <= mainCanvas.width) {
+                    this.aperturesList[apertureIndex].setAnimationVariable(mainCanvas.width - this.aperturesList[apertureIndex].apertureCenter.x, this.aperturesList[apertureIndex].AnimationStages.OpenHole);
+                }
                 this.scrollToLeftAnimationStep(scrollSpeedInPercentage);
             }
 
         }
-
+        
     }
 
 }
