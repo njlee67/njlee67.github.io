@@ -4,7 +4,7 @@ var ctx;
 
 // Global Variables
 // let backgroundColor = "#FEFF0B";
-let backgroundColor = "gray";
+let backgroundColor = "green";
 // let backgroundColor = "#777777";
 
 // Animation Geometries that are incremented in updateCanvasAnimations() function to animate shapes
@@ -419,7 +419,7 @@ class aperture {
         // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.fillStyle = '#aaaaaa'; 
+            ctx.fillStyle = 'red'; 
             ctx.beginPath();
     
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
