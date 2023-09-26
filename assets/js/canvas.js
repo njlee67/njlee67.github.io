@@ -563,11 +563,24 @@ let edgePercent = 4;
 let shrinkSpeed = 0.075;
 let openSpeed = 0.5;
 let edgeSpeed = 0.2;
-// let backColor = "#00ff00";
 let backColor = canvasBackDropColor;
 let frontColor = canvasForegroundColor;
 
 let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor, 0.2);
+
+// If a colorWheel element is clicked
+// using HSL color change the Hue based on the distance from the colorWheel to the top edge of the screen
+// The hue should adjust from it's original hue and overflow into red based on innerHeight
+
+// draw Rectangle button element to act as color wheel visual
+
+// create function called changeHue() to point to for onclick event for the button
+
+// in changeHue() callback/function:
+    // get mouse.y
+    // get currentHue of the colorWheel object and save it in previousHue variable
+    // set currentHue = (mouse.y/innerHeight) - previousHue;
+    // update the colors of the corresponding html elements
 
 let initialPageOpenTime = new Date();
 let delayInitialPauseTimeInSeconds = 1; 
@@ -582,6 +595,9 @@ function setupCanvas() {
     mainCanvas.addEventListener('mousemove', onPointerMove);
 
     initialPageOpenTime = new Date();
+    // let foregroundColorButton = document.getElementById("foregorundColorButt"); 
+    // mainCanvas.appendChild(foregroundColorButton);
+    
     // updateCanvasAnimations handles the sequence of the canvas animations
     updateCanvasAnimations();
 }

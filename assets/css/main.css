@@ -7,6 +7,43 @@
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
 
+#Graphics-Layer {
+    margin-top: 0px;
+}
+
+#UI-Layer {
+    position: absolute; /* Reposition logo from the natural layout */
+    left: 0px;
+    top: 0px;
+    z-index: 2;
+}
+.button {
+    border: none;
+    height: 100px;
+    width: 100px;
+    color: green;
+    padding: 16px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    z-index: 2;
+  }
+
+  .button1 {
+    background-color: green; 
+    color: black; 
+    border: 2px solid #4CAF50;
+  }
+  
+  .button1:hover {
+    background-color: #4CAF50;
+    color: white;
+  }
+
 html, body, div, span, applet, object,
 iframe, h1, h2, h3, h4, h5, h6, p, blockquote,
 pre, a, abbr, acronym, address, big, cite,
