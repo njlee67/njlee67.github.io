@@ -4,8 +4,9 @@
 let mainCanvas;
 let ctx;
 
-// Global letiables
-let edgeColor = "gray";
+// Global variables
+let canvasBackDropColor = "#00ff00";
+let canvasForegroundColor = "#000000";
 
 // hexagonApothem is the distance from the center to a vertex of fully tesselated hexagon/aperture when the screen loads 
 const hexagonApothem = Math.round(window.innerHeight/3);
@@ -160,7 +161,7 @@ class aperture {
         } else {
             this.drawHexagon();
             if(this.isNJLClosedAperture) {
-                ctx.fillStyle = edgeColor;
+                ctx.fillStyle = this.edgeColor;
                 let fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(70));
                 ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
                 let initials = 'njL';
@@ -479,21 +480,29 @@ class apertureTesselation {
             // if((this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullyOpenedDistance
             // && this.aperturesList[apertureIndex].apertureCenter.x < mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance)
             // || this.aperturesList[apertureIndex].projectThumbnail == null) {
+            // Shrink hexagons stage from fully black screen to black hexagons
             if(!this.aperturesList[apertureIndex].AnimationStages.Shrink.doneWithStageBoolean) {
                 this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.Shrink);
             }
             
+            // Done with shrink hexagon stage
+            // Starting open edge stage , aperture edges currently red open on apertures 
             if(this.aperturesList[apertureIndex].AnimationStages.Shrink.doneWithStageBoolean && !this.aperturesList[apertureIndex].AnimationStages.OpenEdge.doneWithStageBoolean) {
                 this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenEdge);
                 this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole,this.aperturesList[apertureIndex].AnimationStages.OpenEdge.pixelsPerFrame);
             }
             
+            // Done with open edge stage
+            // Starting open aperture stage , apertures on right and left sides of the screen 
+            // should only open apertures up to the screen edge to reveal project thumbnails
+            // No scrolling has started at this point
             if(this.aperturesList[apertureIndex].AnimationStages.OpenEdge.doneWithStageBoolean && !this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean){
+                // If the aperture in this iteration of the for loop through the list of apertures is not on the left edge or right edge while scrolling
                 if((this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullyOpenedDistance
-                && this.aperturesList[apertureIndex].apertureCenter.x < mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance)
-                || this.aperturesList[apertureIndex].projectThumbnail == null) {
+                && this.aperturesList[apertureIndex].apertureCenter.x < mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance)) {
                     this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole);
                 }
+                // Otherwise if current aperture in this for loop is on the left edge and is close enough to the edge to start closing the aperture at the edge
                 else {
                     if(this.aperturesList[apertureIndex].apertureCenter.x <= this.aperturesList[apertureIndex].fullyOpenedDistance){
                         if(this.aperturesList[apertureIndex].AnimationStages.OpenHole.currentStageVariable <= this.aperturesList[apertureIndex].apertureCenter.x) {
@@ -516,14 +525,26 @@ class apertureTesselation {
                 }
             }
 
+            // Done opening apertures and now dynamic user input scrolling has started
+            // Now when scrolling and an aperture reaches a threshold x value on the right/left sides of the screen 
+            // the aperture sets its hole opened distance to the distance from the apertureCenter to the right/left edge of the screen, so it
+            // looks like the screen edge is closing and opening them 
             if(this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean) {
                 this.aperturesList[apertureIndex].drawCurrent();
+
+                // If aperture center is past the threshold on the left
+                // AND it's greater than the aperture edge thickness on the left so that it doesn't close too far 
+                // set it to the distance from apertureCenter.x to the left edge 
                 if(this.aperturesList[apertureIndex].apertureCenter.x < this.aperturesList[apertureIndex].fullyOpenedDistance
-                && this.aperturesList[apertureIndex].apertureCenter.x > 0) {
-                        this.aperturesList[apertureIndex].setAnimationVariable(this.aperturesList[apertureIndex].apertureCenter.x, this.aperturesList[apertureIndex].AnimationStages.OpenHole);
-                    }
+                && this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullEdgeThickness) {
+                    this.aperturesList[apertureIndex].setAnimationVariable(this.aperturesList[apertureIndex].apertureCenter.x, this.aperturesList[apertureIndex].AnimationStages.OpenHole);
+                }
+
+                // If aperture center is past the threshold on the right
+                // AND it's greater than the aperture edge thickness on the right so that it doesn't close aperture hole too far making little points on hexagon vertices
+                // set it to the distance from apertureCenter.x to the right edge 
                 else if(this.aperturesList[apertureIndex].apertureCenter.x >=  mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance
-                && this.aperturesList[apertureIndex].apertureCenter.x <= mainCanvas.width) {
+                && this.aperturesList[apertureIndex].apertureCenter.x <= mainCanvas.width - this.aperturesList[apertureIndex].fullEdgeThickness) {
                     this.aperturesList[apertureIndex].setAnimationVariable(mainCanvas.width - this.aperturesList[apertureIndex].apertureCenter.x, this.aperturesList[apertureIndex].AnimationStages.OpenHole);
                 }
                 this.scrollToLeftAnimationStep(scrollSpeedInPercentage);
@@ -543,8 +564,8 @@ let shrinkSpeed = 0.075;
 let openSpeed = 0.5;
 let edgeSpeed = 0.2;
 // let backColor = "#00ff00";
-let backColor = edgeColor;
-let frontColor = "black";
+let backColor = canvasBackDropColor;
+let frontColor = canvasForegroundColor;
 
 let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor, 0.2);
 
@@ -603,12 +624,11 @@ function onPointerMove(e) {
 window.addEventListener('load', setupCanvas);
 
 // Draws background rectangle on the canvas
-function drawBackground(color = edgeColor) {
+function drawBackground(color = canvasBackDropColor) {
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
 }
-
 
 // Main Animation Loop using requestAnimationFrame function for each conditional on stage booleans declared above animation
 function updateCanvasAnimations() {
