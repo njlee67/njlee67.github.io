@@ -580,19 +580,6 @@ let edgeSpeed = 0.2;
 
 let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, canvasForegroundColor, apertureEdgeColor, 0.2);
 
-// If a colorWheel element is clicked
-// using HSL color change the Hue based on the distance from the colorWheel to the top edge of the screen
-// The hue should adjust from it's original hue and overflow into red based on innerHeight
-
-// draw Rectangle button element to act as color wheel visual
-
-// create function called changeHue() to point to for onclick event for the button
-
-// in changeHue() callback/function:
-    // get mouse.y
-    // get currentHue of the colorWheel object and save it in previousHue variable
-    // set currentHue = (mouse.y/innerHeight) - previousHue;
-    // update the colors of the corresponding html elements
 let initialPageOpenTime = new Date();
 let delayInitialPauseTimeInSeconds = 1; 
 
@@ -633,9 +620,9 @@ class hexagonColorSelector {
     }
 }
 
-let backgroundColorButton = new hexagonColorSelector({x: foreground_X + 2*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackDropColor);
+let backgroundColorButton = new hexagonColorSelector({x: foreground_X + 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackDropColor);
 
-let apertureEdgeColorButton = new hexagonColorSelector({x: foreground_X - 2*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor);
+let apertureEdgeColorButton = new hexagonColorSelector({x: foreground_X - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor);
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
@@ -647,6 +634,9 @@ function setupCanvas() {
     mainCanvas.addEventListener('mousemove', onPointerMove);
     mainCanvas.addEventListener('mousedown', onPointerDown);
     mainCanvas.addEventListener('mouseup', onPointerUp);
+    mainCanvas.addEventListener('touchstart', (e) => handleTouch(e, onPointerDown));
+    mainCanvas.addEventListener('touchend', (e) => handleTouch(e, onPointerUp));
+    mainCanvas.addEventListener('touchmove', (e) => handleTouch(e, onPointerMove));
 
     initialPageOpenTime = new Date();
     // let foregroundColorButton = document.getElementById("foregorundColorButt"); 
@@ -659,6 +649,7 @@ function setupCanvas() {
 function getEventLocation(e)
 {
     if (e.touches && e.touches.length === 1) {
+        // console.log('touch location: ('+  e.touches[0].clientX + ', ' + e.touches[0].clientY + ')')
         return { 
             x: e.touches[0].clientX,
             y: e.touches[0].clientY
@@ -674,10 +665,25 @@ function getEventLocation(e)
 
 let scrollSpeedInPercentage = -0.5;
 
+let globalPointerDown = false;
+
+let wasTouchEvent = false;
+
+function handleTouch(e, singleTouchHandler) {
+    e.preventDefault();
+    if (e.touches.length <= 1) {
+        singleTouchHandler(e);
+        wasTouchEvent = true;
+    }
+    // else if (e.type == "touchmove" && e.touches.length == 2) {
+    //     isDragging = false;
+    //     handlerPinch(e);
+    // }
+}
 
 function onPointerMove(e) {
     let mouseLocationOnMove = getEventLocation(e);
-
+    // console.log('touchmovin');
     if(mouseLocationOnMove != undefined && mouseLocationOnMove != null) {
         if(mouseLocationOnMove.x > (2/3)*mainCanvas.width) {
             scrollSpeedInPercentage = ((mouseLocationOnMove.x-((2/3)*mainCanvas.width))/((1/3)*mainCanvas.width))
@@ -688,35 +694,37 @@ function onPointerMove(e) {
         else {
             scrollSpeedInPercentage = 0;
         }
-    }
-
     
-    if(backgroundColorButton.pointerDown) {
-        let verticalColor = 360*(1 - (mouseLocationOnMove.y/window.innerHeight)) + getHueFromHexAColor(backgroundColorButton.previousColor);
-        
-        if(verticalColor > 360) {
-            verticalColor -= 360;
+        if(backgroundColorButton.pointerDown) {
+            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,backgroundColorButton.hexagonCenterPosition.y) /backgroundColorButton.hexagonCenterPosition.y, 0);
+            
+            let verticalColor = 360*(1 - mouseBoundedVertical) + getHueFromHexAColor(backgroundColorButton.previousColor);
+            
+            if(verticalColor > 360) {
+                verticalColor -= 360;
+            }
+            
+            let newColor = HSLToHex(verticalColor, 100, 50);
+            
+            backgroundColorButton.setNewHSLAColor(newColor);
+            canvasBackDropColor = newColor;
         }
 
-        let newColor = HSLToHex(verticalColor, 100, 50);
-        
-        backgroundColorButton.setNewHSLAColor(newColor);
-        canvasBackDropColor = newColor;
-    }
-    
-    if(apertureEdgeColorButton.pointerDown) {
-        let verticalColor = 360*(1 - (mouseLocationOnMove.y/window.innerHeight)) + getHueFromHexAColor(apertureEdgeColorButton.previousColor);
-        
-        if(verticalColor > 360) {
-            verticalColor -= 360;
+        if(apertureEdgeColorButton.pointerDown) {
+            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,backgroundColorButton.hexagonCenterPosition.y) /backgroundColorButton.hexagonCenterPosition.y, 0);
+            
+            let verticalColor = 360*(1 - mouseBoundedVertical) + getHueFromHexAColor(apertureEdgeColorButton.previousColor);
+            
+            if(verticalColor > 360) {
+                verticalColor -= 360;
+            }
+
+            let newColor = HSLToHex(verticalColor, 100, 50);
+            
+            apertureEdgeColorButton.setNewHSLAColor(newColor);
+            mainApertureTesselation.setTesselationEdgeColor(newColor);
         }
-
-        let newColor = HSLToHex(verticalColor, 100, 50);
-        
-        apertureEdgeColorButton.setNewHSLAColor(newColor);
-        mainApertureTesselation.setTesselationEdgeColor(newColor);
     }
-
 }
 
 // https://css-tricks.com/converting-color-spaces-in-javascript/
@@ -810,17 +818,36 @@ let pointerDown = false;
 
 function onPointerDown(e) {
     let mouseLocationOnDown = getEventLocation(e);
-
+    
+    globalPointerDown = true;
     if(Math.hypot(backgroundColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, backgroundColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < foregroundHexSize) {
+        console.log('touchDown in hex back')
         backgroundColorButton.pointerDown = true;
     }
-
+    
     if(Math.hypot(apertureEdgeColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, apertureEdgeColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < foregroundHexSize) {
+        console.log('touchDown in hex edge')
         apertureEdgeColorButton.pointerDown = true;
+    }
+
+    if(mouseLocationOnDown != undefined && mouseLocationOnDown != null) {
+        if(wasTouchEvent) {
+            if(mouseLocationOnDown.x > (2/3)*mainCanvas.width) {
+                scrollSpeedInPercentage = ((mouseLocationOnDown.x-((2/3)*mainCanvas.width))/((1/3)*mainCanvas.width))
+            }
+            else if(mouseLocationOnDown.x < (1/3)*mainCanvas.width) {
+                scrollSpeedInPercentage = -(1-(mouseLocationOnDown.x/((1/3)*mainCanvas.width)))
+            }
+            else {
+                scrollSpeedInPercentage = 0;
+            }
+        }
     }
 }
 
 function onPointerUp(e) {
+    globalPointerDown = false;
+    console.log('touchup')
     backgroundColorButton.pointerDown = false;
     backgroundColorButton.previousColor = backgroundColorButton.color;
 

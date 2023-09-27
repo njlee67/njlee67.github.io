@@ -9,6 +9,7 @@
 
 #Graphics-Layer {
     margin-top: 0px;
+    overflow: hidden;
 }
 
 #UI-Layer {
