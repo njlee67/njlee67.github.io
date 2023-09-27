@@ -584,7 +584,7 @@ let initialPageOpenTime = new Date();
 let delayInitialPauseTimeInSeconds = 1; 
 
 let foreground_X = window.innerWidth*0.50;
-let foreground_Y = window.innerHeight*0.9;
+let foreground_Y = window.innerHeight*0.85;
 let foregroundHexSize = window.innerHeight/12;
 let borderHexSize = window.innerHeight/10;
 let borderColor = "#ffffff00";
@@ -620,9 +620,9 @@ class hexagonColorSelector {
     }
 }
 
-let backgroundColorButton = new hexagonColorSelector({x: foreground_X + 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackDropColor);
+let backgroundColorButton = new hexagonColorSelector({x: 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackDropColor);
 
-let apertureEdgeColorButton = new hexagonColorSelector({x: foreground_X - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor);
+let apertureEdgeColorButton = new hexagonColorSelector({x: window.innerWidth - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor);
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
