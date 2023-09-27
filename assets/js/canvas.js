@@ -7,6 +7,7 @@ let ctx;
 // Global variables
 let canvasBackDropColor = "#00ff00";
 let canvasForegroundColor = "#000000";
+let apertureEdgeColor = '#ff0000';
 
 // hexagonApothem is the distance from the center to a vertex of fully tesselated hexagon/aperture when the screen loads 
 const hexagonApothem = Math.round(window.innerHeight/3);
@@ -127,7 +128,13 @@ class aperture {
         };
     }
     
-
+    setForegroundColor(newForegroundColor) {
+        this.foregroundColor = newForegroundColor;
+    }
+    
+    setEdgeColor(newEdgeColor) {
+        this.edgeColor = newEdgeColor;
+    }
 
     // Scale geometric variables based on percentage on the primary dimension, the hexagonalApothem
     percentageToPixelsOfApothem(percentageOfApothem) {
@@ -313,7 +320,7 @@ class aperture {
         // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.fillStyle = '#ff0000'; 
+            ctx.fillStyle = this.edgeColor; 
             ctx.beginPath();
     
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
@@ -386,7 +393,8 @@ class apertureTesselation {
         this.hexTesselationHorizontalOffset = 1.5*hexagonalApothem; 
         this.maximumScrollPixelsPerFrame = maximumScrollPixelsPerFrame;
         this.numberVerticalApertures = Math.ceil((window.innerHeight - this.tesselationOriginPosition.y)/this.hexTesselationVerticalOffset) + 1;
-
+        this.foregroundColor = foregroundColor;
+        this.edgeColor = edgeColor;
         this.numberHorizontalApertures = 0;
         this.aperturesList = [];
 
@@ -452,8 +460,14 @@ class apertureTesselation {
             this.aperturesList[this.aperturesList.length-1].isNJLClosedAperture = true;
         }
 
+        this.doneWithInitialOpeningApertures = false;
     }
 
+    setTesselationEdgeColor(newColor) {
+        for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
+            this.aperturesList[apertureIndex].setEdgeColor(newColor);
+        }
+    }
     // TODO: should really use the aperture class version of this duplicate
     percentageToPixelsOfApothem(percentageOfApothem) {
         return ((percentageOfApothem/100.0)*this.hexagonalApothem);
@@ -563,25 +577,71 @@ let edgePercent = 4;
 let shrinkSpeed = 0.075;
 let openSpeed = 0.5;
 let edgeSpeed = 0.2;
-// let backColor = "#00ff00";
-let backColor = canvasBackDropColor;
-let frontColor = canvasForegroundColor;
 
-let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor, 0.2);
+let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, canvasForegroundColor, apertureEdgeColor, 0.2);
 
 let initialPageOpenTime = new Date();
 let delayInitialPauseTimeInSeconds = 1; 
 
+let foreground_X = window.innerWidth*0.50;
+let foreground_Y = window.innerHeight*0.85;
+let foregroundHexSize = window.innerHeight/12;
+let borderHexSize = window.innerHeight/10;
+let borderColor = "#ffffff00";
+
+let fColorWheel = 'hsl(0, 100%, 50%)';
+
+class hexagonColorSelector {
+    constructor(hexagonCenterPosition, hexagonalApothem, initialColor) {
+        this.hexagonCenterPosition = hexagonCenterPosition;
+        this.hexagonApothem = hexagonalApothem;
+        this.color = initialColor;
+        this.previousColor = initialColor;
+        this.pointerDown = false;
+    }
+
+    drawColorSelector() {
+        ctx.fillStyle = this.color;
+        
+        // Draw hexagon filled shape using lineTo() and closePath() functions going from each vertex and back again in a loop
+        ctx.beginPath();
+        ctx.moveTo(this.hexagonCenterPosition.x + this.hexagonApothem*Math.sin(Math.PI/6), this.hexagonCenterPosition.y + this.hexagonApothem*Math.cos(Math.PI/6));
+    
+        for(let vertex = 0;vertex < 6;vertex++) {
+            ctx.lineTo(this.hexagonCenterPosition.x + this.hexagonApothem*Math.sin(vertex*Math.PI/3 + Math.PI/6), this.hexagonCenterPosition.y + this.hexagonApothem*Math.cos(vertex*Math.PI/3 + Math.PI/6));
+        }
+    
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    setNewHSLAColor(newHSLAColor) {
+        this.color = newHSLAColor;
+    }
+}
+
+let backgroundColorButton = new hexagonColorSelector({x: 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackDropColor);
+
+let apertureEdgeColorButton = new hexagonColorSelector({x: window.innerWidth - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor);
+
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
     ctx = mainCanvas.getContext("2d");
-
+    
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
 
     mainCanvas.addEventListener('mousemove', onPointerMove);
+    mainCanvas.addEventListener('mousedown', onPointerDown);
+    mainCanvas.addEventListener('mouseup', onPointerUp);
+    mainCanvas.addEventListener('touchstart', (e) => handleTouch(e, onPointerDown));
+    mainCanvas.addEventListener('touchend', (e) => handleTouch(e, onPointerUp));
+    mainCanvas.addEventListener('touchmove', (e) => handleTouch(e, onPointerMove));
 
     initialPageOpenTime = new Date();
+    // let foregroundColorButton = document.getElementById("foregorundColorButt"); 
+    // mainCanvas.appendChild(foregroundColorButton);
+    
     // updateCanvasAnimations handles the sequence of the canvas animations
     updateCanvasAnimations();
 }
@@ -589,6 +649,7 @@ function setupCanvas() {
 function getEventLocation(e)
 {
     if (e.touches && e.touches.length === 1) {
+        // console.log('touch location: ('+  e.touches[0].clientX + ', ' + e.touches[0].clientY + ')')
         return { 
             x: e.touches[0].clientX,
             y: e.touches[0].clientY
@@ -604,9 +665,25 @@ function getEventLocation(e)
 
 let scrollSpeedInPercentage = -0.5;
 
+let globalPointerDown = false;
+
+let wasTouchEvent = false;
+
+function handleTouch(e, singleTouchHandler) {
+    e.preventDefault();
+    if (e.touches.length <= 1) {
+        singleTouchHandler(e);
+        wasTouchEvent = true;
+    }
+    // else if (e.type == "touchmove" && e.touches.length == 2) {
+    //     isDragging = false;
+    //     handlerPinch(e);
+    // }
+}
+
 function onPointerMove(e) {
     let mouseLocationOnMove = getEventLocation(e);
-
+    // console.log('touchmovin');
     if(mouseLocationOnMove != undefined && mouseLocationOnMove != null) {
         if(mouseLocationOnMove.x > (2/3)*mainCanvas.width) {
             scrollSpeedInPercentage = ((mouseLocationOnMove.x-((2/3)*mainCanvas.width))/((1/3)*mainCanvas.width))
@@ -617,9 +694,166 @@ function onPointerMove(e) {
         else {
             scrollSpeedInPercentage = 0;
         }
+    
+        if(backgroundColorButton.pointerDown) {
+            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,backgroundColorButton.hexagonCenterPosition.y) /backgroundColorButton.hexagonCenterPosition.y, 0);
+            
+            let verticalColor = 360*(1 - mouseBoundedVertical) + getHueFromHexAColor(backgroundColorButton.previousColor);
+            
+            if(verticalColor > 360) {
+                verticalColor -= 360;
+            }
+            
+            let newColor = HSLToHex(verticalColor, 100, 50);
+            
+            backgroundColorButton.setNewHSLAColor(newColor);
+            canvasBackDropColor = newColor;
+        }
+
+        if(apertureEdgeColorButton.pointerDown) {
+            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,backgroundColorButton.hexagonCenterPosition.y) /backgroundColorButton.hexagonCenterPosition.y, 0);
+            
+            let verticalColor = 360*(1 - mouseBoundedVertical) + getHueFromHexAColor(apertureEdgeColorButton.previousColor);
+            
+            if(verticalColor > 360) {
+                verticalColor -= 360;
+            }
+
+            let newColor = HSLToHex(verticalColor, 100, 50);
+            
+            apertureEdgeColorButton.setNewHSLAColor(newColor);
+            mainApertureTesselation.setTesselationEdgeColor(newColor);
+        }
     }
 }
 
+// https://css-tricks.com/converting-color-spaces-in-javascript/
+
+function HSLToHex(h,s,l) {
+    s /= 100;
+    l /= 100;
+  
+    let c = (1 - Math.abs(2 * l - 1)) * s,
+        x = c * (1 - Math.abs((h / 60) % 2 - 1)),
+        m = l - c/2,
+        r = 0,
+        g = 0, 
+        b = 0; 
+  
+    if (0 <= h && h < 60) {
+      r = c; g = x; b = 0;
+    } else if (60 <= h && h < 120) {
+      r = x; g = c; b = 0;
+    } else if (120 <= h && h < 180) {
+      r = 0; g = c; b = x;
+    } else if (180 <= h && h < 240) {
+      r = 0; g = x; b = c;
+    } else if (240 <= h && h < 300) {
+      r = x; g = 0; b = c;
+    } else if (300 <= h && h < 360) {
+      r = c; g = 0; b = x;
+    }
+    // Having obtained RGB, convert channels to hex
+    r = Math.round((r + m) * 255).toString(16);
+    g = Math.round((g + m) * 255).toString(16);
+    b = Math.round((b + m) * 255).toString(16);
+  
+    // Prepend 0s, if necessary
+    if (r.length == 1)
+      r = "0" + r;
+    if (g.length == 1)
+      g = "0" + g;
+    if (b.length == 1)
+      b = "0" + b;
+  
+    return "#" + r + g + b;
+  }
+  
+function getHueFromHexAColor(H) {
+    // Convert hex to RGB first
+  let r = 0, g = 0, b = 0;
+  if (H.length == 4) {
+    r = "0x" + H[1] + H[1];
+    g = "0x" + H[2] + H[2];
+    b = "0x" + H[3] + H[3];
+  } else if (H.length == 7) {
+    r = "0x" + H[1] + H[2];
+    g = "0x" + H[3] + H[4];
+    b = "0x" + H[5] + H[6];
+  }
+  // Then to HSL
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  let cmin = Math.min(r,g,b),
+      cmax = Math.max(r,g,b),
+      delta = cmax - cmin,
+      h = 0,
+      s = 0,
+      l = 0;
+
+  if (delta == 0)
+    h = 0;
+  else if (cmax == r)
+    h = ((g - b) / delta) % 6;
+  else if (cmax == g)
+    h = (b - r) / delta + 2;
+  else
+    h = (r - g) / delta + 4;
+
+  h = Math.round(h * 60);
+
+  if (h < 0)
+    h += 360;
+
+  l = (cmax + cmin) / 2;
+  s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+  s = +(s * 100).toFixed(1);
+  l = +(l * 100).toFixed(1);
+
+  return h;
+}
+
+let pointerDown = false;
+
+function onPointerDown(e) {
+    let mouseLocationOnDown = getEventLocation(e);
+    
+    globalPointerDown = true;
+    if(Math.hypot(backgroundColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, backgroundColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < foregroundHexSize) {
+        console.log('touchDown in hex back')
+        backgroundColorButton.pointerDown = true;
+    }
+    
+    if(Math.hypot(apertureEdgeColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, apertureEdgeColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < foregroundHexSize) {
+        console.log('touchDown in hex edge')
+        apertureEdgeColorButton.pointerDown = true;
+    }
+
+    if(mouseLocationOnDown != undefined && mouseLocationOnDown != null) {
+        if(wasTouchEvent) {
+            if(mouseLocationOnDown.x > (2/3)*mainCanvas.width) {
+                scrollSpeedInPercentage = ((mouseLocationOnDown.x-((2/3)*mainCanvas.width))/((1/3)*mainCanvas.width))
+            }
+            else if(mouseLocationOnDown.x < (1/3)*mainCanvas.width) {
+                scrollSpeedInPercentage = -(1-(mouseLocationOnDown.x/((1/3)*mainCanvas.width)))
+            }
+            else {
+                scrollSpeedInPercentage = 0;
+            }
+        }
+    }
+}
+
+function onPointerUp(e) {
+    globalPointerDown = false;
+    console.log('touchup')
+    backgroundColorButton.pointerDown = false;
+    backgroundColorButton.previousColor = backgroundColorButton.color;
+
+    apertureEdgeColorButton.pointerDown = false;
+    apertureEdgeColorButton.previousColor = apertureEdgeColorButton.color;
+}
 // Ensures setupCanvas() is run only once
 window.addEventListener('load', setupCanvas);
 
@@ -645,8 +879,11 @@ function updateCanvasAnimations() {
     else {
         drawBackground("black");
     }
+
+    backgroundColorButton.drawColorSelector();
+    apertureEdgeColorButton.drawColorSelector();
     // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
-    
+
     // Canvas Animation
     requestAnimationFrame(updateCanvasAnimations);
 }
