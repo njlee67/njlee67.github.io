@@ -1,57 +1,40 @@
+'use strict';
+
 // Declare Canvas and Context Objects
-var mainCanvas;
-var ctx;
+let mainCanvas;
+let ctx;
 
-// Global Variables
-// let backgroundColor = "#FEFF0B";
-let backgroundColor = "green";
-// let backgroundColor = "#777777";
+// Global variables
+let canvasBackDropColor = "#00ff00";
+let canvasForegroundColor = "#000000";
+let apertureEdgeColor = '#ff0000';
 
-// Animation Geometries that are incremented in updateCanvasAnimations() function to animate shapes
-// hexagonApothem is the distance from the center to a vertex of fully tesselated hexagons at the load screen 
-var hexagonApothem = Math.round(window.innerHeight/3);
+// hexagonApothem is the distance from the center to a vertex of fully tesselated hexagon/aperture when the screen loads 
+const hexagonApothem = Math.round(window.innerHeight/3);
 
-// overlapHexPadding is a fraction of the hexagonApothem to remove the thin line that shows the background during the iris mechanism animation
-// var overlapHexPadding = Math.round(hexagonApothem/20);
-
-// dynamicOverlapHexPadding is a variable that is decremented each frame to shrink the black hexagons at page loading
-// var dynamicOverlapHexPadding = overlapHexPadding;
-
-// List of thumbnail images for each project bordered by hexagonal iris mechanism 
-projectThumbnailImagesPaths = [
-    '/images/thumbnails/LMBB v2.jpg',
-    'images/thumbnails/design-and-manufacturing-2-Yo-Yos.jpg',
-    'images/thumbnails/dont-stress-hoodie.jpg',
-    'images/thumbnails/LMBB v1.0.jpg',
-    'images/thumbnails/No-Cap-Hoodie.jpg',
-    'images/thumbnails/QUAD.PNG',
-    'images/thumbnails/SatchPack-v1.jpg',
-    'images/thumbnails/youre-a-real-1-hoodie.jpg',
-    'images/thumbnails/ALEEgators.jpg'
-    // Gazebo Walking Simulation
-];
-
-
+// projectInfo class contains all the information and media related to a project thumbnail/description and is used to add new projects
 class projectInfo {
-    constructor(relativeFilePath, projectName, projectVersion, projectTopic) {
-        this.relativeFilePath = relativeFilePath;
+    constructor(relativeImageFilePath, projectName, projectVersion, projectTopic) {
+        this.relativeImageFilePath = relativeImageFilePath;
         this.projectName = projectName;
         this.projectVersion = projectVersion;
         this.projectTopic = projectTopic;
     }
-    
 }
-var lmbbV2 = new projectInfo(projectThumbnailImagesPaths[0], 'LMBB v2', 'v2.0', 'BT Speaker');
-var yoyos = new projectInfo(projectThumbnailImagesPaths[1], '2.008 YoYos', '', 'Class Project');
-var noStress = new projectInfo(projectThumbnailImagesPaths[2], "Don't Stress", 'v1.0', 'Custom Apparel');
-var lmbbV1 = new projectInfo(projectThumbnailImagesPaths[3], 'LMBB v1', 'v1.0', 'BT Speaker');
-var noCap = new projectInfo(projectThumbnailImagesPaths[4], 'No Cap', 'v1.0', 'Custom Apparel');
-var QUAD = new projectInfo(projectThumbnailImagesPaths[5], 'QUAD', 'v1.0', 'Legged Robot');
-var satchPackV1 = new projectInfo(projectThumbnailImagesPaths[6], 'SatchPack', 'v1.0', 'Backpack/Desk');
-var uAreal1 = new projectInfo(projectThumbnailImagesPaths[7], 'Ur a Real 1', 'v1.0', 'Custom Apparel');
-var ALEEgators = new projectInfo(projectThumbnailImagesPaths[8], 'ALEEgators', 'v1.0', 'Custom Footwear');
 
-var projectInfoObjectList = [
+// projectInfo variables for the projects I want to display on this portfolio page
+let lmbbV2 = new projectInfo('/images/thumbnails/LMBB v2.jpg', 'LMBB v2', 'v2.0', 'BT Speaker');
+let yoyos = new projectInfo('images/thumbnails/design-and-manufacturing-2-Yo-Yos.jpg', '2.008 YoYos', '', 'Class Project');
+let noStress = new projectInfo('images/thumbnails/dont-stress-hoodie.jpg', "Don't Stress", 'v1.0', 'Custom Apparel');
+let lmbbV1 = new projectInfo('images/thumbnails/LMBB v1.0.jpg', 'LMBB v1', 'v1.0', 'BT Speaker');
+let noCap = new projectInfo('images/thumbnails/No-Cap-Hoodie.jpg', 'No Cap', 'v1.0', 'Custom Apparel');
+let QUAD = new projectInfo('images/thumbnails/QUAD.PNG', 'QUAD', 'v1.0', 'Legged Robot');
+let satchPackV1 = new projectInfo('images/thumbnails/SatchPack-v1.jpg', 'SatchPack', 'v1.0', 'Backpack/Desk');
+let uAreal1 = new projectInfo('images/thumbnails/youre-a-real-1-hoodie.jpg', 'Ur a Real 1', 'v1.0', 'Custom Apparel');
+let ALEEgators = new projectInfo('images/thumbnails/ALEEgators.jpg', 'ALEEgators', 'v1.0', 'Custom Footwear');
+
+// list of projectInfoObjects used to create apertureTessalation
+let projectInfoObjectList = [
 lmbbV1,
 yoyos,
 noStress,
@@ -62,34 +45,43 @@ satchPackV1,
 uAreal1,
 ALEEgators
 ]
-// apertureDistance is the distance from the center of a hexagon in the direction from the center of the hexagon to a vertex
-// iris animation is based on the iris mechanism similar to a camera shutter
 
+// aperture object is named after a camera aperture and represents a single object that has the project info and opens to display the thumbnail image among other animations
 class aperture {
-    
-    constructor(apertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor) {
+
+    constructor(apertureCenter, hexagonalApothem, 
+        fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, 
+        shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, 
+        foregroundColor, edgeColor) {
+
+        // The center of the aperture object
         this.apertureCenter = apertureCenter;
 
         this.hexagonalApothem = hexagonalApothem;
 
-        // Constant Variables
-        this.fullyShrunkenSize = this.toPixelsOfApothem(fullyShrunkenPercentage);
-        this.fullyOpenedDistance = this.toPixelsOfApothem(fullyOpenedPercentage);
-        this.fullEdgeThickness = this.toPixelsOfApothem(fullEdgeThicknessPercentage);
+        // Constant variables for aperture geometric features final form
+        this.fullyShrunkenHexagonSize = this.percentageToPixelsOfApothem(fullyShrunkenPercentage);
+        // The opened distance is the distance from the center of the aperture to the vertices of the aperture opening
+        this.fullyOpenedDistance = this.percentageToPixelsOfApothem(fullyOpenedPercentage);
+        // Edge thickness is the difference in the Opened Distances of the foregound and background apertures to give an edge looking effect because they have the foregroundColor and edgeColor respectively
+        this.fullEdgeThickness = this.percentageToPixelsOfApothem(fullEdgeThicknessPercentage);
 
-        // Dynamic Variables
+        // Dynamic variables fo animations that are the current state of the corresponding variable and are altered/incremented/decremented to update the animations
         this.currentShrunkenSize = hexagonalApothem;
         this.currentOpenedDistance = 0;
         this.currentEdgeThickness = 0;
 
-        // Animation Speed Variables
-        this.shrinkPixelsPerFrame = this.toPixelsOfApothem(shrinkPercentagePerFrame);
-        this.openPixelsPerFrame = this.toPixelsOfApothem(openPercentagePerFrame);
-        this.edgePixelsPerFrame = this.toPixelsOfApothem(edgePercentagePerFrame);
+        // Animation Speed variables control the speed of different animation stages
+        this.shrinkPixelsPerFrame = -Math.abs(this.percentageToPixelsOfApothem(shrinkPercentagePerFrame));
+        this.expandPixelsPerFrame = Math.abs(this.shrinkPixelsPerFrame);
+        this.openPixelsPerFrame = Math.abs(this.percentageToPixelsOfApothem(openPercentagePerFrame));
+        this.closePixelsPerFrame = Math.abs(this.openPixelsPerFrame);
+        this.edgeOpenPixelsPerFrame = Math.abs(this.percentageToPixelsOfApothem(edgePercentagePerFrame));
+        this.edgeClosePixelsPerFrame = -Math.abs(this.edgeOpenPixelsPerFrame);
 
-        // Colors
+        // forgroundColor is the color of the aperture and edgeColor is the color of the aperture
         this.foregroundColor = foregroundColor;
-        this.backgroundColor = backgroundColor;
+        this.edgeColor = edgeColor;
 
         // Animation stage variables
         this.doneShrinking = false;
@@ -103,204 +95,113 @@ class aperture {
         this.isNJLClosedAperture = false;
         this.projectInfoObject = null;
         this.projectTextCurrentFadeValue = 0;
+        // Pseudo Enum type object to denote the animation type when calling specificAnimationStageStep()
+        this.AnimationStages = {
+            Shrink: {
+                currentStageVariable: this.currentShrunkenSize, 
+                doneWithStageBoolean: this.doneShrinking,
+                pixelsPerFrame: this.shrinkPixelsPerFrame},
+            Expand: {
+                currentStageVariable: this.currentShrunkenSize, 
+                doneWithStageBoolean: this.doneExpanding,
+                pixelsPerFrame: this.expandPixelsPerFrame},
+            OpenHole: {
+                currentStageVariable: this.currentOpenedDistance, 
+                doneWithStageBoolean: this.doneOpeningApertureHole,
+                pixelsPerFrame: this.openPixelsPerFrame},
+            CloseHole: {
+                currentStageVariable: this.currentOpenedDistance, 
+                doneWithStageBoolean: this.doneClosingApertureHole,
+                pixelsPerFrame: this.closePixelsPerFrame},
+            OpenEdge: {
+                currentStageVariable: this.currentOpenedDistance, 
+                // currentStageVariables: {
+                //     edgeThickness: this.currentEdgeThickness, 
+                //     openedDistance: this.currentOpenedDistance
+                // },
+                doneWithStageBoolean: this.doneOpeningEdge,
+                pixelsPerFrame: this.edgeOpenPixelsPerFrame},
+            CloseEdge: {
+                currentStageVariable: this.currentEdgeThickness, 
+                doneWithStageBoolean: this.doneClosingEdge,
+                pixelsPerFrame: this.edgeClosePixelsPerFrame}
+        };
+    }
+    
+    setForegroundColor(newForegroundColor) {
+        this.foregroundColor = newForegroundColor;
+    }
+    
+    setEdgeColor(newEdgeColor) {
+        this.edgeColor = newEdgeColor;
     }
 
-    toPixelsOfApothem(percentageOfApothem) {
+    // Scale geometric variables based on percentage on the primary dimension, the hexagonalApothem
+    percentageToPixelsOfApothem(percentageOfApothem) {
         return ((percentageOfApothem/100.0)*this.hexagonalApothem);
     }
 
-    checkIfShrinkingOutsideLimits(setShrunkenSizeTo) {
-        let setShrunkenCommandOutsideLimits = setShrunkenSizeTo < this.fullyShrunkenSize || setShrunkenSizeTo > this.hexagonalApothem;
-        
-        if(setShrunkenCommandOutsideLimits) {
-            if(setShrunkenSizeTo < this.fullyShrunkenSize) {
-                this.currentShrunkenSize = this.fullyShrunkenSize;
-            }
-            else if(setShrunkenSizeTo > this.hexagonalApothem) {
-                this.currentShrunkenSize = this.hexagonalApothem;
-            }
-            return true;
-        }
-        else {
-            return false;
-        }
+    updateAnimationStageBooleans() {
+        this.AnimationStages.Shrink.doneWithStageBoolean = this.AnimationStages.Shrink.currentStageVariable <= this.fullyShrunkenHexagonSize;
+        this.AnimationStages.Expand.doneWithStageBoolean = this.AnimationStages.Shrink.currentStageVariable >= this.hexagonalApothem;
+        this.AnimationStages.OpenEdge.doneWithStageBoolean = this.AnimationStages.OpenEdge.currentStageVariable >= this.fullEdgeThickness;
+        this.AnimationStages.CloseEdge.doneWithStageBoolean = this.AnimationStages.OpenEdge.currentStageVariable <= 0;
+        this.AnimationStages.OpenHole.doneWithStageBoolean = this.AnimationStages.OpenHole.currentStageVariable >= this.fullyOpenedDistance;
+        this.AnimationStages.CloseHole.doneWithStageBoolean = this.AnimationStages.OpenHole.currentStageVariable <= 0;
     }
 
-    checkIfApertureHoleOutsideLimits(setOpenDistanceTo) {
-        let setOpenCommandIsOutsideLimits = setOpenDistanceTo < 0 || setOpenDistanceTo > this.fullyOpenedDistance;
-        
-        if(setOpenCommandIsOutsideLimits) {
-            if(setOpenDistanceTo < 0) {
-                this.currentOpenedDistance = 0;
-            }
-            else if(setOpenDistanceTo > this.fullyOpenedDistance) {
-                this.currentOpenedDistance = this.fullyOpenedDistance;
-            }
-
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-    
-    checkIfEdgeThicknessOutsideLimits(setEdgeThicknessTo) {
-        let setEdgeCommandIsOutsideLimits = setEdgeThicknessTo < 0 || setEdgeThicknessTo > this.fullEdgeThickness;
-        
-        if(setEdgeCommandIsOutsideLimits) {
-            if(setEdgeThicknessTo < 0) {
-                this.currentEdgeThickness = 0;
-            }
-            else if(setEdgeThicknessTo > this.fullEdgeThickness) {
-                this.currentEdgeThickness = this.fullEdgeThickness;
-            }
-
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    checkIfProjectInfoIsFadedIn(setProjectInfoTextTransparency) {
-        let setProjectInfoTextTransparencyOutsideLimits = setProjectInfoTextTransparency < 0 || setProjectInfoTextTransparency > 255;
-
-        if(setProjectInfoTextTransparencyOutsideLimits) {
-            if(setProjectInfoTextTransparencyOutsideLimits < 0) {
-                this.projectTextCurrentFadeValue = 0;
-            }
-            else if(setProjectInfoTextTransparencyOutsideLimits > 255) {
-                this.projectTextCurrentFadeValue = 255;
-            }
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    shrinkAnimationStep() {
-        this.doneShrinking = this.checkIfShrinkingOutsideLimits(this.currentShrunkenSize - this.shrinkPixelsPerFrame);        
-        
-        if(!this.doneShrinking) {
-            this.currentShrunkenSize -= this.shrinkPixelsPerFrame;
-            this.drawCurrent();
-        }
-    }
-
-    expandAnimationStep() {
-        this.doneExpanding = this.checkIfShrinkingOutsideLimits(this.currentShrunkenSize + this.shrinkPixelsPerFrame);        
-        
-        if(!this.doneExpanding) {
-            this.currentShrunkenSize += this.shrinkPixelsPerFrame;
-            this.drawCurrent();
-        }
-    }
-
-    edgeOpenAnimationStep() {
-        this.doneOpeningEdge = this.checkIfEdgeThicknessOutsideLimits(this.currentEdgeThickness + this.edgePixelsPerFrame);        
-        
-        if(!this.doneOpeningEdge) {
-            if(!this.checkIfApertureHoleOutsideLimits(this.currentOpenedDistance + this.edgePixelsPerFrame)) {
-                this.currentOpenedDistance += this.edgePixelsPerFrame;
-            }
-            this.currentEdgeThickness += this.edgePixelsPerFrame;
+    specificAnimationStageStep(AnimationStageEnum, alternatePixelsPerFrame = AnimationStageEnum.pixelsPerFrame) {
+        this.updateAnimationStageBooleans();
+        if(!AnimationStageEnum.doneWithStageBoolean) {
+            AnimationStageEnum.currentStageVariable += alternatePixelsPerFrame;
             this.drawCurrent();
         }
     }
     
-    // TODO: remove the pixelsperframe needed in the checkifoutsidelimits methods cuz it's confusing to remember the +/-
-    edgeCloseAnimationStep() {
-        this.doneClosingEdge = this.checkIfEdgeThicknessOutsideLimits(this.currentEdgeThickness);        
-        
-        if(!this.doneClosingEdge) {
-            if(!this.checkIfApertureHoleOutsideLimits(this.currentOpenedDistance)) {
-                this.currentOpenedDistance -= this.edgePixelsPerFrame;
-            }
-            this.currentEdgeThickness -= this.edgePixelsPerFrame;
-            this.drawCurrent();
-        }
-    }
-
-    openAnimationStep() {
-        this.doneOpeningApertureHole = this.checkIfApertureHoleOutsideLimits(this.currentOpenedDistance + this.openPixelsPerFrame);        
-        
-        if(!this.doneOpeningApertureHole) {
-            this.currentOpenedDistance += this.openPixelsPerFrame;
-            this.drawCurrent();
-        }
-    }
-    
-    closeAnimationStep() {
-        this.doneClosingApertureHole = this.checkIfApertureHoleOutsideLimits(this.currentOpenedDistance);   
-        
-        if(!this.doneClosingApertureHole) {
-            this.currentOpenedDistance -= this.openPixelsPerFrame;
-            this.drawCurrent();
-        }
-    }
-
-    // fadeProjectinfoTextAnimationStep() {
-    //     var speedOfFade = 2;
-    //     this.doneFadeInProjectInfoText = this.checkIfProjectInfoIsFadedIn(this.projectTextCurrentFadeValue + speedOfFade);
-
-    //     if(!this.doneFadeInProjectInfoText) {
-    //         this.projectTextCurrentFadeValue += speedOfFade;
-    //         // this.projectTextCurrentFadeValue = Math.floor(this.projectTextCurrentFadeValue);
-    //         this.drawCurrent();
-    //     }
-    // }
-    
-    setOpenedPercentage(setOpenPercentageTo) {
-
-        let setOpenCommandWithinBounds = this.toPixelsOfApothem(setOpenPercentageTo) >= 0 
-            && this.toPixelsOfApothem(setOpenPercentageTo) <= this.fullyOpenedDistance;
-        
-        if(setOpenCommandWithinBounds) {
-            this.currentOpenedDistance = setOpenPercentageTo;
-        }
-        else {
-            this.doneOpeningApertureHole = true;
-        }
-
-        if(!this.doneOpeningApertureHoleOrClosing) {
-            //this.drawAperature();
-        }
-    }
-
     drawCurrent() {
         if(this.projectThumbnail != null) {
-            this.drawProjectInfo()
-        }
-        if(this.projectThumbnail != null && this.currentOpenedDistance > 0) {
-            this.drawThumbnail();
-        }
-
-        if(this.projectThumbnail != null && this.currentEdgeThickness > 0) {
-            this.drawBackgroundAperatureQuadrilaterals();
-        }
-        if(this.projectThumbnail != null && this.currentOpenedDistance > 0) {
-            this.drawForegroundAperatureQuadrilaterals();
-            this.drawHexagonBorderWindow();
-        }
-        else {
+            this.drawProjectInfo();
+            if(this.AnimationStages.Shrink.doneWithStageBoolean == true) {
+                this.drawThumbnail();
+                this.drawBackgroundAperatureQuadrilaterals();
+                this.drawHexagonBorderWindow();
+                this.drawForegroundAperatureQuadrilaterals();
+            }
+            else {
+                this.drawHexagon();
+            }
+        } else {
             this.drawHexagon();
             if(this.isNJLClosedAperture) {
-                ctx.fillStyle = backgroundColor;
-                var fontSizeFractionOfApothem = Math.round(this.toPixelsOfApothem(70));
+                ctx.fillStyle = this.edgeColor;
+                let fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(70));
                 ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
-                var initials = 'njL';
-                var initialsWidth = ctx.measureText(initials).width;
-                var initialsHeight = fontSizeFractionOfApothem;
-                ctx.fillText(initials, this.apertureCenter.x - (initialsWidth/2), this.apertureCenter.y + Math.round(this.toPixelsOfApothem(5)) )
-                fontSizeFractionOfApothem = Math.round(this.toPixelsOfApothem(20));
+                let initials = 'njL';
+                let initialsWidth = ctx.measureText(initials).width;
+                let initialsHeight = fontSizeFractionOfApothem;
+                ctx.fillText(initials, this.apertureCenter.x - (initialsWidth/2), this.apertureCenter.y + Math.round(this.percentageToPixelsOfApothem(5)) )
+                fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(20));
                 ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
-                var portfolioWidth = ctx.measureText('portfolio').width;
-                ctx.fillText('portfolio', this.apertureCenter.x - (portfolioWidth/2), this.apertureCenter.y + (Math.round(this.toPixelsOfApothem(45))) )
-
+                let portfolioWidth = ctx.measureText('portfolio').width;
+                ctx.fillText('portfolio', this.apertureCenter.x - (portfolioWidth/2), this.apertureCenter.y + (Math.round(this.percentageToPixelsOfApothem(45))) )
+                
             }
         }
     }
+    // TODO: drawText()
+    // drawText(textString, percentageOfApothem, color, x_relative, y_relative) {
+    //     ctx.fillStyle = color;
+    //     let fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(percentageOfApothem));
+    //     ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
+    //     let textWidth = ctx.measureText(textString).width;
+    //     let textHeight = fontSizeFractionOfApothem;
+    //     ctx.fillText(textString, this.apertureCenter.x + x_relative, this.apertureCenter.y + y_relative);
+    //     fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(20));
+    //     ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
+    //     let portfolioWidth = ctx.measureText('portfolio').width;
+    //     ctx.fillText('portfolio', this.apertureCenter.x - (portfolioWidth/2), this.apertureCenter.y + (Math.round(this.percentageToPixelsOfApothem(45))) )
+
+    // }
 
     drawProjectInfo() {
         if(this.projectTextCurrentFadeValue.toString(16).length > 1) {
@@ -309,20 +210,25 @@ class aperture {
         else {
             ctx.fillStyle = this.foregroundColor;
         }
-        var projectInfoTextSize = this.fullEdgeThickness*2.5;
+        let projectInfoTextSize = this.fullEdgeThickness*2.5;
         ctx.font = '900 ' + projectInfoTextSize.toString() + "px Arial";
        
-        var projectNameText = this.projectInfoObject.projectName;
-        var projectNameWidth = ctx.measureText(projectNameText).width;
-        var projectNameHeight = ctx.measureText(projectNameText).actualBoundingBoxAscent + ctx.measureText(projectNameText).actualBoundingBoxDescent;
+        let projectNameText = this.projectInfoObject.projectName;
+        let projectNameWidth = ctx.measureText(projectNameText).width;
+        let projectNameHeight = ctx.measureText(projectNameText).actualBoundingBoxAscent + ctx.measureText(projectNameText).actualBoundingBoxDescent;
 
         ctx.fillText(projectNameText, this.apertureCenter.x -  projectNameWidth/2, this.apertureCenter.y + projectNameHeight/2 - (Math.sqrt(3)/2)*((this.hexagonalApothem)));
         
-        var projectThemeTextSize = this.fullEdgeThickness*2.5;
-        var projectTopicWidth = ctx.measureText(this.projectInfoObject.projectTopic).width;
-        var projectTopicHeight = ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxAscent + ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxDescent;
+        let projectThemeTextSize = this.fullEdgeThickness*2.5;
+        let projectTopicWidth = ctx.measureText(this.projectInfoObject.projectTopic).width;
+        let projectTopicHeight = ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxAscent + ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxDescent;
 
         ctx.fillText(this.projectInfoObject.projectTopic, this.apertureCenter.x - projectTopicWidth/2, this.apertureCenter.y + projectTopicHeight/2 +  (Math.sqrt(3)/2)*((this.hexagonalApothem)));
+    }
+
+    setAnimationVariable(setValue, AnimationStageEnum) {
+        AnimationStageEnum.currentStageVariable = setValue;
+        this.drawCurrent();
     }
 
     setApertureCenter(newApertureCenter) {
@@ -334,10 +240,10 @@ class aperture {
         
         // Draw hexagon filled shape using lineTo() and closePath() functions going from each vertex and back again in a loop
         ctx.beginPath();
-        ctx.moveTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin(Math.PI/6), this.apertureCenter.y + this.currentShrunkenSize*Math.cos(Math.PI/6));
+        ctx.moveTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin(Math.PI/6), this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos(Math.PI/6));
     
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.lineTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin(vertex*Math.PI/3 + Math.PI/6), this.apertureCenter.y + this.currentShrunkenSize*Math.cos(vertex*Math.PI/3 + Math.PI/6));
+            ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin(vertex*Math.PI/3 + Math.PI/6), this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos(vertex*Math.PI/3 + Math.PI/6));
         }
     
         ctx.closePath();
@@ -350,7 +256,7 @@ class aperture {
             ctx.fillStyle = this.foregroundColor;
             ctx.beginPath();
             
-            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem variable
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem letiable
             let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
             
             // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
@@ -360,17 +266,17 @@ class aperture {
             let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
             
             // Draw the lines that make up each quadrilateral
-            ctx.moveTo(this.apertureCenter.x + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.x - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.x,
-                         this.apertureCenter.y + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.y - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.y);
+            ctx.moveTo(this.apertureCenter.x + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.x,
+                         this.apertureCenter.y + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.y);
         
-            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVectorPrev.x - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.x, 
-                        this.apertureCenter.y + this.fullyShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVectorPrev.y - 0*this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.y);
+            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenHexagonSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVectorPrev.x, 
+                        this.apertureCenter.y + this.fullyShrunkenHexagonSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVectorPrev.y);
             
-            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
-                        this.apertureCenter.y + this.fullyShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
+            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenHexagonSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
+                        this.apertureCenter.y + this.fullyShrunkenHexagonSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
         
-            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenSize*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.x, 
-                        this.apertureCenter.y + this.fullyShrunkenSize*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.y);
+            ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenHexagonSize*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.x, 
+                        this.apertureCenter.y + this.fullyShrunkenHexagonSize*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.y);
                         
             ctx.closePath();
             ctx.fill();
@@ -389,7 +295,7 @@ class aperture {
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
             // so when the irisMechanismDistance is 0 the irisMechanism animation is completely closed and when it  = hexagonApothem it is completely open but we use it as a border, so it never equals the hexagonApothem
     
-            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem variable
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem letiable
             let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
             
             // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
@@ -399,16 +305,16 @@ class aperture {
             let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
             
             // Draw the lines that make up each quadrilateral
-            ctx.moveTo(this.apertureCenter.x + this.currentOpenedDistance*parallelToSideUnitVector.x - this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.x, this.apertureCenter.y + this.currentOpenedDistance*parallelToSideUnitVector.y - this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.y);
+            ctx.moveTo(this.apertureCenter.x + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.x - this.AnimationStages.OpenEdge.currentStageVariable*perpindicularToSideUnitVectorPrev.x, this.apertureCenter.y + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.y - this.AnimationStages.OpenEdge.currentStageVariable*perpindicularToSideUnitVectorPrev.y);
     
-            ctx.lineTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVectorPrev.x - this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.x, 
-                        this.apertureCenter.y + this.currentShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVectorPrev.y - this.currentEdgeThickness*perpindicularToSideUnitVectorPrev.y);
+            ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVectorPrev.x - this.AnimationStages.OpenEdge.currentStageVariable*perpindicularToSideUnitVectorPrev.x, 
+                        this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVectorPrev.y - this.AnimationStages.OpenEdge.currentStageVariable*perpindicularToSideUnitVectorPrev.y);
             
-            ctx.lineTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
-                        this.apertureCenter.y + this.currentShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
+            ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
+                        this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
     
-            ctx.lineTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVector.x, 
-                        this.apertureCenter.y + this.currentShrunkenSize*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVector.y);
+            ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.x, 
+                        this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.y);
     
             ctx.closePath();
             ctx.fill();
@@ -419,13 +325,13 @@ class aperture {
         // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.fillStyle = 'red'; 
+            ctx.fillStyle = this.edgeColor; 
             ctx.beginPath();
     
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
             // so when the irisMechanismDistance is 0 the irisMechanism animation is completely closed and when it  = hexagonApothem it is completely open but we use it as a border, so it never equals the hexagonApothem
     
-            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem variable
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem letiable
             let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
             
             // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
@@ -435,17 +341,17 @@ class aperture {
             let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
             
             // Draw the lines that make up each quadrilateral
-            ctx.moveTo(this.apertureCenter.x + this.currentOpenedDistance*parallelToSideUnitVector.x - this.currentEdgeThickness*parallelToSideUnitVector.x, 
-                        this.apertureCenter.y + this.currentOpenedDistance*parallelToSideUnitVector.y - this.currentEdgeThickness*parallelToSideUnitVector.y);
+            ctx.moveTo(this.apertureCenter.x + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.x - this.AnimationStages.OpenEdge.currentStageVariable*parallelToSideUnitVector.x, 
+                        this.apertureCenter.y + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.y - this.AnimationStages.OpenEdge.currentStageVariable*parallelToSideUnitVector.y);
     
-            ctx.lineTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVectorPrev.x, 
-                        this.apertureCenter.y + this.currentShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVectorPrev.y);
+            ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVectorPrev.x, 
+                        this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVectorPrev.y);
             
-            ctx.lineTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
-                        this.apertureCenter.y + this.currentShrunkenSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
+            ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
+                        this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
     
-            ctx.lineTo(this.apertureCenter.x + this.currentShrunkenSize*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVector.x - this.currentEdgeThickness*parallelToSideUnitVector.x, 
-                        this.apertureCenter.y + this.currentShrunkenSize*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + this.currentOpenedDistance*parallelToSideUnitVector.y - this.currentEdgeThickness*parallelToSideUnitVector.y);
+            ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.x - this.AnimationStages.OpenEdge.currentStageVariable*parallelToSideUnitVector.x, 
+                        this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.y - this.AnimationStages.OpenEdge.currentStageVariable*parallelToSideUnitVector.y);
     
             ctx.closePath();
             ctx.fill();
@@ -458,14 +364,14 @@ class aperture {
         this.projectThumbnail = new Image();
         this.projectThumbnail.onload = function(){ 
         };
-        this.projectThumbnail.src = projectInfoObject.relativeFilePath;
+        this.projectThumbnail.src = projectInfoObject.relativeImageFilePath;
         this.projectInfoObject = projectInfoObject;
     }
     
     drawThumbnail() {
         if(this.projectThumbnail != null) {
-            var croppedWidth = this.projectThumbnail.width;
-            var croppedHeight = (Math.sqrt(3)/2) * croppedWidth;
+            let croppedWidth = this.projectThumbnail.width;
+            let croppedHeight = (Math.sqrt(3)/2) * croppedWidth;
 
             if(this.projectThumbnail.width > this.projectThumbnail.height) {
                 croppedHeight = (Math.sqrt(3)/2) * croppedWidth;
@@ -486,29 +392,31 @@ class aperture {
 }
 
 class apertureTesselation {
-    constructor(projectInfoList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor, maximumScrollPixelsPerFrame) {
+    constructor(projectInfoList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, edgeColor, maximumScrollPixelsPerFrame) {
         this.tesselationOriginPosition = tesselationOriginPosition;
         this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(hexagonalApothem, 2) - Math.pow(hexagonalApothem/2, 2));
         this.hexTesselationHorizontalOffset = 1.5*hexagonalApothem; 
         this.maximumScrollPixelsPerFrame = maximumScrollPixelsPerFrame;
         this.numberVerticalApertures = Math.ceil((window.innerHeight - this.tesselationOriginPosition.y)/this.hexTesselationVerticalOffset) + 1;
-
+        this.foregroundColor = foregroundColor;
+        this.edgeColor = edgeColor;
         this.numberHorizontalApertures = 0;
         this.aperturesList = [];
 
         this.projectInfoList = projectInfoList;
 
-        var numberOfThumnailsWithoutAnAperture = this.projectInfoList.length;
+        let numberOfThumnailsWithoutAnAperture = this.projectInfoList.length;
 
+        // Using projectInfoObject.length determine how many total aperture/hexagon aperture class objects are needed
         while(numberOfThumnailsWithoutAnAperture > 0) {
-            var nextColumnInitialIndex = this.numberHorizontalApertures * this.numberVerticalApertures;
+            let nextColumnInitialIndex = this.numberHorizontalApertures * this.numberVerticalApertures;
             // Loop through each column 
-            for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
-                var nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
+            for(let verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
+                let nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
                 if(this.numberHorizontalApertures%2 != 0) {
                     nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                 }
-                this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor));
+                this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, edgeColor));
             
                 let nextApertureIsTooHighForThumbnail = this.aperturesList[verticalIndex + nextColumnInitialIndex].apertureCenter.y < this.hexTesselationVerticalOffset/2;
                 let nextApertureIsTooLowForThumbnail = this.aperturesList[verticalIndex + nextColumnInitialIndex].apertureCenter.y > window.innerHeight - this.hexTesselationVerticalOffset/2;
@@ -521,25 +429,26 @@ class apertureTesselation {
             this.numberHorizontalApertures++;
         }
         
+        // Adding extra column if the number of columns in the tesselation is not even
         if(this.numberHorizontalApertures%2 != 0) {
-            for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
-                var nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
+            for(let verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
+                let nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
                 if(this.numberHorizontalApertures%2 != 0) {
                     nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                 }
-                this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor));
+                this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, edgeColor));
                 this.aperturesList[this.aperturesList.length-1].isNJLClosedAperture = true;
             }
             this.numberHorizontalApertures++;
         }
         else {
-            for(var njLColumns = 0;njLColumns < 2;njLColumns++) {
-                for(var verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
-                    var nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
+            for(let njLColumns = 0;njLColumns < 2;njLColumns++) {
+                for(let verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
+                    let nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
                     if(this.numberHorizontalApertures%2 != 0) {
                         nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                     }
-                    this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor));
+                    this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, edgeColor));
                     this.aperturesList[this.aperturesList.length-1].isNJLClosedAperture = true;
                 }
                 this.numberHorizontalApertures++;
@@ -547,18 +456,25 @@ class apertureTesselation {
         }
         
         // Adding one more row on top so that the tesselation gets extended to the gap for projectInfotext
-        for(var horizontalIndex = 0;horizontalIndex < this.numberHorizontalApertures;horizontalIndex++) {
-            var nextApertureCenter = {x:this.tesselationOriginPosition.x + (horizontalIndex+1)*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y -0.5* this.hexTesselationVerticalOffset};
+        for(let horizontalIndex = 0;horizontalIndex < this.numberHorizontalApertures;horizontalIndex++) {
+            let nextApertureCenter = {x:this.tesselationOriginPosition.x + (horizontalIndex+1)*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y -0.5* this.hexTesselationVerticalOffset};
             if(horizontalIndex%2 != 0) {
                 nextApertureCenter.y -= this.hexTesselationVerticalOffset/2;
             }
-            this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, backgroundColor));
+            this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, edgeColor));
             this.aperturesList[this.aperturesList.length-1].isNJLClosedAperture = true;
         }
 
+        this.doneWithInitialOpeningApertures = false;
     }
 
-    toPixelsOfApothem(percentageOfApothem) {
+    setTesselationEdgeColor(newColor) {
+        for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
+            this.aperturesList[apertureIndex].setEdgeColor(newColor);
+        }
+    }
+    // TODO: should really use the aperture class version of this duplicate
+    percentageToPixelsOfApothem(percentageOfApothem) {
         return ((percentageOfApothem/100.0)*this.hexagonalApothem);
     }
     
@@ -579,30 +495,82 @@ class apertureTesselation {
     }
 
     drawTesselation() {
-        for(var apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
-            if(!this.aperturesList[apertureIndex].doneShrinking) {
-                this.aperturesList[apertureIndex].shrinkAnimationStep();
+        for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
+            // if((this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullyOpenedDistance
+            // && this.aperturesList[apertureIndex].apertureCenter.x < mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance)
+            // || this.aperturesList[apertureIndex].projectThumbnail == null) {
+            // Shrink hexagons stage from fully black screen to black hexagons
+            if(!this.aperturesList[apertureIndex].AnimationStages.Shrink.doneWithStageBoolean) {
+                this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.Shrink);
             }
             
-            if(this.aperturesList[apertureIndex].doneShrinking && !this.aperturesList[apertureIndex].doneOpeningEdge) {
-                this.aperturesList[apertureIndex].edgeOpenAnimationStep();
+            // Done with shrink hexagon stage
+            // Starting open edge stage , aperture edges currently red open on apertures 
+            if(this.aperturesList[apertureIndex].AnimationStages.Shrink.doneWithStageBoolean && !this.aperturesList[apertureIndex].AnimationStages.OpenEdge.doneWithStageBoolean) {
+                this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenEdge);
+                this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole,this.aperturesList[apertureIndex].AnimationStages.OpenEdge.pixelsPerFrame);
             }
             
-            if(this.aperturesList[apertureIndex].doneOpeningEdge && !this.aperturesList[apertureIndex].doneOpeningApertureHole){
-                this.aperturesList[apertureIndex].openAnimationStep();
-            }
-            
-            // if(this.aperturesList[apertureIndex].doneOpeningApertureHole && !this.aperturesList[apertureIndex].doneFadeInProjectInfoText) {
-            //     this.aperturesList[apertureIndex].fadeProjectinfoTextAnimationStep();
-            // }
+            // Done with open edge stage
+            // Starting open aperture stage , apertures on right and left sides of the screen 
+            // should only open apertures up to the screen edge to reveal project thumbnails
+            // No scrolling has started at this point
+            if(this.aperturesList[apertureIndex].AnimationStages.OpenEdge.doneWithStageBoolean && !this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean){
+                // If the aperture in this iteration of the for loop through the list of apertures is not on the left edge or right edge while scrolling
+                if((this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullyOpenedDistance
+                && this.aperturesList[apertureIndex].apertureCenter.x < mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance)) {
+                    this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole);
+                }
+                // Otherwise if current aperture in this for loop is on the left edge and is close enough to the edge to start closing the aperture at the edge
+                else {
+                    if(this.aperturesList[apertureIndex].apertureCenter.x <= this.aperturesList[apertureIndex].fullyOpenedDistance){
+                        if(this.aperturesList[apertureIndex].AnimationStages.OpenHole.currentStageVariable <= this.aperturesList[apertureIndex].apertureCenter.x) {
+                            this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole);
+                        }
+                        else {
+                            this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean = true;
+                            this.aperturesList[apertureIndex].drawCurrent();
+                        }
+                    }else if(this.aperturesList[apertureIndex].apertureCenter.x >= mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance){
+                        if(this.aperturesList[apertureIndex].AnimationStages.OpenHole.currentStageVariable <= mainCanvas.width - this.aperturesList[apertureIndex].apertureCenter.x) {
+                            this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole);
+                        }
+                        else {
+                            this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean = true;
 
-            if(this.aperturesList[apertureIndex].doneOpeningApertureHole) {
+                            this.aperturesList[apertureIndex].drawCurrent();
+                        }
+                    }
+                }
+            }
+
+            // Done opening apertures and now dynamic user input scrolling has started
+            // Now when scrolling and an aperture reaches a threshold x value on the right/left sides of the screen 
+            // the aperture sets its hole opened distance to the distance from the apertureCenter to the right/left edge of the screen, so it
+            // looks like the screen edge is closing and opening them 
+            if(this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean) {
                 this.aperturesList[apertureIndex].drawCurrent();
+
+                // If aperture center is past the threshold on the left
+                // AND it's greater than the aperture edge thickness on the left so that it doesn't close too far 
+                // set it to the distance from apertureCenter.x to the left edge 
+                if(this.aperturesList[apertureIndex].apertureCenter.x < this.aperturesList[apertureIndex].fullyOpenedDistance
+                && this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullEdgeThickness) {
+                    this.aperturesList[apertureIndex].setAnimationVariable(this.aperturesList[apertureIndex].apertureCenter.x, this.aperturesList[apertureIndex].AnimationStages.OpenHole);
+                }
+
+                // If aperture center is past the threshold on the right
+                // AND it's greater than the aperture edge thickness on the right so that it doesn't close aperture hole too far making little points on hexagon vertices
+                // set it to the distance from apertureCenter.x to the right edge 
+                else if(this.aperturesList[apertureIndex].apertureCenter.x >=  mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance
+                && this.aperturesList[apertureIndex].apertureCenter.x <= mainCanvas.width - this.aperturesList[apertureIndex].fullEdgeThickness) {
+                    this.aperturesList[apertureIndex].setAnimationVariable(mainCanvas.width - this.aperturesList[apertureIndex].apertureCenter.x, this.aperturesList[apertureIndex].AnimationStages.OpenHole);
+                }
                 this.scrollToLeftAnimationStep(scrollSpeedInPercentage);
             }
 
         }
-
+        
     }
 
 }
@@ -614,32 +582,79 @@ let edgePercent = 4;
 let shrinkSpeed = 0.075;
 let openSpeed = 0.5;
 let edgeSpeed = 0.2;
-// let backColor = "#00ff00";
-let backColor = backgroundColor;
-let frontColor = "black";
 
-var mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor, 0.2);
+let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, canvasForegroundColor, apertureEdgeColor, 0.075);
 
-var initialPageOpenTime = new Date();
+let initialPageOpenTime = new Date();
 let delayInitialPauseTimeInSeconds = 1; 
+
+let foreground_X = window.innerWidth*0.50;
+let foreground_Y = window.innerHeight*0.85;
+let foregroundHexSize = window.innerHeight/12;
+let borderHexSize = window.innerHeight/10;
+let borderColor = "#ffffff00";
+
+let fColorWheel = 'hsl(0, 100%, 50%)';
+
+class hexagonColorSelector {
+    constructor(hexagonCenterPosition, hexagonalApothem, initialColor) {
+        this.hexagonCenterPosition = hexagonCenterPosition;
+        this.hexagonApothem = hexagonalApothem;
+        this.color = initialColor;
+        this.previousColor = initialColor;
+        this.pointerDown = false;
+    }
+
+    drawColorSelector() {
+        ctx.fillStyle = this.color;
+        
+        // Draw hexagon filled shape using lineTo() and closePath() functions going from each vertex and back again in a loop
+        ctx.beginPath();
+        ctx.moveTo(this.hexagonCenterPosition.x + this.hexagonApothem*Math.sin(Math.PI/6), this.hexagonCenterPosition.y + this.hexagonApothem*Math.cos(Math.PI/6));
+    
+        for(let vertex = 0;vertex < 6;vertex++) {
+            ctx.lineTo(this.hexagonCenterPosition.x + this.hexagonApothem*Math.sin(vertex*Math.PI/3 + Math.PI/6), this.hexagonCenterPosition.y + this.hexagonApothem*Math.cos(vertex*Math.PI/3 + Math.PI/6));
+        }
+    
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    setNewHSLAColor(newHSLAColor) {
+        this.color = newHSLAColor;
+    }
+}
+
+let backgroundColorButton = new hexagonColorSelector({x: 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackDropColor + "00");
+
+let apertureEdgeColorButton = new hexagonColorSelector({x: window.innerWidth - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor + "00");
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
     ctx = mainCanvas.getContext("2d");
-
+    
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
 
     mainCanvas.addEventListener('mousemove', onPointerMove);
+    mainCanvas.addEventListener('mousedown', onPointerDown);
+    mainCanvas.addEventListener('mouseup', onPointerUp);
+    mainCanvas.addEventListener('touchstart', (e) => handleTouch(e, onPointerDown));
+    mainCanvas.addEventListener('touchend', (e) => handleTouch(e, onPointerUp));
+    mainCanvas.addEventListener('touchmove', (e) => handleTouch(e, onPointerMove));
 
     initialPageOpenTime = new Date();
+    // let foregroundColorButton = document.getElementById("foregorundColorButt"); 
+    // mainCanvas.appendChild(foregroundColorButton);
+    
     // updateCanvasAnimations handles the sequence of the canvas animations
     updateCanvasAnimations();
 }
 
 function getEventLocation(e)
 {
-    if (e.touches && e.touches.length == 1) {
+    if (e.touches && e.touches.length === 1) {
+        // console.log('touch location: ('+  e.touches[0].clientX + ', ' + e.touches[0].clientY + ')')
         return { 
             x: e.touches[0].clientX,
             y: e.touches[0].clientY
@@ -653,11 +668,30 @@ function getEventLocation(e)
     }
 }
 
-var scrollSpeedInPercentage = -0.5;
+let scrollSpeedInPercentage = -0.5;
+
+let globalPointerDown = false;
+
+let wasTouchEvent = false;
+
+let doneFadingColorSelectorsIn = false;
+let colorSelectorOpacity = 0;
+
+function handleTouch(e, singleTouchHandler) {
+    e.preventDefault();
+    if (e.touches.length <= 1) {
+        singleTouchHandler(e);
+        wasTouchEvent = true;
+    }
+    // else if (e.type == "touchmove" && e.touches.length == 2) {
+    //     isDragging = false;
+    //     handlerPinch(e);
+    // }
+}
 
 function onPointerMove(e) {
-    var mouseLocationOnMove = getEventLocation(e);
-
+    let mouseLocationOnMove = getEventLocation(e);
+    // console.log('touchmovin');
     if(mouseLocationOnMove != undefined && mouseLocationOnMove != null) {
         if(mouseLocationOnMove.x > (2/3)*mainCanvas.width) {
             scrollSpeedInPercentage = ((mouseLocationOnMove.x-((2/3)*mainCanvas.width))/((1/3)*mainCanvas.width))
@@ -668,19 +702,183 @@ function onPointerMove(e) {
         else {
             scrollSpeedInPercentage = 0;
         }
+    
+        if(backgroundColorButton.pointerDown) {
+            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,backgroundColorButton.hexagonCenterPosition.y) /backgroundColorButton.hexagonCenterPosition.y, 0);
+            
+            let verticalColor = 360*(1 - mouseBoundedVertical) + getHueFromHexAColor(backgroundColorButton.previousColor);
+            
+            if(verticalColor > 360) {
+                verticalColor -= 360;
+            }
+            
+            let newColor = HSLToHex(verticalColor, 100, 50);
+            
+            backgroundColorButton.setNewHSLAColor(newColor);
+            canvasBackDropColor = newColor;
+        }
+
+        if(apertureEdgeColorButton.pointerDown) {
+            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,apertureEdgeColorButton.hexagonCenterPosition.y) /apertureEdgeColorButton.hexagonCenterPosition.y, 0);
+            
+            let verticalColor = 360*(1 - mouseBoundedVertical) + getHueFromHexAColor(apertureEdgeColorButton.previousColor);
+            
+            if(verticalColor > 360) {
+                verticalColor -= 360;
+            }
+
+            let newColor = HSLToHex(verticalColor, 100, 50);
+            
+            apertureEdgeColorButton.setNewHSLAColor(newColor);
+            mainApertureTesselation.setTesselationEdgeColor(newColor);
+        }
     }
 }
 
+// https://css-tricks.com/converting-color-spaces-in-javascript/
+
+function HSLToHex(h,s,l) {
+    s /= 100;
+    l /= 100;
+  
+    let c = (1 - Math.abs(2 * l - 1)) * s,
+        x = c * (1 - Math.abs((h / 60) % 2 - 1)),
+        m = l - c/2,
+        r = 0,
+        g = 0, 
+        b = 0; 
+  
+    if (0 <= h && h < 60) {
+      r = c; g = x; b = 0;
+    } else if (60 <= h && h < 120) {
+      r = x; g = c; b = 0;
+    } else if (120 <= h && h < 180) {
+      r = 0; g = c; b = x;
+    } else if (180 <= h && h < 240) {
+      r = 0; g = x; b = c;
+    } else if (240 <= h && h < 300) {
+      r = x; g = 0; b = c;
+    } else if (300 <= h && h < 360) {
+      r = c; g = 0; b = x;
+    }
+    // Having obtained RGB, convert channels to hex
+    r = Math.round((r + m) * 255).toString(16);
+    g = Math.round((g + m) * 255).toString(16);
+    b = Math.round((b + m) * 255).toString(16);
+  
+    // Prepend 0s, if necessary
+    if (r.length == 1)
+      r = "0" + r;
+    if (g.length == 1)
+      g = "0" + g;
+    if (b.length == 1)
+      b = "0" + b;
+  
+    return "#" + r + g + b;
+  }
+  
+function getHueFromHexAColor(H) {
+    // Convert hex to RGB first
+  let r = 0, g = 0, b = 0;
+  if (H.length == 4) {
+    r = "0x" + H[1] + H[1];
+    g = "0x" + H[2] + H[2];
+    b = "0x" + H[3] + H[3];
+  } else if (H.length == 7) {
+    r = "0x" + H[1] + H[2];
+    g = "0x" + H[3] + H[4];
+    b = "0x" + H[5] + H[6];
+  }
+  // Then to HSL
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  let cmin = Math.min(r,g,b),
+      cmax = Math.max(r,g,b),
+      delta = cmax - cmin,
+      h = 0,
+      s = 0,
+      l = 0;
+
+  if (delta == 0)
+    h = 0;
+  else if (cmax == r)
+    h = ((g - b) / delta) % 6;
+  else if (cmax == g)
+    h = (b - r) / delta + 2;
+  else
+    h = (r - g) / delta + 4;
+
+  h = Math.round(h * 60);
+
+  if (h < 0)
+    h += 360;
+
+  l = (cmax + cmin) / 2;
+  s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+  s = +(s * 100).toFixed(1);
+  l = +(l * 100).toFixed(1);
+
+  return h;
+}
+
+let pointerDown = false;
+
+function onPointerDown(e) {
+    let mouseLocationOnDown = getEventLocation(e);
+    
+    globalPointerDown = true;
+    if(Math.hypot(backgroundColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, backgroundColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < foregroundHexSize) {
+        backgroundColorButton.pointerDown = true;
+        apertureEdgeColorButton.pointerDown = false;
+    }
+    
+    if(Math.hypot(apertureEdgeColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, apertureEdgeColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < foregroundHexSize) {
+        apertureEdgeColorButton.pointerDown = true;
+        backgroundColorButton.pointerDown = false;
+    }
+
+    if(mouseLocationOnDown != undefined && mouseLocationOnDown != null) {
+        if(wasTouchEvent) {
+            if(mouseLocationOnDown.x > (2/3)*mainCanvas.width) {
+                scrollSpeedInPercentage = ((mouseLocationOnDown.x-((2/3)*mainCanvas.width))/((1/3)*mainCanvas.width))
+            }
+            else if(mouseLocationOnDown.x < (1/3)*mainCanvas.width) {
+                scrollSpeedInPercentage = -(1-(mouseLocationOnDown.x/((1/3)*mainCanvas.width)))
+            }
+            else {
+                scrollSpeedInPercentage = 0;
+            }
+        }
+    }
+}
+
+function onPointerUp(e) {
+    globalPointerDown = false;
+    console.log('touchup ' + backgroundColorButton.color)
+    backgroundColorButton.pointerDown = false;
+    backgroundColorButton.previousColor = backgroundColorButton.color;
+
+    if(backgroundColorButton.color.length < 9) {
+        backgroundColorButton.color = backgroundColorButton.color + "77";
+    }
+    
+    apertureEdgeColorButton.pointerDown = false;
+    apertureEdgeColorButton.previousColor = apertureEdgeColorButton.color;
+
+    if(apertureEdgeColorButton.color.length < 9) {
+        apertureEdgeColorButton.color = apertureEdgeColorButton.color + "77";
+    }
+}
 // Ensures setupCanvas() is run only once
 window.addEventListener('load', setupCanvas);
 
 // Draws background rectangle on the canvas
-function drawBackground(color = backgroundColor) {
+function drawBackground(color = canvasBackDropColor) {
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
 }
-
 
 // Main Animation Loop using requestAnimationFrame function for each conditional on stage booleans declared above animation
 function updateCanvasAnimations() {
@@ -688,26 +886,41 @@ function updateCanvasAnimations() {
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
 
-    var endInitialPauseTimer = new Date();
+    let endInitialPauseTimer = new Date();
     // Reset the background
-    if((endInitialPauseTimer.getTime()) - initialPageOpenTime.getTime() > 1500) {
+    if((endInitialPauseTimer.getTime()) - initialPageOpenTime.getTime() > 2000) {
         drawBackground();
         mainApertureTesselation.drawTesselation();
+        doneFadingColorSelectorsIn = colorSelectorOpacity >= 200;
+        if(!doneFadingColorSelectorsIn) {
+            colorSelectorOpacity++;
+            let hexColorOpacity = colorSelectorOpacity.toString(16);
+
+            if(hexColorOpacity.length < 2) {
+                hexColorOpacity = '0' + hexColorOpacity;
+            }
+            backgroundColorButton.setNewHSLAColor(canvasBackDropColor + hexColorOpacity);
+            apertureEdgeColorButton.setNewHSLAColor(mainApertureTesselation.edgeColor + hexColorOpacity);
+        }
     }
     else {
         drawBackground("black");
     }
-    // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
+
     
+    backgroundColorButton.drawColorSelector();
+    apertureEdgeColorButton.drawColorSelector();
+    // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
+
     // Canvas Animation
     requestAnimationFrame(updateCanvasAnimations);
 }
 
 // https://stackoverflow.com/questions/1484506/random-color-generator
 function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
+    let letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
       color += letters[Math.floor(Math.random() * 16)];
     }
     return color;
