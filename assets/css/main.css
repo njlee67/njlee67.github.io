@@ -13,14 +13,14 @@
 
 #UI-Layer {
     position: absolute; /* Reposition logo from the natural layout */
-    left: 0px;
-    top: 0px;
+    left: 80%;
+    top: 85%;
     z-index: 2;
 }
 .button {
     border: none;
-    height: 100px;
-    width: 100px;
+    height: 50px;
+    width: 50px;
     color: green;
     padding: 16px 32px;
     text-align: center;
@@ -36,7 +36,8 @@
   .button1 {
     background-color: green; 
     color: black; 
-    border: 2px solid #4CAF50;
+    border: none;
+    position:relative;
   }
   
   .button1:hover {

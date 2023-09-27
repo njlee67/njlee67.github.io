@@ -7,6 +7,7 @@ let ctx;
 // Global variables
 let canvasBackDropColor = "#00ff00";
 let canvasForegroundColor = "#000000";
+let apertureEdgeColor = '#ff0000';
 
 // hexagonApothem is the distance from the center to a vertex of fully tesselated hexagon/aperture when the screen loads 
 const hexagonApothem = Math.round(window.innerHeight/3);
@@ -127,7 +128,13 @@ class aperture {
         };
     }
     
-
+    setForegroundColor(newForegroundColor) {
+        this.foregroundColor = newForegroundColor;
+    }
+    
+    setEdgeColor(newEdgeColor) {
+        this.edgeColor = newEdgeColor;
+    }
 
     // Scale geometric variables based on percentage on the primary dimension, the hexagonalApothem
     percentageToPixelsOfApothem(percentageOfApothem) {
@@ -313,7 +320,7 @@ class aperture {
         // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.fillStyle = '#ff0000'; 
+            ctx.fillStyle = this.edgeColor; 
             ctx.beginPath();
     
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
@@ -452,6 +459,7 @@ class apertureTesselation {
             this.aperturesList[this.aperturesList.length-1].isNJLClosedAperture = true;
         }
 
+        this.doneWithInitialOpeningApertures = false;
     }
 
     // TODO: should really use the aperture class version of this duplicate
@@ -563,7 +571,7 @@ let edgePercent = 4;
 let shrinkSpeed = 0.075;
 let openSpeed = 0.5;
 let edgeSpeed = 0.2;
-let backColor = canvasBackDropColor;
+let backColor = apertureEdgeColor;
 let frontColor = canvasForegroundColor;
 
 let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, frontColor, backColor, 0.2);
@@ -581,18 +589,34 @@ let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x:
     // get currentHue of the colorWheel object and save it in previousHue variable
     // set currentHue = (mouse.y/innerHeight) - previousHue;
     // update the colors of the corresponding html elements
-
 let initialPageOpenTime = new Date();
 let delayInitialPauseTimeInSeconds = 1; 
+
+let foreground_X = window.innerWidth*0.50;
+let foreground_Y = window.innerHeight*0.9;
+let foregroundHexSize = window.innerHeight/12;
+let borderHexSize = window.innerHeight/10;
+let borderColor = "#ffffff00";
+
+let fColorWheel = 'hsl(0, 100%, 50%)';
+    
+let foregroundColorButton = new aperture({x: foreground_X, y: foreground_Y}, foregroundHexSize, 0, 100, 0, 0, 0 ,0, fColorWheel, canvasBackDropColor);
+let foregroundColorButtonBorder = new aperture({x: foreground_X, y: foreground_Y}, borderHexSize, 0, 100, 0, 0, 0 ,0, borderColor, canvasBackDropColor);
+let backColorButton = new aperture({x: foreground_X + 2.5*borderHexSize, y: foreground_Y}, foregroundHexSize, 0, 100, 0, 0, 0 ,0, "#000000dd", canvasForegroundColor);
+let backColorButtonBorder = new aperture({x: foreground_X + 2.5*borderHexSize, y: foreground_Y}, borderHexSize, 0, 100, 0, 0, 0 ,0, borderColor, canvasBackDropColor);
+let edgeColorButton = new aperture({x: foreground_X - 2.5*borderHexSize, y: foreground_Y}, foregroundHexSize, 0, 100, 0, 0, 0 ,0, "#ff0000bb", "#ff0000");
+let edgeButtonBorder = new aperture({x: foreground_X - 2.5*borderHexSize, y: foreground_Y}, borderHexSize, 0, 100, 0, 0, 0 ,0, borderColor, canvasBackDropColor);
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
     ctx = mainCanvas.getContext("2d");
-
+    
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
 
     mainCanvas.addEventListener('mousemove', onPointerMove);
+    mainCanvas.addEventListener('mousedown', onPointerDown);
+    mainCanvas.addEventListener('mouseup', onPointerUp);
 
     initialPageOpenTime = new Date();
     // let foregroundColorButton = document.getElementById("foregorundColorButt"); 
@@ -620,6 +644,7 @@ function getEventLocation(e)
 
 let scrollSpeedInPercentage = -0.5;
 
+
 function onPointerMove(e) {
     let mouseLocationOnMove = getEventLocation(e);
 
@@ -634,8 +659,32 @@ function onPointerMove(e) {
             scrollSpeedInPercentage = 0;
         }
     }
+
+    // console.log(verticalColor);
+    
+    
+    if(pointerDown) {
+        let verticalColor = 360*(mouseLocationOnMove.y/window.innerHeight)
+        fColorWheel = 'hsl(' + verticalColor +  ', 100%, 50%)';
+        foregroundColorButton.setForegroundColor(fColorWheel);
+        canvasBackDropColor = fColorWheel;
+    }
+
 }
 
+let pointerDown = false;
+
+function onPointerDown(e) {
+    let mouseLocationOnDown = getEventLocation(e);
+
+    if(Math.hypot(foreground_X - mouseLocationOnDown.x, foreground_Y - mouseLocationOnDown.y) < foregroundHexSize) {
+        pointerDown = true;
+    }
+}
+
+function onPointerUp(e) {
+    pointerDown = false;
+}
 // Ensures setupCanvas() is run only once
 window.addEventListener('load', setupCanvas);
 
@@ -661,8 +710,17 @@ function updateCanvasAnimations() {
     else {
         drawBackground("black");
     }
-    // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
+
     
+    // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
+    foregroundColorButtonBorder.drawCurrent()
+    foregroundColorButton.drawCurrent();
+
+    backColorButtonBorder.drawCurrent();
+    backColorButton.drawCurrent();
+
+    edgeButtonBorder.drawCurrent();
+    edgeColorButton.drawCurrent();
     // Canvas Animation
     requestAnimationFrame(updateCanvasAnimations);
 }
