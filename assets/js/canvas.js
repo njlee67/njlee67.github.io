@@ -161,10 +161,15 @@ class aperture {
     drawCurrent() {
         if(this.projectThumbnail != null) {
             this.drawProjectInfo();
-            this.drawThumbnail();
-            this.drawBackgroundAperatureQuadrilaterals();
-            this.drawHexagonBorderWindow();
-            this.drawForegroundAperatureQuadrilaterals();
+            if(this.AnimationStages.Shrink.doneWithStageBoolean == true) {
+                this.drawThumbnail();
+                this.drawBackgroundAperatureQuadrilaterals();
+                this.drawHexagonBorderWindow();
+                this.drawForegroundAperatureQuadrilaterals();
+            }
+            else {
+                this.drawHexagon();
+            }
         } else {
             this.drawHexagon();
             if(this.isNJLClosedAperture) {
