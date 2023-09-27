@@ -583,7 +583,7 @@ let shrinkSpeed = 0.075;
 let openSpeed = 0.5;
 let edgeSpeed = 0.2;
 
-let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, canvasForegroundColor, apertureEdgeColor, 0.2);
+let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, canvasForegroundColor, apertureEdgeColor, 0.075);
 
 let initialPageOpenTime = new Date();
 let delayInitialPauseTimeInSeconds = 1; 
@@ -625,9 +625,9 @@ class hexagonColorSelector {
     }
 }
 
-let backgroundColorButton = new hexagonColorSelector({x: 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackDropColor);
+let backgroundColorButton = new hexagonColorSelector({x: 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackDropColor + "00");
 
-let apertureEdgeColorButton = new hexagonColorSelector({x: window.innerWidth - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor);
+let apertureEdgeColorButton = new hexagonColorSelector({x: window.innerWidth - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor + "00");
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
@@ -674,6 +674,9 @@ let globalPointerDown = false;
 
 let wasTouchEvent = false;
 
+let doneFadingColorSelectorsIn = false;
+let colorSelectorOpacity = 0;
+
 function handleTouch(e, singleTouchHandler) {
     e.preventDefault();
     if (e.touches.length <= 1) {
@@ -716,7 +719,7 @@ function onPointerMove(e) {
         }
 
         if(apertureEdgeColorButton.pointerDown) {
-            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,backgroundColorButton.hexagonCenterPosition.y) /backgroundColorButton.hexagonCenterPosition.y, 0);
+            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,apertureEdgeColorButton.hexagonCenterPosition.y) /apertureEdgeColorButton.hexagonCenterPosition.y, 0);
             
             let verticalColor = 360*(1 - mouseBoundedVertical) + getHueFromHexAColor(apertureEdgeColorButton.previousColor);
             
@@ -826,13 +829,13 @@ function onPointerDown(e) {
     
     globalPointerDown = true;
     if(Math.hypot(backgroundColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, backgroundColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < foregroundHexSize) {
-        console.log('touchDown in hex back')
         backgroundColorButton.pointerDown = true;
+        apertureEdgeColorButton.pointerDown = false;
     }
     
     if(Math.hypot(apertureEdgeColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, apertureEdgeColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < foregroundHexSize) {
-        console.log('touchDown in hex edge')
         apertureEdgeColorButton.pointerDown = true;
+        backgroundColorButton.pointerDown = false;
     }
 
     if(mouseLocationOnDown != undefined && mouseLocationOnDown != null) {
@@ -852,12 +855,20 @@ function onPointerDown(e) {
 
 function onPointerUp(e) {
     globalPointerDown = false;
-    console.log('touchup')
+    console.log('touchup ' + backgroundColorButton.color)
     backgroundColorButton.pointerDown = false;
     backgroundColorButton.previousColor = backgroundColorButton.color;
 
+    if(backgroundColorButton.color.length < 9) {
+        backgroundColorButton.color = backgroundColorButton.color + "77";
+    }
+    
     apertureEdgeColorButton.pointerDown = false;
     apertureEdgeColorButton.previousColor = apertureEdgeColorButton.color;
+
+    if(apertureEdgeColorButton.color.length < 9) {
+        apertureEdgeColorButton.color = apertureEdgeColorButton.color + "77";
+    }
 }
 // Ensures setupCanvas() is run only once
 window.addEventListener('load', setupCanvas);
@@ -877,14 +888,26 @@ function updateCanvasAnimations() {
 
     let endInitialPauseTimer = new Date();
     // Reset the background
-    if((endInitialPauseTimer.getTime()) - initialPageOpenTime.getTime() > 1500) {
+    if((endInitialPauseTimer.getTime()) - initialPageOpenTime.getTime() > 2000) {
         drawBackground();
         mainApertureTesselation.drawTesselation();
+        doneFadingColorSelectorsIn = colorSelectorOpacity >= 200;
+        if(!doneFadingColorSelectorsIn) {
+            colorSelectorOpacity++;
+            let hexColorOpacity = colorSelectorOpacity.toString(16);
+
+            if(hexColorOpacity.length < 2) {
+                hexColorOpacity = '0' + hexColorOpacity;
+            }
+            backgroundColorButton.setNewHSLAColor(canvasBackDropColor + hexColorOpacity);
+            apertureEdgeColorButton.setNewHSLAColor(mainApertureTesselation.edgeColor + hexColorOpacity);
+        }
     }
     else {
         drawBackground("black");
     }
 
+    
     backgroundColorButton.drawColorSelector();
     apertureEdgeColorButton.drawColorSelector();
     // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
