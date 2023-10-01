@@ -855,19 +855,18 @@ function onPointerDown(e) {
 
 function onPointerUp(e) {
     globalPointerDown = false;
-    console.log('touchup ' + backgroundColorButton.color)
     backgroundColorButton.pointerDown = false;
     backgroundColorButton.previousColor = backgroundColorButton.color;
 
     if(backgroundColorButton.color.length < 9) {
-        backgroundColorButton.color = backgroundColorButton.color + "77";
+        backgroundColorButton.color = backgroundColorButton.color;
     }
     
     apertureEdgeColorButton.pointerDown = false;
     apertureEdgeColorButton.previousColor = apertureEdgeColorButton.color;
 
     if(apertureEdgeColorButton.color.length < 9) {
-        apertureEdgeColorButton.color = apertureEdgeColorButton.color + "77";
+        apertureEdgeColorButton.color = apertureEdgeColorButton.color;
     }
 }
 // Ensures setupCanvas() is run only once
@@ -891,7 +890,7 @@ function updateCanvasAnimations() {
     if((endInitialPauseTimer.getTime()) - initialPageOpenTime.getTime() > 2000) {
         drawBackground();
         mainApertureTesselation.drawTesselation();
-        doneFadingColorSelectorsIn = colorSelectorOpacity >= 200;
+        doneFadingColorSelectorsIn = colorSelectorOpacity >= 255;
         if(!doneFadingColorSelectorsIn) {
             colorSelectorOpacity++;
             let hexColorOpacity = colorSelectorOpacity.toString(16);
