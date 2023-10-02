@@ -101,6 +101,8 @@ class aperture {
                 currentStageVariable: this.currentShrunkenSize, 
                 doneWithStageBoolean: this.doneShrinking,
                 pixelsPerFrame: this.shrinkPixelsPerFrame},
+                duration: 1000,
+                startTime: undefined,
             Expand: {
                 currentStageVariable: this.currentShrunkenSize, 
                 doneWithStageBoolean: this.doneExpanding,
@@ -127,7 +129,24 @@ class aperture {
                 pixelsPerFrame: this.edgeClosePixelsPerFrame}
         };
     }
+
+    // // https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
+    // drawShrinkAnimationStep(timeStamp) {
+    //     if(this.AnimationStages.Shrink.startTime === undefined) {
+    //         this.AnimationStages.Shrink.startTime = timeStamp;
+    //     }
+
+    //     const animationProgress = (timeStamp - start) / this.AnimationStages.Shrink.duration;
+
+    //     if(animationProgress < 1) {
+    //         this.AnimationStages.Shrink.currentStageVariable = (this.fullyShrunkenHexagonSize - this.hexagonalApothem) * animationProgress + this.hexagonalApothem;
+    //         this.drawCurrent();
+    //         requestAnimationFrame(this.drawShrinkAnimationStep.bind(this));
+    //     }
+    // }
+
     
+
     setForegroundColor(newForegroundColor) {
         this.foregroundColor = newForegroundColor;
     }
@@ -188,20 +207,6 @@ class aperture {
             }
         }
     }
-    // TODO: drawText()
-    // drawText(textString, percentageOfApothem, color, x_relative, y_relative) {
-    //     ctx.fillStyle = color;
-    //     let fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(percentageOfApothem));
-    //     ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
-    //     let textWidth = ctx.measureText(textString).width;
-    //     let textHeight = fontSizeFractionOfApothem;
-    //     ctx.fillText(textString, this.apertureCenter.x + x_relative, this.apertureCenter.y + y_relative);
-    //     fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(20));
-    //     ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
-    //     let portfolioWidth = ctx.measureText('portfolio').width;
-    //     ctx.fillText('portfolio', this.apertureCenter.x - (portfolioWidth/2), this.apertureCenter.y + (Math.round(this.percentageToPixelsOfApothem(45))) )
-
-    // }
 
     drawProjectInfo() {
         if(this.projectTextCurrentFadeValue.toString(16).length > 1) {
@@ -390,6 +395,8 @@ class aperture {
     }
 
 }
+
+// https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
 
 class apertureTesselation {
     constructor(projectInfoList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, edgeColor, maximumScrollPixelsPerFrame) {
@@ -629,6 +636,25 @@ let backgroundColorButton = new hexagonColorSelector({x: 1.5*borderHexSize, y: f
 
 let apertureEdgeColorButton = new hexagonColorSelector({x: window.innerWidth - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor + "00");
 
+
+let stort = undefined;
+
+function drawShrinkAnimationStep(timeStamp) {
+    if(stort === undefined) {
+        stort = timeStamp;
+    }
+
+    const animationProgress = (timeStamp - stort) / 1000;
+    if(animationProgress < 1) {
+        drawBackground();
+        let commandValue = mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize - ((mainApertureTesselation.aperturesList[4].hexagonalApothem - mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize) * (animationProgress - 1.0));
+
+        mainApertureTesselation.aperturesList[4].AnimationStages.Shrink.currentStageVariable = commandValue;
+        mainApertureTesselation.aperturesList[4].drawHexagon();
+        requestAnimationFrame(drawShrinkAnimationStep);
+    }
+}
+
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
     ctx = mainCanvas.getContext("2d");
@@ -646,9 +672,9 @@ function setupCanvas() {
     initialPageOpenTime = new Date();
     // let foregroundColorButton = document.getElementById("foregorundColorButt"); 
     // mainCanvas.appendChild(foregroundColorButton);
-    
+    requestAnimationFrame(drawShrinkAnimationStep);
     // updateCanvasAnimations handles the sequence of the canvas animations
-    updateCanvasAnimations();
+    // updateCanvasAnimations();
 }
 
 function getEventLocation(e)
@@ -889,7 +915,8 @@ function updateCanvasAnimations() {
     // Reset the background
     if((endInitialPauseTimer.getTime()) - initialPageOpenTime.getTime() > 2000) {
         drawBackground();
-        mainApertureTesselation.drawTesselation();
+        // mainApertureTesselation.drawTesselation();
+        // mainApertureTesselation.aperturesList[15];
         doneFadingColorSelectorsIn = colorSelectorOpacity >= 255;
         if(!doneFadingColorSelectorsIn) {
             colorSelectorOpacity++;
