@@ -227,7 +227,6 @@ class aperture {
 
     setAnimationProgress(progressValue, AnimationStageEnum) {
         let command = (AnimationStageEnum.finalValue - AnimationStageEnum.initialValue)*progressValue + AnimationStageEnum.initialValue;
-        console.log(command)
         AnimationStageEnum.currentStageVariable = command;
         this.drawCurrent();
     }
@@ -579,7 +578,7 @@ class apertureTesselation {
 
 let shrinkPercent = 90;
 let openPercent = 60;
-let edgePercent = 5;
+let edgePercent = 4;
 let shrinkSpeed = 0.075;
 let openSpeed = 0.5;
 let edgeSpeed = 0.2;
@@ -646,7 +645,6 @@ function shrinkAnimationStep(timeStamp) {
     
     if(animationProgress < 1) {
         drawBackground();
-        // let commandValue = mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize - ((mainApertureTesselation.aperturesList[4].hexagonalApothem - mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize) * (animationProgress - 1.0));
         for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
             mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.Shrink);
         }
@@ -706,7 +704,7 @@ function setupCanvas() {
 
     requestAnimationFrame(shrinkAnimationStep);
     // updateCanvasAnimations handles the sequence of the canvas animations
-    updateCanvasAnimations();
+    // updateCanvasAnimations();
 }
 
 function getEventLocation(e)
@@ -944,7 +942,7 @@ function updateCanvasAnimations() {
     mainCanvas.height = window.innerHeight;
 
     drawBackground();
-    mainApertureTesselation.drawTesselation();
+    // mainApertureTesselation.drawTesselation();
     
     backgroundColorButton.drawColorSelector();
     apertureEdgeColorButton.drawColorSelector();
