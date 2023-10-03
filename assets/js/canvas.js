@@ -637,13 +637,13 @@ function drawShrinkAnimationStep(timeStamp) {
         stort = timeStamp;
     }
 
-    const animationProgress = (timeStamp - stort) / 1000;
+    const animationProgress = (timeStamp - stort) / 4000;
     if(animationProgress < 1) {
         drawBackground();
         // let commandValue = mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize - ((mainApertureTesselation.aperturesList[4].hexagonalApothem - mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize) * (animationProgress - 1.0));
-
-        mainApertureTesselation.aperturesList[4].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[4].AnimationStages.Shrink);
-        // mainApertureTesselation.aperturesList[4].drawHexagon();
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
+            mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.Shrink);
+        }
         requestAnimationFrame(drawShrinkAnimationStep);
     }
 }
