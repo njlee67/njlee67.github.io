@@ -227,6 +227,7 @@ class aperture {
 
     setAnimationProgress(progressValue, AnimationStageEnum) {
         let command = (AnimationStageEnum.finalValue - AnimationStageEnum.initialValue)*progressValue + AnimationStageEnum.initialValue;
+        console.log(command)
         AnimationStageEnum.currentStageVariable = command;
         this.drawCurrent();
     }
@@ -578,7 +579,7 @@ class apertureTesselation {
 
 let shrinkPercent = 90;
 let openPercent = 60;
-let edgePercent = 4;
+let edgePercent = 5;
 let shrinkSpeed = 0.075;
 let openSpeed = 0.5;
 let edgeSpeed = 0.2;
@@ -625,26 +626,65 @@ class hexagonColorSelector {
     }
 }
 
-let backgroundColorButton = new hexagonColorSelector({x: 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackDropColor + "00");
+let backgroundColorButton = new hexagonColorSelector({x: 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackDropColor);
 
-let apertureEdgeColorButton = new hexagonColorSelector({x: window.innerWidth - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor + "00");
+let apertureEdgeColorButton = new hexagonColorSelector({x: window.innerWidth - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor);
 
 
 let stort = undefined;
+let globalAnimationId;
+let dramaticPageOpenPause = 1500;
+let shrinkDuration = 2000;
+let openHoleDuration = 2000;
 
-function drawShrinkAnimationStep(timeStamp) {
+function shrinkAnimationStep(timeStamp) {
     if(stort === undefined) {
         stort = timeStamp;
     }
 
-    const animationProgress = (timeStamp - stort) / 4000;
+    const animationProgress = (timeStamp - stort) / shrinkDuration;
+    
     if(animationProgress < 1) {
         drawBackground();
         // let commandValue = mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize - ((mainApertureTesselation.aperturesList[4].hexagonalApothem - mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize) * (animationProgress - 1.0));
         for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
             mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.Shrink);
         }
-        requestAnimationFrame(drawShrinkAnimationStep);
+        globalAnimationId = requestAnimationFrame(shrinkAnimationStep);
+    }
+    else {
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
+            mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.Shrink.doneWithStageBoolean = true;
+        }
+        cancelAnimationFrame(globalAnimationId);
+        stort = undefined;
+        requestAnimationFrame(openEdgesAnimationStep);
+    }
+}
+
+function openEdgesAnimationStep(timeStamp) {
+    if(stort === undefined) {
+        stort = timeStamp;
+    }
+
+    const animationProgress = (timeStamp - stort) / openHoleDuration;
+    
+    if(animationProgress < 1) {
+        drawBackground();
+        // let commandValue = mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize - ((mainApertureTesselation.aperturesList[4].hexagonalApothem - mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize) * (animationProgress - 1.0));
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
+            mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenEdge);
+            mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenHole);
+        }
+        globalAnimationId = requestAnimationFrame(openEdgesAnimationStep);
+    }
+    else {
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
+            mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean = true;
+            mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenEdge.doneWithStageBoolean = true;
+        }
+        cancelAnimationFrame(globalAnimationId);
+        stort = undefined;
     }
 }
 
@@ -663,11 +703,10 @@ function setupCanvas() {
     mainCanvas.addEventListener('touchmove', (e) => handleTouch(e, onPointerMove));
 
     initialPageOpenTime = new Date();
-    // let foregroundColorButton = document.getElementById("foregorundColorButt"); 
-    // mainCanvas.appendChild(foregroundColorButton);
-    requestAnimationFrame(drawShrinkAnimationStep);
+
+    requestAnimationFrame(shrinkAnimationStep);
     // updateCanvasAnimations handles the sequence of the canvas animations
-    // updateCanvasAnimations();
+    updateCanvasAnimations();
 }
 
 function getEventLocation(e)
@@ -904,32 +943,11 @@ function updateCanvasAnimations() {
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
 
-    let endInitialPauseTimer = new Date();
-    // Reset the background
-    if((endInitialPauseTimer.getTime()) - initialPageOpenTime.getTime() > 2000) {
-        drawBackground();
-        // mainApertureTesselation.drawTesselation();
-        // mainApertureTesselation.aperturesList[15];
-        doneFadingColorSelectorsIn = colorSelectorOpacity >= 255;
-        if(!doneFadingColorSelectorsIn) {
-            colorSelectorOpacity++;
-            let hexColorOpacity = colorSelectorOpacity.toString(16);
-
-            if(hexColorOpacity.length < 2) {
-                hexColorOpacity = '0' + hexColorOpacity;
-            }
-            backgroundColorButton.setNewHSLAColor(canvasBackDropColor + hexColorOpacity);
-            apertureEdgeColorButton.setNewHSLAColor(mainApertureTesselation.edgeColor + hexColorOpacity);
-        }
-    }
-    else {
-        drawBackground("black");
-    }
-
+    drawBackground();
+    mainApertureTesselation.drawTesselation();
     
     backgroundColorButton.drawColorSelector();
     apertureEdgeColorButton.drawColorSelector();
-    // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
 
     // Canvas Animation
     requestAnimationFrame(updateCanvasAnimations);
