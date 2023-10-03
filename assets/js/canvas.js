@@ -100,52 +100,41 @@ class aperture {
             Shrink: {
                 currentStageVariable: this.currentShrunkenSize, 
                 doneWithStageBoolean: this.doneShrinking,
-                pixelsPerFrame: this.shrinkPixelsPerFrame},
-                duration: 1000,
-                startTime: undefined,
+                pixelsPerFrame: this.shrinkPixelsPerFrame,
+                initialValue: this.hexagonalApothem,
+                finalValue: this.fullyShrunkenHexagonSize},
             Expand: {
                 currentStageVariable: this.currentShrunkenSize, 
                 doneWithStageBoolean: this.doneExpanding,
-                pixelsPerFrame: this.expandPixelsPerFrame},
+                pixelsPerFrame: this.expandPixelsPerFrame,
+                initialValue: this.fullyShrunkenHexagonSize,
+                finalValue: this.hexagonalApothem},
             OpenHole: {
                 currentStageVariable: this.currentOpenedDistance, 
                 doneWithStageBoolean: this.doneOpeningApertureHole,
-                pixelsPerFrame: this.openPixelsPerFrame},
+                pixelsPerFrame: this.openPixelsPerFrame,
+                initialValue: 0,
+                finalValue: this.fullyOpenedDistance},
             CloseHole: {
                 currentStageVariable: this.currentOpenedDistance, 
                 doneWithStageBoolean: this.doneClosingApertureHole,
-                pixelsPerFrame: this.closePixelsPerFrame},
+                pixelsPerFrame: this.closePixelsPerFrame,
+                initialValue: this.fullyOpenedDistance,
+                finalValue: 0},
             OpenEdge: {
                 currentStageVariable: this.currentOpenedDistance, 
-                // currentStageVariables: {
-                //     edgeThickness: this.currentEdgeThickness, 
-                //     openedDistance: this.currentOpenedDistance
-                // },
                 doneWithStageBoolean: this.doneOpeningEdge,
-                pixelsPerFrame: this.edgeOpenPixelsPerFrame},
+                pixelsPerFrame: this.edgeOpenPixelsPerFrame,
+                initialValue: 0,
+                finalValue: this.fullEdgeThickness},
             CloseEdge: {
                 currentStageVariable: this.currentEdgeThickness, 
                 doneWithStageBoolean: this.doneClosingEdge,
-                pixelsPerFrame: this.edgeClosePixelsPerFrame}
+                pixelsPerFrame: this.edgeClosePixelsPerFrame,
+                initialValue: this.fullEdgeThickness,
+                finalValue: 0},
         };
     }
-
-    // // https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
-    // drawShrinkAnimationStep(timeStamp) {
-    //     if(this.AnimationStages.Shrink.startTime === undefined) {
-    //         this.AnimationStages.Shrink.startTime = timeStamp;
-    //     }
-
-    //     const animationProgress = (timeStamp - start) / this.AnimationStages.Shrink.duration;
-
-    //     if(animationProgress < 1) {
-    //         this.AnimationStages.Shrink.currentStageVariable = (this.fullyShrunkenHexagonSize - this.hexagonalApothem) * animationProgress + this.hexagonalApothem;
-    //         this.drawCurrent();
-    //         requestAnimationFrame(this.drawShrinkAnimationStep.bind(this));
-    //     }
-    // }
-
-    
 
     setForegroundColor(newForegroundColor) {
         this.foregroundColor = newForegroundColor;
@@ -233,6 +222,12 @@ class aperture {
 
     setAnimationVariable(setValue, AnimationStageEnum) {
         AnimationStageEnum.currentStageVariable = setValue;
+        this.drawCurrent();
+    }
+
+    setAnimationProgress(progressValue, AnimationStageEnum) {
+        let command = (AnimationStageEnum.finalValue - AnimationStageEnum.initialValue)*progressValue + AnimationStageEnum.initialValue;
+        AnimationStageEnum.currentStageVariable = command;
         this.drawCurrent();
     }
 
@@ -363,8 +358,6 @@ class aperture {
         }
     }
 
-    // TODO: make the tesselation as long as needed to fit all thumbnail project 
-    // images and travel that distance when scrolling left/right to se all and not have to have a shifting cache then reset transition
     attachThumbnaiil(projectInfoObject) {
         this.projectThumbnail = new Image();
         this.projectThumbnail.onload = function(){ 
@@ -647,10 +640,10 @@ function drawShrinkAnimationStep(timeStamp) {
     const animationProgress = (timeStamp - stort) / 1000;
     if(animationProgress < 1) {
         drawBackground();
-        let commandValue = mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize - ((mainApertureTesselation.aperturesList[4].hexagonalApothem - mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize) * (animationProgress - 1.0));
+        // let commandValue = mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize - ((mainApertureTesselation.aperturesList[4].hexagonalApothem - mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize) * (animationProgress - 1.0));
 
-        mainApertureTesselation.aperturesList[4].AnimationStages.Shrink.currentStageVariable = commandValue;
-        mainApertureTesselation.aperturesList[4].drawHexagon();
+        mainApertureTesselation.aperturesList[4].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[4].AnimationStages.Shrink);
+        // mainApertureTesselation.aperturesList[4].drawHexagon();
         requestAnimationFrame(drawShrinkAnimationStep);
     }
 }
