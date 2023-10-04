@@ -14,24 +14,25 @@ const hexagonApothem = Math.round(window.innerHeight/3);
 
 // projectInfo class contains all the information and media related to a project thumbnail/description and is used to add new projects
 class projectInfo {
-    constructor(relativeImageFilePath, projectName, projectVersion, projectTopic) {
+    constructor(relativeImageFilePath, relativeAnimationFilePaths, projectName, projectVersion, projectTopic) {
         this.relativeImageFilePath = relativeImageFilePath;
         this.projectName = projectName;
         this.projectVersion = projectVersion;
         this.projectTopic = projectTopic;
+        this.relativeAnimationFilePaths = relativeAnimationFilePaths;
     }
 }
 
 // projectInfo variables for the projects I want to display on this portfolio page
-let lmbbV2 = new projectInfo('/images/thumbnails/LMBB v2.jpg', 'LMBB v2', 'v2.0', 'BT Speaker');
-let yoyos = new projectInfo('images/thumbnails/design-and-manufacturing-2-Yo-Yos.jpg', '2.008 YoYos', '', 'Class Project');
-let noStress = new projectInfo('images/thumbnails/dont-stress-hoodie.jpg', "Don't Stress", 'v1.0', 'Custom Apparel');
-let lmbbV1 = new projectInfo('images/thumbnails/LMBB v1.0.jpg', 'LMBB v1', 'v1.0', 'BT Speaker');
-let noCap = new projectInfo('images/thumbnails/No-Cap-Hoodie.jpg', 'No Cap', 'v1.0', 'Custom Apparel');
-let QUAD = new projectInfo('images/thumbnails/QUAD.PNG', 'QUAD', 'v1.0', 'Legged Robot');
-let satchPackV1 = new projectInfo('images/thumbnails/SatchPack-v1.jpg', 'SatchPack', 'v1.0', 'Backpack/Desk');
-let uAreal1 = new projectInfo('images/thumbnails/youre-a-real-1-hoodie.jpg', 'Ur a Real 1', 'v1.0', 'Custom Apparel');
-let ALEEgators = new projectInfo('images/thumbnails/ALEEgators.jpg', 'ALEEgators', 'v1.0', 'Custom Footwear');
+let lmbbV2 = new projectInfo('/images/thumbnails/LMBB v2.jpg',['/images/thumbnails/LMBB v2 frame 0.JPG', '/images/thumbnails/LMBB v2 frame 1.JPG', '/images/thumbnails/LMBB v2 frame 2.JPG', '/images/thumbnails/LMBB v2 frame 3.JPG'], 'LMBB v2', 'v2.0', 'BT Speaker');
+let yoyos = new projectInfo('images/thumbnails/design-and-manufacturing-2-Yo-Yos.jpg', [], '2.008 YoYos', '', 'Class Project');
+let noStress = new projectInfo('images/thumbnails/dont-stress-hoodie.jpg', [], "Don't Stress", 'v1.0', 'Custom Apparel');
+let lmbbV1 = new projectInfo('images/thumbnails/LMBB v1.0.jpg', [], 'LMBB v1', 'v1.0', 'BT Speaker');
+let noCap = new projectInfo('images/thumbnails/No-Cap-Hoodie.jpg', [], 'No Cap', 'v1.0', 'Custom Apparel');
+let QUAD = new projectInfo('images/thumbnails/QUAD.PNG', [], 'QUAD', 'v1.0', 'Legged Robot');
+let satchPackV1 = new projectInfo('images/thumbnails/SatchPack-v1.jpg', [], 'SatchPack', 'v1.0', 'Backpack/Desk');
+let uAreal1 = new projectInfo('images/thumbnails/youre-a-real-1-hoodie.jpg', [], 'Ur a Real 1', 'v1.0', 'Custom Apparel');
+let ALEEgators = new projectInfo('images/thumbnails/ALEEgators.jpg', [], 'ALEEgators', 'v1.0', 'Custom Footwear');
 
 // list of projectInfoObjects used to create apertureTessalation
 let projectInfoObjectList = [
@@ -364,6 +365,15 @@ class aperture {
         };
         this.projectThumbnail.src = projectInfoObject.relativeImageFilePath;
         this.projectInfoObject = projectInfoObject;
+    }
+
+    setThumbnailAnimation(progress) {
+        let scaledProgress = Math.min(Math.floor(this.projectInfoObject.relativeAnimationFilePaths.length * progress), this.projectInfoObject.relativeAnimationFilePaths.length - 1);
+        this.projectThumbnail = new Image();
+        this.projectThumbnail.onload = function(){ 
+        };
+        console.log("scaled progress: " + scaledProgress)
+        this.projectThumbnail.src = this.projectInfoObject.relativeAnimationFilePaths[scaledProgress];
     }
     
     drawThumbnail() {
@@ -728,8 +738,41 @@ function openAperturesAnimationStep(timeStamp) {
 
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
-        requestAnimationFrame(updateCanvasAnimations);
+        requestAnimationFrame(animateThumbnail);
     }
+}
+
+function animateThumbnail(timeStamp) {
+    if(animationStartTime == undefined) {
+        animationStartTime = timeStamp;
+    }
+    
+    const animationProgress = (timeStamp - animationStartTime) / 3000;
+    
+    if(animationProgress < 1) {
+        drawBackground();
+
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
+            if(mainApertureTesselation.aperturesList[apertureIndex].projectThumbnail != null) {
+                if(mainApertureTesselation.aperturesList[apertureIndex].projectInfoObject.relativeAnimationFilePaths.length > 0) {
+                    mainApertureTesselation.aperturesList[apertureIndex].setThumbnailAnimation(animationProgress);
+                }
+            }
+        }
+
+        mainApertureTesselation.drawCurrentTesselation();
+
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
+        globalAnimationId = requestAnimationFrame(animateThumbnail);
+    }
+    else {
+        cancelAnimationFrame(globalAnimationId);
+        animationStartTime = undefined;
+        globalAnimationId = requestAnimationFrame(animateThumbnail);
+    }
+
 }
 
 function setupCanvas() {
