@@ -494,6 +494,17 @@ class apertureTesselation {
         }
     }
 
+    drawCurrentTesselation() {
+        for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
+            this.aperturesList[apertureIndex].drawCurrent();
+        }
+
+        if(this.aperturesList[0].AnimationStages.OpenHole.doneWithStageBoolean == true) {
+            console.log('done with open')
+            this.scrollToLeftAnimationStep(scrollSpeedInPercentage);
+        }
+    }
+
     drawTesselation() {
         for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
             // if((this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullyOpenedDistance
@@ -582,8 +593,9 @@ let edgePercent = 4;
 let shrinkSpeed = 0.075;
 let openSpeed = 0.5;
 let edgeSpeed = 0.2;
+let scrollSpeedMultiplier = 7;
 
-let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, canvasForegroundColor, apertureEdgeColor, 0.075);
+let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, canvasForegroundColor, apertureEdgeColor, scrollSpeedMultiplier);
 
 let initialPageOpenTime = new Date();
 let delayInitialPauseTimeInSeconds = 1; 
@@ -656,11 +668,11 @@ function shrinkAnimationStep(timeStamp) {
         }
         cancelAnimationFrame(globalAnimationId);
         stort = undefined;
-        requestAnimationFrame(openEdgesAnimationStep);
+        requestAnimationFrame(openAperturesAnimationStep);
     }
 }
 
-function openEdgesAnimationStep(timeStamp) {
+function openAperturesAnimationStep(timeStamp) {
     if(stort === undefined) {
         stort = timeStamp;
     }
@@ -674,7 +686,7 @@ function openEdgesAnimationStep(timeStamp) {
             mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenEdge);
             mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenHole);
         }
-        globalAnimationId = requestAnimationFrame(openEdgesAnimationStep);
+        globalAnimationId = requestAnimationFrame(openAperturesAnimationStep);
     }
     else {
         for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
@@ -683,6 +695,7 @@ function openEdgesAnimationStep(timeStamp) {
         }
         cancelAnimationFrame(globalAnimationId);
         stort = undefined;
+        requestAnimationFrame(updateCanvasAnimations);
     }
 }
 
@@ -942,7 +955,8 @@ function updateCanvasAnimations() {
     mainCanvas.height = window.innerHeight;
 
     drawBackground();
-    // mainApertureTesselation.drawTesselation();
+    console.log(scrollSpeedInPercentage)
+    mainApertureTesselation.drawCurrentTesselation();
     
     backgroundColorButton.drawColorSelector();
     apertureEdgeColorButton.drawColorSelector();
