@@ -706,7 +706,7 @@ function openAperturesAnimationStep(timeStamp) {
         animationStartTime = timeStamp;
     }
 
-    const animationProgress = 7*powerTiming( (timeStamp - animationStartTime) / openHoleDuration - 0.5, 3) - 0.75*powerTiming( (timeStamp - animationStartTime) / openHoleDuration, 2) + 0.875;
+    const animationProgress = powerTiming( (timeStamp - animationStartTime) / openHoleDuration, 3);
     
     if(animationProgress < 1) {
         drawBackground();
