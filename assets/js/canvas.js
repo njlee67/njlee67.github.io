@@ -588,7 +588,7 @@ let shrinkPercent = 90;
 let openPercent = 60;
 let edgePercent = 4;
 let shrinkSpeed = 0.075;
-let openSpeed = 0.5;
+let openSpeed = 10;
 let edgeSpeed = 0.2;
 let scrollSpeedMultiplier = 7;
 
@@ -641,7 +641,7 @@ let apertureEdgeColorButton = new hexagonColorSelector({x: window.innerWidth - 1
 
 let animationStartTime = undefined;
 let globalAnimationId;
-let dramaticPageOpenDuration = 3000;
+let dramaticPageOpenDuration = 2000;
 let shrinkDuration = 2000;
 let openHoleDuration = 2000;
 
@@ -668,13 +668,17 @@ function dramaticPageOpenPause(timeStamp) {
     }
 
 }
+
+function powerTiming(timing, exponent) {
+    return Math.pow(timing, exponent);
+}
 function shrinkAnimationStep(timeStamp) {
     if(animationStartTime === undefined) {
         animationStartTime = timeStamp;
     }
 
 
-    const animationProgress = (timeStamp - animationStartTime) / shrinkDuration;
+    const animationProgress = powerTiming( (timeStamp - animationStartTime) / shrinkDuration, 4);
     
     if(animationProgress < 1) {
         drawBackground();
@@ -702,7 +706,7 @@ function openAperturesAnimationStep(timeStamp) {
         animationStartTime = timeStamp;
     }
 
-    const animationProgress = (timeStamp - animationStartTime) / openHoleDuration;
+    const animationProgress = 7*powerTiming( (timeStamp - animationStartTime) / openHoleDuration - 0.5, 3) - 0.75*powerTiming( (timeStamp - animationStartTime) / openHoleDuration, 2) + 0.875;
     
     if(animationProgress < 1) {
         drawBackground();
