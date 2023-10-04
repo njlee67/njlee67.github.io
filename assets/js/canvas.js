@@ -100,34 +100,42 @@ class aperture {
             Shrink: {
                 currentStageVariable: this.currentShrunkenSize, 
                 doneWithStageBoolean: this.doneShrinking,
-                pixelsPerFrame: this.shrinkPixelsPerFrame},
+                pixelsPerFrame: this.shrinkPixelsPerFrame,
+                initialValue: this.hexagonalApothem,
+                finalValue: this.fullyShrunkenHexagonSize},
             Expand: {
                 currentStageVariable: this.currentShrunkenSize, 
                 doneWithStageBoolean: this.doneExpanding,
-                pixelsPerFrame: this.expandPixelsPerFrame},
+                pixelsPerFrame: this.expandPixelsPerFrame,
+                initialValue: this.fullyShrunkenHexagonSize,
+                finalValue: this.hexagonalApothem},
             OpenHole: {
                 currentStageVariable: this.currentOpenedDistance, 
                 doneWithStageBoolean: this.doneOpeningApertureHole,
-                pixelsPerFrame: this.openPixelsPerFrame},
+                pixelsPerFrame: this.openPixelsPerFrame,
+                initialValue: 0,
+                finalValue: this.fullyOpenedDistance},
             CloseHole: {
                 currentStageVariable: this.currentOpenedDistance, 
                 doneWithStageBoolean: this.doneClosingApertureHole,
-                pixelsPerFrame: this.closePixelsPerFrame},
+                pixelsPerFrame: this.closePixelsPerFrame,
+                initialValue: this.fullyOpenedDistance,
+                finalValue: 0},
             OpenEdge: {
                 currentStageVariable: this.currentOpenedDistance, 
-                // currentStageVariables: {
-                //     edgeThickness: this.currentEdgeThickness, 
-                //     openedDistance: this.currentOpenedDistance
-                // },
                 doneWithStageBoolean: this.doneOpeningEdge,
-                pixelsPerFrame: this.edgeOpenPixelsPerFrame},
+                pixelsPerFrame: this.edgeOpenPixelsPerFrame,
+                initialValue: 0,
+                finalValue: this.fullEdgeThickness},
             CloseEdge: {
                 currentStageVariable: this.currentEdgeThickness, 
                 doneWithStageBoolean: this.doneClosingEdge,
-                pixelsPerFrame: this.edgeClosePixelsPerFrame}
+                pixelsPerFrame: this.edgeClosePixelsPerFrame,
+                initialValue: this.fullEdgeThickness,
+                finalValue: 0},
         };
     }
-    
+
     setForegroundColor(newForegroundColor) {
         this.foregroundColor = newForegroundColor;
     }
@@ -188,20 +196,6 @@ class aperture {
             }
         }
     }
-    // TODO: drawText()
-    // drawText(textString, percentageOfApothem, color, x_relative, y_relative) {
-    //     ctx.fillStyle = color;
-    //     let fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(percentageOfApothem));
-    //     ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
-    //     let textWidth = ctx.measureText(textString).width;
-    //     let textHeight = fontSizeFractionOfApothem;
-    //     ctx.fillText(textString, this.apertureCenter.x + x_relative, this.apertureCenter.y + y_relative);
-    //     fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(20));
-    //     ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
-    //     let portfolioWidth = ctx.measureText('portfolio').width;
-    //     ctx.fillText('portfolio', this.apertureCenter.x - (portfolioWidth/2), this.apertureCenter.y + (Math.round(this.percentageToPixelsOfApothem(45))) )
-
-    // }
 
     drawProjectInfo() {
         if(this.projectTextCurrentFadeValue.toString(16).length > 1) {
@@ -228,6 +222,12 @@ class aperture {
 
     setAnimationVariable(setValue, AnimationStageEnum) {
         AnimationStageEnum.currentStageVariable = setValue;
+        this.drawCurrent();
+    }
+
+    setAnimationProgress(progressValue, AnimationStageEnum) {
+        let command = (AnimationStageEnum.finalValue - AnimationStageEnum.initialValue)*progressValue + AnimationStageEnum.initialValue;
+        AnimationStageEnum.currentStageVariable = command;
         this.drawCurrent();
     }
 
@@ -358,8 +358,6 @@ class aperture {
         }
     }
 
-    // TODO: make the tesselation as long as needed to fit all thumbnail project 
-    // images and travel that distance when scrolling left/right to se all and not have to have a shifting cache then reset transition
     attachThumbnaiil(projectInfoObject) {
         this.projectThumbnail = new Image();
         this.projectThumbnail.onload = function(){ 
@@ -494,6 +492,16 @@ class apertureTesselation {
         }
     }
 
+    drawCurrentTesselation() {
+        for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
+            this.aperturesList[apertureIndex].drawCurrent();
+        }
+
+        if(this.aperturesList[0].AnimationStages.OpenHole.doneWithStageBoolean == true) {
+            this.scrollToLeftAnimationStep(scrollSpeedInPercentage);
+        }
+    }
+
     drawTesselation() {
         for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
             // if((this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullyOpenedDistance
@@ -580,10 +588,11 @@ let shrinkPercent = 90;
 let openPercent = 60;
 let edgePercent = 4;
 let shrinkSpeed = 0.075;
-let openSpeed = 0.5;
+let openSpeed = 10;
 let edgeSpeed = 0.2;
+let scrollSpeedMultiplier = 7;
 
-let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, canvasForegroundColor, apertureEdgeColor, 0.075);
+let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, canvasForegroundColor, apertureEdgeColor, scrollSpeedMultiplier);
 
 let initialPageOpenTime = new Date();
 let delayInitialPauseTimeInSeconds = 1; 
@@ -625,9 +634,103 @@ class hexagonColorSelector {
     }
 }
 
-let backgroundColorButton = new hexagonColorSelector({x: 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackDropColor + "00");
+let backgroundColorButton = new hexagonColorSelector({x: 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackDropColor);
 
-let apertureEdgeColorButton = new hexagonColorSelector({x: window.innerWidth - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor + "00");
+let apertureEdgeColorButton = new hexagonColorSelector({x: window.innerWidth - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor);
+
+
+let animationStartTime = undefined;
+let globalAnimationId;
+let dramaticPageOpenDuration = 2000;
+let shrinkDuration = 2000;
+let openHoleDuration = 2000;
+
+// https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
+
+function dramaticPageOpenPause(timeStamp) {
+    if(animationStartTime === undefined) {
+        animationStartTime = timeStamp;
+    }
+
+    const dramaticPageOpenProgress = (timeStamp - animationStartTime) / dramaticPageOpenDuration;
+
+    if(dramaticPageOpenProgress < 1) {
+        drawBackground("#000000");
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
+        globalAnimationId = requestAnimationFrame(dramaticPageOpenPause)
+    }
+    else {
+        cancelAnimationFrame(globalAnimationId);
+        animationStartTime = undefined;
+        requestAnimationFrame(shrinkAnimationStep);
+    }
+
+}
+
+function powerTiming(timing, exponent) {
+    return Math.pow(timing, exponent);
+}
+function shrinkAnimationStep(timeStamp) {
+    if(animationStartTime === undefined) {
+        animationStartTime = timeStamp;
+    }
+
+
+    const animationProgress = powerTiming( (timeStamp - animationStartTime) / shrinkDuration, 4);
+    
+    if(animationProgress < 1) {
+        drawBackground();
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
+            mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.Shrink);
+        }
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
+        globalAnimationId = requestAnimationFrame(shrinkAnimationStep);
+    }
+    else {
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
+            mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.Shrink.doneWithStageBoolean = true;
+        }
+
+        cancelAnimationFrame(globalAnimationId);
+        animationStartTime = undefined;
+        requestAnimationFrame(openAperturesAnimationStep);
+    }
+}
+
+function openAperturesAnimationStep(timeStamp) {
+    if(animationStartTime === undefined) {
+        animationStartTime = timeStamp;
+    }
+
+    const animationProgress = 7*powerTiming( (timeStamp - animationStartTime) / openHoleDuration - 0.5, 3) - 0.75*powerTiming( (timeStamp - animationStartTime) / openHoleDuration, 2) + 0.875;
+    
+    if(animationProgress < 1) {
+        drawBackground();
+        // let commandValue = mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize - ((mainApertureTesselation.aperturesList[4].hexagonalApothem - mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize) * (animationProgress - 1.0));
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
+            mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenEdge);
+            mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenHole);
+        }
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
+        globalAnimationId = requestAnimationFrame(openAperturesAnimationStep);
+    }
+    else {
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
+            mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean = true;
+            mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenEdge.doneWithStageBoolean = true;
+        }
+
+        cancelAnimationFrame(globalAnimationId);
+        animationStartTime = undefined;
+        requestAnimationFrame(updateCanvasAnimations);
+    }
+}
 
 function setupCanvas() {
     mainCanvas = document.getElementById("main-canvas");
@@ -644,11 +747,10 @@ function setupCanvas() {
     mainCanvas.addEventListener('touchmove', (e) => handleTouch(e, onPointerMove));
 
     initialPageOpenTime = new Date();
-    // let foregroundColorButton = document.getElementById("foregorundColorButt"); 
-    // mainCanvas.appendChild(foregroundColorButton);
-    
+
+    requestAnimationFrame(dramaticPageOpenPause);
     // updateCanvasAnimations handles the sequence of the canvas animations
-    updateCanvasAnimations();
+    // updateCanvasAnimations();
 }
 
 function getEventLocation(e)
@@ -855,19 +957,18 @@ function onPointerDown(e) {
 
 function onPointerUp(e) {
     globalPointerDown = false;
-    console.log('touchup ' + backgroundColorButton.color)
     backgroundColorButton.pointerDown = false;
     backgroundColorButton.previousColor = backgroundColorButton.color;
 
     if(backgroundColorButton.color.length < 9) {
-        backgroundColorButton.color = backgroundColorButton.color + "77";
+        backgroundColorButton.color = backgroundColorButton.color;
     }
     
     apertureEdgeColorButton.pointerDown = false;
     apertureEdgeColorButton.previousColor = apertureEdgeColorButton.color;
 
     if(apertureEdgeColorButton.color.length < 9) {
-        apertureEdgeColorButton.color = apertureEdgeColorButton.color + "77";
+        apertureEdgeColorButton.color = apertureEdgeColorButton.color;
     }
 }
 // Ensures setupCanvas() is run only once
@@ -886,31 +987,11 @@ function updateCanvasAnimations() {
     mainCanvas.width = window.innerWidth;
     mainCanvas.height = window.innerHeight;
 
-    let endInitialPauseTimer = new Date();
-    // Reset the background
-    if((endInitialPauseTimer.getTime()) - initialPageOpenTime.getTime() > 2000) {
-        drawBackground();
-        mainApertureTesselation.drawTesselation();
-        doneFadingColorSelectorsIn = colorSelectorOpacity >= 200;
-        if(!doneFadingColorSelectorsIn) {
-            colorSelectorOpacity++;
-            let hexColorOpacity = colorSelectorOpacity.toString(16);
-
-            if(hexColorOpacity.length < 2) {
-                hexColorOpacity = '0' + hexColorOpacity;
-            }
-            backgroundColorButton.setNewHSLAColor(canvasBackDropColor + hexColorOpacity);
-            apertureEdgeColorButton.setNewHSLAColor(mainApertureTesselation.edgeColor + hexColorOpacity);
-        }
-    }
-    else {
-        drawBackground("black");
-    }
-
+    drawBackground();
+    mainApertureTesselation.drawCurrentTesselation();
     
     backgroundColorButton.drawColorSelector();
     apertureEdgeColorButton.drawColorSelector();
-    // // TODO: add light mode feature that makes background black and foreground hexagons green in an animated color gradual color transition/inversion
 
     // Canvas Animation
     requestAnimationFrame(updateCanvasAnimations);
