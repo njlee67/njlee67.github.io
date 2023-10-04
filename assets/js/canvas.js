@@ -389,8 +389,6 @@ class aperture {
 
 }
 
-// https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
-
 class apertureTesselation {
     constructor(projectInfoList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, edgeColor, maximumScrollPixelsPerFrame) {
         this.tesselationOriginPosition = tesselationOriginPosition;
@@ -500,7 +498,6 @@ class apertureTesselation {
         }
 
         if(this.aperturesList[0].AnimationStages.OpenHole.doneWithStageBoolean == true) {
-            console.log('done with open')
             this.scrollToLeftAnimationStep(scrollSpeedInPercentage);
         }
     }
@@ -642,42 +639,70 @@ let backgroundColorButton = new hexagonColorSelector({x: 1.5*borderHexSize, y: f
 let apertureEdgeColorButton = new hexagonColorSelector({x: window.innerWidth - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor);
 
 
-let stort = undefined;
+let animationStartTime = undefined;
 let globalAnimationId;
-let dramaticPageOpenPause = 1500;
+let dramaticPageOpenDuration = 3000;
 let shrinkDuration = 2000;
 let openHoleDuration = 2000;
 
-function shrinkAnimationStep(timeStamp) {
-    if(stort === undefined) {
-        stort = timeStamp;
+// https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
+
+function dramaticPageOpenPause(timeStamp) {
+    if(animationStartTime === undefined) {
+        animationStartTime = timeStamp;
     }
 
-    const animationProgress = (timeStamp - stort) / shrinkDuration;
+    const dramaticPageOpenProgress = (timeStamp - animationStartTime) / dramaticPageOpenDuration;
+
+    if(dramaticPageOpenProgress < 1) {
+        drawBackground("#000000");
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
+        globalAnimationId = requestAnimationFrame(dramaticPageOpenPause)
+    }
+    else {
+        cancelAnimationFrame(globalAnimationId);
+        animationStartTime = undefined;
+        requestAnimationFrame(shrinkAnimationStep);
+    }
+
+}
+function shrinkAnimationStep(timeStamp) {
+    if(animationStartTime === undefined) {
+        animationStartTime = timeStamp;
+    }
+
+
+    const animationProgress = (timeStamp - animationStartTime) / shrinkDuration;
     
     if(animationProgress < 1) {
         drawBackground();
         for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
             mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.Shrink);
         }
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
         globalAnimationId = requestAnimationFrame(shrinkAnimationStep);
     }
     else {
         for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
             mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.Shrink.doneWithStageBoolean = true;
         }
+
         cancelAnimationFrame(globalAnimationId);
-        stort = undefined;
+        animationStartTime = undefined;
         requestAnimationFrame(openAperturesAnimationStep);
     }
 }
 
 function openAperturesAnimationStep(timeStamp) {
-    if(stort === undefined) {
-        stort = timeStamp;
+    if(animationStartTime === undefined) {
+        animationStartTime = timeStamp;
     }
 
-    const animationProgress = (timeStamp - stort) / openHoleDuration;
+    const animationProgress = (timeStamp - animationStartTime) / openHoleDuration;
     
     if(animationProgress < 1) {
         drawBackground();
@@ -686,6 +711,9 @@ function openAperturesAnimationStep(timeStamp) {
             mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenEdge);
             mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenHole);
         }
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
         globalAnimationId = requestAnimationFrame(openAperturesAnimationStep);
     }
     else {
@@ -693,8 +721,9 @@ function openAperturesAnimationStep(timeStamp) {
             mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean = true;
             mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenEdge.doneWithStageBoolean = true;
         }
+
         cancelAnimationFrame(globalAnimationId);
-        stort = undefined;
+        animationStartTime = undefined;
         requestAnimationFrame(updateCanvasAnimations);
     }
 }
@@ -715,7 +744,7 @@ function setupCanvas() {
 
     initialPageOpenTime = new Date();
 
-    requestAnimationFrame(shrinkAnimationStep);
+    requestAnimationFrame(dramaticPageOpenPause);
     // updateCanvasAnimations handles the sequence of the canvas animations
     // updateCanvasAnimations();
 }
@@ -955,7 +984,6 @@ function updateCanvasAnimations() {
     mainCanvas.height = window.innerHeight;
 
     drawBackground();
-    console.log(scrollSpeedInPercentage)
     mainApertureTesselation.drawCurrentTesselation();
     
     backgroundColorButton.drawColorSelector();
