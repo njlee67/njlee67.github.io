@@ -5,12 +5,15 @@ let mainCanvas;
 let ctx;
 
 // Global variables
-let canvasBackDropColor = "#00ff00";
-let canvasForegroundColor = "#000000";
-let apertureEdgeColor = '#ff0000';
+// The canvasBackgroundColor is the color behind the aperture tesselation in between apertures
+let canvasBackgroundColor = "#00ff00";
+// apertureColor is the color of the aperture sides
+let apertureColor = "#000000";
+// apertureSlitColor is the color of the aperture slits in between the sides of the aperture
+let apertureSlitColor = '#ff0000';
 
-// hexagonApothem is the distance from the center to a vertex of fully tesselated hexagon/aperture when the screen loads 
-const hexagonApothem = Math.round(window.innerHeight/3);
+// apertureHexagonApothem is the distance from the center to a vertex of fully tesselated hexagon/aperture when the screen loads 
+const apertureHexagonApothem = Math.round(window.innerHeight/3);
 
 // projectInfo class contains all the information and media related to a project thumbnail/description and is used to add new projects
 class projectInfo {
@@ -256,7 +259,7 @@ class aperture {
             ctx.fillStyle = this.foregroundColor;
             ctx.beginPath();
             
-            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem letiable
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the apertureHexagonApothem letiable
             let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
             
             // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
@@ -286,16 +289,16 @@ class aperture {
     }
 
     drawForegroundAperatureQuadrilaterals() {
-        // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
+        // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
             ctx.fillStyle = this.foregroundColor;
             ctx.beginPath();
     
-            // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
-            // so when the irisMechanismDistance is 0 the irisMechanism animation is completely closed and when it  = hexagonApothem it is completely open but we use it as a border, so it never equals the hexagonApothem
+            // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the apertureHexagonApothem
+            // so when the irisMechanismDistance is 0 the irisMechanism animation is completely closed and when it  = apertureHexagonApothem it is completely open but we use it as a border, so it never equals the apertureHexagonApothem
     
-            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem letiable
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the apertureHexagonApothem letiable
             let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
             
             // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
@@ -322,16 +325,16 @@ class aperture {
     }
 
     drawBackgroundAperatureQuadrilaterals() {
-        // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*hexagonApothem/img.width));
+        // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
             ctx.fillStyle = this.edgeColor; 
             ctx.beginPath();
     
-            // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the hexagonApothem
-            // so when the irisMechanismDistance is 0 the irisMechanism animation is completely closed and when it  = hexagonApothem it is completely open but we use it as a border, so it never equals the hexagonApothem
+            // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the apertureHexagonApothem
+            // so when the irisMechanismDistance is 0 the irisMechanism animation is completely closed and when it  = apertureHexagonApothem it is completely open but we use it as a border, so it never equals the apertureHexagonApothem
     
-            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the hexagonApothem letiable
+            // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the apertureHexagonApothem letiable
             let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
             
             // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
@@ -592,7 +595,7 @@ let openSpeed = 10;
 let edgeSpeed = 0.2;
 let scrollSpeedMultiplier = 7;
 
-let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, canvasForegroundColor, apertureEdgeColor, scrollSpeedMultiplier);
+let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, apertureColor, apertureSlitColor, scrollSpeedMultiplier);
 
 let initialPageOpenTime = new Date();
 let delayInitialPauseTimeInSeconds = 1; 
@@ -608,7 +611,7 @@ let fColorWheel = 'hsl(0, 100%, 50%)';
 class hexagonColorSelector {
     constructor(hexagonCenterPosition, hexagonalApothem, initialColor) {
         this.hexagonCenterPosition = hexagonCenterPosition;
-        this.hexagonApothem = hexagonalApothem;
+        this.apertureHexagonApothem = hexagonalApothem;
         this.color = initialColor;
         this.previousColor = initialColor;
         this.pointerDown = false;
@@ -619,10 +622,10 @@ class hexagonColorSelector {
         
         // Draw hexagon filled shape using lineTo() and closePath() functions going from each vertex and back again in a loop
         ctx.beginPath();
-        ctx.moveTo(this.hexagonCenterPosition.x + this.hexagonApothem*Math.sin(Math.PI/6), this.hexagonCenterPosition.y + this.hexagonApothem*Math.cos(Math.PI/6));
+        ctx.moveTo(this.hexagonCenterPosition.x + this.apertureHexagonApothem*Math.sin(Math.PI/6), this.hexagonCenterPosition.y + this.apertureHexagonApothem*Math.cos(Math.PI/6));
     
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.lineTo(this.hexagonCenterPosition.x + this.hexagonApothem*Math.sin(vertex*Math.PI/3 + Math.PI/6), this.hexagonCenterPosition.y + this.hexagonApothem*Math.cos(vertex*Math.PI/3 + Math.PI/6));
+            ctx.lineTo(this.hexagonCenterPosition.x + this.apertureHexagonApothem*Math.sin(vertex*Math.PI/3 + Math.PI/6), this.hexagonCenterPosition.y + this.apertureHexagonApothem*Math.cos(vertex*Math.PI/3 + Math.PI/6));
         }
     
         ctx.closePath();
@@ -634,9 +637,9 @@ class hexagonColorSelector {
     }
 }
 
-let backgroundColorButton = new hexagonColorSelector({x: 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackDropColor);
+let backgroundColorButton = new hexagonColorSelector({x: 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, canvasBackgroundColor);
 
-let apertureEdgeColorButton = new hexagonColorSelector({x: window.innerWidth - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor);
+let apertureSlitColorButton = new hexagonColorSelector({x: window.innerWidth - 1.5*borderHexSize, y: foreground_Y}, foregroundHexSize, mainApertureTesselation.edgeColor);
 
 
 let animationStartTime = undefined;
@@ -657,7 +660,7 @@ function dramaticPageOpenPause(timeStamp) {
     if(dramaticPageOpenProgress < 1) {
         drawBackground("#000000");
         backgroundColorButton.drawColorSelector();
-        apertureEdgeColorButton.drawColorSelector();
+        apertureSlitColorButton.drawColorSelector();
 
         globalAnimationId = requestAnimationFrame(dramaticPageOpenPause)
     }
@@ -686,7 +689,7 @@ function shrinkAnimationStep(timeStamp) {
             mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.Shrink);
         }
         backgroundColorButton.drawColorSelector();
-        apertureEdgeColorButton.drawColorSelector();
+        apertureSlitColorButton.drawColorSelector();
 
         globalAnimationId = requestAnimationFrame(shrinkAnimationStep);
     }
@@ -716,7 +719,7 @@ function openAperturesAnimationStep(timeStamp) {
             mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenHole);
         }
         backgroundColorButton.drawColorSelector();
-        apertureEdgeColorButton.drawColorSelector();
+        apertureSlitColorButton.drawColorSelector();
 
         globalAnimationId = requestAnimationFrame(openAperturesAnimationStep);
     }
@@ -817,13 +820,13 @@ function onPointerMove(e) {
             let newColor = HSLToHex(verticalColor, 100, 50);
             
             backgroundColorButton.setNewHSLAColor(newColor);
-            canvasBackDropColor = newColor;
+            canvasBackgroundColor = newColor;
         }
 
-        if(apertureEdgeColorButton.pointerDown) {
-            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,apertureEdgeColorButton.hexagonCenterPosition.y) /apertureEdgeColorButton.hexagonCenterPosition.y, 0);
+        if(apertureSlitColorButton.pointerDown) {
+            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,apertureSlitColorButton.hexagonCenterPosition.y) /apertureSlitColorButton.hexagonCenterPosition.y, 0);
             
-            let verticalColor = 360*(1 - mouseBoundedVertical) + getHueFromHexAColor(apertureEdgeColorButton.previousColor);
+            let verticalColor = 360*(1 - mouseBoundedVertical) + getHueFromHexAColor(apertureSlitColorButton.previousColor);
             
             if(verticalColor > 360) {
                 verticalColor -= 360;
@@ -831,7 +834,7 @@ function onPointerMove(e) {
 
             let newColor = HSLToHex(verticalColor, 100, 50);
             
-            apertureEdgeColorButton.setNewHSLAColor(newColor);
+            apertureSlitColorButton.setNewHSLAColor(newColor);
             mainApertureTesselation.setTesselationEdgeColor(newColor);
         }
     }
@@ -932,11 +935,11 @@ function onPointerDown(e) {
     globalPointerDown = true;
     if(Math.hypot(backgroundColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, backgroundColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < foregroundHexSize) {
         backgroundColorButton.pointerDown = true;
-        apertureEdgeColorButton.pointerDown = false;
+        apertureSlitColorButton.pointerDown = false;
     }
     
-    if(Math.hypot(apertureEdgeColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, apertureEdgeColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < foregroundHexSize) {
-        apertureEdgeColorButton.pointerDown = true;
+    if(Math.hypot(apertureSlitColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, apertureSlitColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < foregroundHexSize) {
+        apertureSlitColorButton.pointerDown = true;
         backgroundColorButton.pointerDown = false;
     }
 
@@ -964,18 +967,18 @@ function onPointerUp(e) {
         backgroundColorButton.color = backgroundColorButton.color;
     }
     
-    apertureEdgeColorButton.pointerDown = false;
-    apertureEdgeColorButton.previousColor = apertureEdgeColorButton.color;
+    apertureSlitColorButton.pointerDown = false;
+    apertureSlitColorButton.previousColor = apertureSlitColorButton.color;
 
-    if(apertureEdgeColorButton.color.length < 9) {
-        apertureEdgeColorButton.color = apertureEdgeColorButton.color;
+    if(apertureSlitColorButton.color.length < 9) {
+        apertureSlitColorButton.color = apertureSlitColorButton.color;
     }
 }
 // Ensures setupCanvas() is run only once
 window.addEventListener('load', setupCanvas);
 
 // Draws background rectangle on the canvas
-function drawBackground(color = canvasBackDropColor) {
+function drawBackground(color = canvasBackgroundColor) {
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
@@ -991,7 +994,7 @@ function updateCanvasAnimations() {
     mainApertureTesselation.drawCurrentTesselation();
     
     backgroundColorButton.drawColorSelector();
-    apertureEdgeColorButton.drawColorSelector();
+    apertureSlitColorButton.drawColorSelector();
 
     // Canvas Animation
     requestAnimationFrame(updateCanvasAnimations);
