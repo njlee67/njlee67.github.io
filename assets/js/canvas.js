@@ -63,7 +63,7 @@ ALEEgators
 class aperture {
     // The contruction parameters: fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, 
     // shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, 
-    // foregroundColor, edgeColor
+    // color, edgeColor
     // Are not unique to each aperture they'll just be global variables
 
     constructor(apertureCenter, relativeProjectInfoFolder = undefined) {
@@ -71,30 +71,32 @@ class aperture {
         // The center of the aperture object
         this.apertureCenter = apertureCenter;
 
+        // Setting the default hexagon apothem to global default value for tesselation pattern of apothems
         this.hexagonApothem = apertureHexagonApothem;
 
-        // Constant variables for aperture geometric features final form
+        // Constant variables for aperture geometric features/dimensions final form for each animation
         this.fullyShrunkenHexagonSize = this.percentageToPixelsOfApothem(shrinkPercent);
+
         // The opened distance is the distance from the center of the aperture to the vertices of the aperture opening
         this.fullyOpenedDistance = this.percentageToPixelsOfApothem(openPercent);
-        // Edge thickness is the difference in the Opened Distances of the foregound and background apertures to give an edge looking effect because they have the foregroundColor and edgeColor respectively
+
+        // Edge thickness is the difference in the Opened Distances of the foregound and background apertures to give an edge looking effect because they have the color and edgeColor respectively
         this.fullEdgeThickness = this.percentageToPixelsOfApothem(edgePercent);
 
         // Dynamic variables fo animations that are the current state of the corresponding variable and are altered/incremented/decremented to update the animations
+        // The current size of the aperture which controls the spacing between apertures
         this.currentShrunkenSize = apertureHexagonApothem;
+
+        // The current distance from the center of the aperture to the six vertices of the opening
         this.currentOpenedDistance = 0;
+
+        // The current edge thickness between each aperture side
         this.currentEdgeThickness = 0;
 
-        // Animation Speed variables control the speed of different animation stages
-        this.shrinkPixelsPerFrame = -Math.abs(this.percentageToPixelsOfApothem(shrinkSpeed));
-        this.expandPixelsPerFrame = Math.abs(this.shrinkPixelsPerFrame);
-        this.openPixelsPerFrame = Math.abs(this.percentageToPixelsOfApothem(openSpeed));
-        this.closePixelsPerFrame = Math.abs(this.openPixelsPerFrame);
-        this.edgeOpenPixelsPerFrame = Math.abs(this.percentageToPixelsOfApothem(edgeSpeed));
-        this.edgeClosePixelsPerFrame = -Math.abs(this.edgeOpenPixelsPerFrame);
-
-        // forgroundColor is the color of the aperture and edgeColor is the color of the aperture
-        this.foregroundColor = apertureColor;
+        // this.color is the color of the aperture and 
+        this.color = apertureColor;
+        
+        // this.edgeColor is the color of the aperture slits or edges between each of the six aperture parts
         this.edgeColor = apertureEdgeColor;
 
         // Animation stage variables
@@ -115,46 +117,43 @@ class aperture {
             Shrink: {
                 currentStageVariable: this.currentShrunkenSize, 
                 doneWithStageBoolean: this.doneShrinking,
-                pixelsPerFrame: this.shrinkPixelsPerFrame,
                 initialValue: this.hexagonApothem,
                 finalValue: this.fullyShrunkenHexagonSize},
             Expand: {
                 currentStageVariable: this.currentShrunkenSize, 
                 doneWithStageBoolean: this.doneExpanding,
-                pixelsPerFrame: this.expandPixelsPerFrame,
                 initialValue: this.fullyShrunkenHexagonSize,
                 finalValue: this.hexagonApothem},
             OpenHole: {
                 currentStageVariable: this.currentOpenedDistance, 
                 doneWithStageBoolean: this.doneOpeningApertureHole,
-                pixelsPerFrame: this.openPixelsPerFrame,
                 initialValue: 0,
                 finalValue: this.fullyOpenedDistance},
             CloseHole: {
                 currentStageVariable: this.currentOpenedDistance, 
                 doneWithStageBoolean: this.doneClosingApertureHole,
-                pixelsPerFrame: this.closePixelsPerFrame,
                 initialValue: this.fullyOpenedDistance,
                 finalValue: 0},
             OpenEdge: {
                 currentStageVariable: this.currentOpenedDistance, 
                 doneWithStageBoolean: this.doneOpeningEdge,
-                pixelsPerFrame: this.edgeOpenPixelsPerFrame,
                 initialValue: 0,
                 finalValue: this.fullEdgeThickness},
             CloseEdge: {
                 currentStageVariable: this.currentEdgeThickness, 
                 doneWithStageBoolean: this.doneClosingEdge,
-                pixelsPerFrame: this.edgeClosePixelsPerFrame,
                 initialValue: this.fullEdgeThickness,
                 finalValue: 0},
         };
     }
 
-    setForegroundColor(newForegroundColor) {
-        this.foregroundColor = newForegroundColor;
+    // Sets the color of the 6 aperture parts
+    // Sets the color of the 6 aperture parts
+    setColor(newcolor) {
+        this.color = newcolor;
     }
     
+    // Sets the color of the edges/slits between the six aperture parts
     setEdgeColor(newEdgeColor) {
         this.edgeColor = newEdgeColor;
     }
@@ -173,14 +172,6 @@ class aperture {
         this.AnimationStages.CloseHole.doneWithStageBoolean = this.AnimationStages.OpenHole.currentStageVariable <= 0;
     }
 
-    specificAnimationStageStep(AnimationStageEnum, alternatePixelsPerFrame = AnimationStageEnum.pixelsPerFrame) {
-        this.updateAnimationStageBooleans();
-        if(!AnimationStageEnum.doneWithStageBoolean) {
-            AnimationStageEnum.currentStageVariable += alternatePixelsPerFrame;
-            this.drawCurrent();
-        }
-    }
-    
     drawCurrent() {
         if(this.projectThumbnail != null) {
             this.drawProjectInfo();
@@ -214,10 +205,10 @@ class aperture {
 
     drawProjectInfo() {
         if(this.projectTextCurrentFadeValue.toString(16).length > 1) {
-            ctx.fillStyle = this.foregroundColor; 
+            ctx.fillStyle = this.color; 
         }
         else {
-            ctx.fillStyle = this.foregroundColor;
+            ctx.fillStyle = this.color;
         }
         let projectInfoTextSize = this.fullEdgeThickness*2.5;
         ctx.font = '900 ' + projectInfoTextSize.toString() + "px Arial";
@@ -251,7 +242,7 @@ class aperture {
     }
 
     drawHexagon() {
-        ctx.fillStyle = this.foregroundColor;
+        ctx.fillStyle = this.color;
         
         // Draw hexagon filled shape using lineTo() and closePath() functions going from each vertex and back again in a loop
         ctx.beginPath();
@@ -268,7 +259,7 @@ class aperture {
     drawHexagonBorderWindow() {
         
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.fillStyle = this.foregroundColor;
+            ctx.fillStyle = this.color;
             ctx.beginPath();
             
             // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the apertureHexagonApothem letiable
@@ -304,7 +295,7 @@ class aperture {
         // ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.fillStyle = this.foregroundColor;
+            ctx.fillStyle = this.color;
             ctx.beginPath();
     
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the apertureHexagonApothem
@@ -405,13 +396,13 @@ class aperture {
 }
 
 class apertureTesselation {
-    constructor(projectInfoList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, edgeColor, maximumScrollPixelsPerFrame) {
+    constructor(projectInfoList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, color, edgeColor, maximumScrollPixelsPerFrame) {
         this.tesselationOriginPosition = tesselationOriginPosition;
         this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(hexagonalApothem, 2) - Math.pow(hexagonalApothem/2, 2));
         this.hexTesselationHorizontalOffset = 1.5*hexagonalApothem; 
         this.maximumScrollPixelsPerFrame = maximumScrollPixelsPerFrame;
         this.numberVerticalApertures = Math.ceil((window.innerHeight - this.tesselationOriginPosition.y)/this.hexTesselationVerticalOffset) + 1;
-        this.foregroundColor = foregroundColor;
+        this.color = color;
         this.edgeColor = edgeColor;
         this.numberHorizontalApertures = 0;
         this.aperturesList = [];
@@ -429,7 +420,7 @@ class apertureTesselation {
                 if(this.numberHorizontalApertures%2 != 0) {
                     nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                 }
-                this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, foregroundColor, edgeColor));
+                this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, color, edgeColor));
             
                 let nextApertureIsTooHighForThumbnail = this.aperturesList[verticalIndex + nextColumnInitialIndex].apertureCenter.y < this.hexTesselationVerticalOffset/2;
                 let nextApertureIsTooLowForThumbnail = this.aperturesList[verticalIndex + nextColumnInitialIndex].apertureCenter.y > window.innerHeight - this.hexTesselationVerticalOffset/2;
