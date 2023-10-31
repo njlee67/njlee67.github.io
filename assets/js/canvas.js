@@ -7,19 +7,11 @@ let ctx;
 
 // Global variables
 // The canvasBackgroundColor is the color behind the aperture tesselation in between apertures
-let canvasBackgroundColor = "hsl(120, 100%, 50%)";
+let canvasBackgroundColor = "hsl(340, 100%, 50%)";
 // apertureColor is the color of the aperture sides
-let apertureColor = "hsl(0, 0%, 0%";
+aperture.apertureColor = "hsl(0, 0%, 0%)";
 // apertureEdgeColor is the color of the aperture slits in between the sides of the aperture
-let apertureEdgeColor = "hsl(0, 100%, 50%)";
-
-// Variables describing aperture geometry in tesselation view
-let shrinkPercent = 90;
-let openPercent = 60;
-let edgePercent = 4;
-let shrinkSpeed = 0.075;
-let openSpeed = 10;
-let edgeSpeed = 0.2;
+aperture.apertureEdgeColor = "hsl(200, 100%, 50%)";
 
 let scrollSpeedMultiplier = 7;
 
@@ -89,8 +81,8 @@ class apertureTesselation {
         this.numberOfColumns = 0;
 
         // Colors for each aperture and aperture edges
-        this.color = apertureColor;
-        this.edgeColor = apertureEdgeColor;
+        this.color = aperture.apertureColor;
+        this.edgeColor = aperture.apertureEdgeColor;
 
         // aperturesArray is the list of apertures positioned to form the tesselation geometry
         this.aperturesArray = [];
@@ -311,7 +303,7 @@ function dramaticPageOpenPause(timeStamp) {
     const dramaticPageOpenProgress = (timeStamp - animationStartTime) / dramaticPageOpenDuration;
 
     if(dramaticPageOpenProgress < 1) {
-        drawBackground(apertureColor);
+        drawBackground(aperture.apertureColor);
         backgroundColorButton.drawColorSelector();
         apertureEdgeColorButton.drawColorSelector();
 
