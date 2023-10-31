@@ -115,9 +115,8 @@ class aperture {
         this.doneClosingApertureHole = false;
         this.projectThumbnail = null;
         this.projectThumbnailLoaded = false;
-        this.isNJLClosedAperture = false;
+        this.is_njLAperture = false;
         this.projectInfoObject = null;
-        this.projectTextCurrentFadeValue = 0;
 
         // Pseudo Enum type object to denote the animation type when calling specificAnimationStageStep()
         this.AnimationStages = {
@@ -165,8 +164,11 @@ class aperture {
 
     // drawCurrent draws the current state of the aperture
     drawCurrent() {
+        // If this aperture object has a projectThumbnail draw it as an aperture
         if(this.projectThumbnail != null) {
-            this.drawProjectInfo();
+            this.drawProjectTitle();
+            this.drawProjectType();
+
             if(shrinkAnimationComplete == true) {
                 this.drawThumbnail();
                 this.drawBackgroundAperatureQuadrilaterals();
@@ -176,44 +178,64 @@ class aperture {
             else {
                 this.drawHexagon();
             }
-        } else {
+        }
+        // If the aperture object doesn't have a projectThumbnail then draw it as just a hexagon and if it's an njL initials hexagon draw it on top
+        else {
             this.drawHexagon();
-            if(this.isNJLClosedAperture) {
-                ctx.fillStyle = this.edgeColor;
-                let fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(70));
-                ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
-                let initials = 'njL';
-                let initialsWidth = ctx.measureText(initials).width;
-                let initialsHeight = fontSizeFractionOfApothem;
-                ctx.fillText(initials, this.apertureCenter.x - (initialsWidth/2), this.apertureCenter.y + Math.round(this.percentageToPixelsOfApothem(5)) )
-                fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(20));
-                ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
-                let portfolioWidth = ctx.measureText('portfolio').width;
-                ctx.fillText('portfolio', this.apertureCenter.x - (portfolioWidth/2), this.apertureCenter.y + (Math.round(this.percentageToPixelsOfApothem(45))) )
-                
+            
+            if(this.is_njLAperture) {
+                this.draw_njL_portfolio();
             }
         }
     }
 
-    drawProjectInfo() {
-        if(this.projectTextCurrentFadeValue.toString(16).length > 1) {
-            ctx.fillStyle = this.color; 
-        }
-        else {
-            ctx.fillStyle = this.color;
-        }
-        let projectInfoTextSize = this.fullEdgeThickness*2.5;
-        ctx.font = '900 ' + projectInfoTextSize.toString() + "px Arial";
-       
-        let projectNameText = this.projectInfoObject.projectName;
-        let projectNameWidth = ctx.measureText(projectNameText).width;
-        let projectNameHeight = ctx.measureText(projectNameText).actualBoundingBoxAscent + ctx.measureText(projectNameText).actualBoundingBoxDescent;
+    draw_njL_portfolio() {
+        let initials = 'njL';
 
-        ctx.fillText(projectNameText, this.apertureCenter.x -  projectNameWidth/2, this.apertureCenter.y + projectNameHeight/2 - (Math.sqrt(3)/2)*((this.hexagonApothem)));
+        // Set initials color in the context to edge color
+        ctx.fillStyle = this.edgeColor;
+        // Setting the font size and font style
+        let fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(70));
+        ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
+        // measuring width of initials to center the text later
+        let initialsWidth = ctx.measureText(initials).width;
+
+        // Draw njL initials
+        ctx.fillText(initials, this.apertureCenter.x - (initialsWidth/2), this.apertureCenter.y + Math.round(this.percentageToPixelsOfApothem(5)) )
+        
+        // Setting the font size of portfolio text
+        fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(20));
+        ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
+        // Measure the width of portfolio text to center it like njL text with new font size 
+        let portfolioWidth = ctx.measureText('portfolio').width;
+
+        // Draw portfolio text
+        ctx.fillText('portfolio', this.apertureCenter.x - (portfolioWidth/2), this.apertureCenter.y + (Math.round(this.percentageToPixelsOfApothem(45))) )
+    }
+
+    drawProjectTitle() {
+        // Set the size of the project title text
+        let projectInfoTextSize = this.fullEdgeThickness*2.5;
+        ctx.fillStyle = apertureColor;
+        ctx.font = '900 ' + projectInfoTextSize.toString() + "px Arial";
+        
+        let projectTitleText = this.projectInfoObject.projectName;
+        let projectTitleWidth = ctx.measureText(projectTitleText).width;
+        let projectTitleHeight = ctx.measureText(projectTitleText).actualBoundingBoxAscent + ctx.measureText(projectTitleText).actualBoundingBoxDescent;
+        
+        ctx.fillText(projectTitleText, this.apertureCenter.x -  projectTitleWidth/2, this.apertureCenter.y + projectTitleHeight/2 - (Math.sqrt(3)/2)*((this.hexagonApothem)));
+        
+    }
+    
+    drawProjectType() {
+        // Set the size of the project type text
+        let projectInfoTextSize = this.fullEdgeThickness*2.5;
+        ctx.fillStyle = apertureColor;
+        ctx.font = '900 ' + projectInfoTextSize.toString() + "px Arial";
         
         let projectTopicWidth = ctx.measureText(this.projectInfoObject.projectTopic).width;
         let projectTopicHeight = ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxAscent + ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxDescent;
-
+        
         ctx.fillText(this.projectInfoObject.projectTopic, this.apertureCenter.x - projectTopicWidth/2, this.apertureCenter.y + projectTopicHeight/2 +  (Math.sqrt(3)/2)*((this.hexagonApothem)));
     }
 
@@ -224,6 +246,7 @@ class aperture {
 
     setAnimationProgress(progressValue, AnimationStageEnum) {
         let command = (AnimationStageEnum.finalValue - AnimationStageEnum.initialValue)*progressValue + AnimationStageEnum.initialValue;
+
         AnimationStageEnum.currentStageVariable = command;
         this.drawCurrent();
     }
@@ -233,6 +256,7 @@ class aperture {
     }
 
     drawHexagon() {
+        // Hexagon or a closed aperture is set to this.color 
         ctx.fillStyle = this.color;
         
         // Draw hexagon filled shape using lineTo() and closePath() functions going from each vertex and back again in a loop
@@ -432,7 +456,7 @@ class apertureTesselation {
                     nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                 }
                 this.aperturesList.push(new aperture(nextApertureCenter));
-                this.aperturesList[this.aperturesList.length-1].isNJLClosedAperture = true;
+                this.aperturesList[this.aperturesList.length-1].is_njLAperture = true;
             }
             this.numberHorizontalApertures++;
         }
@@ -444,7 +468,7 @@ class apertureTesselation {
                         nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                     }
                     this.aperturesList.push(new aperture(nextApertureCenter));
-                    this.aperturesList[this.aperturesList.length-1].isNJLClosedAperture = true;
+                    this.aperturesList[this.aperturesList.length-1].is_njLAperture = true;
                 }
                 this.numberHorizontalApertures++;
             }
@@ -457,7 +481,7 @@ class apertureTesselation {
                 nextApertureCenter.y -= this.hexTesselationVerticalOffset/2;
             }
             this.aperturesList.push(new aperture(nextApertureCenter));
-            this.aperturesList[this.aperturesList.length-1].isNJLClosedAperture = true;
+            this.aperturesList[this.aperturesList.length-1].is_njLAperture = true;
         }
 
         this.doneWithInitialOpeningApertures = false;
