@@ -283,9 +283,6 @@ class aperture {
             // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
             let parallelToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
             
-            // perpindicularToSideUnitVectorPrev is the unit vector with a magnitude of 1
-            let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
-            
             // Draw the lines that make up each quadrilateral
             ctx.moveTo(this.apertureCenter.x + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.x,
                          this.apertureCenter.y + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.y);
@@ -358,9 +355,6 @@ class aperture {
             // The parallelToSideUnitVectorPrev is the vector from the current vertex of the hexagon outline to the previous vertex
             let parallelToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
             
-            // perpindicularToSideUnitVectorPrev is the unit vector with a magnitude of 1
-            let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
-            
             // Draw the lines that make up each quadrilateral
             ctx.moveTo(this.apertureCenter.x + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.x - this.AnimationStages.OpenEdge.currentStageVariable*parallelToSideUnitVector.x, 
                         this.apertureCenter.y + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.y - this.AnimationStages.OpenEdge.currentStageVariable*parallelToSideUnitVector.y);
@@ -411,201 +405,145 @@ class aperture {
 }
 
 class apertureTesselation {
-    constructor(projectInfoList, tesselationOriginPosition, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, color, edgeColor, maximumScrollPixelsPerFrame) {
+    // TODO: set projectInfoList to projectInfoRelativeFolderPath
+    constructor(projectInfoList, tesselationOriginPosition, maximumScrollPixelsPerFrame) {
+        // Setting Tesselation Position and spacing
         this.tesselationOriginPosition = tesselationOriginPosition;
-        this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(hexagonalApothem, 2) - Math.pow(hexagonalApothem/2, 2));
-        this.hexTesselationHorizontalOffset = 1.5*hexagonalApothem; 
+
+        // These offsets determine the distance between hexagon apertures
+        this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(apertureHexagonApothem, 2) - Math.pow(apertureHexagonApothem/2, 2));
+        this.hexTesselationHorizontalOffset = 1.5*apertureHexagonApothem; 
+
+        // This is the maximum speed of the horizontal scrolling
         this.maximumScrollPixelsPerFrame = maximumScrollPixelsPerFrame;
-        this.numberVerticalApertures = Math.ceil((window.innerHeight - this.tesselationOriginPosition.y)/this.hexTesselationVerticalOffset) + 1;
-        this.color = color;
-        this.edgeColor = edgeColor;
-        this.numberHorizontalApertures = 0;
-        this.aperturesList = [];
 
-        this.projectInfoList = projectInfoList;
+        // The number of rows of apertures is determined by the height of the screen
+        this.numberOfRows = Math.ceil((window.innerHeight - this.tesselationOriginPosition.y)/this.hexTesselationVerticalOffset) + 1;
+        this.numberOfColumns = 0;
 
-        let numberOfThumnailsWithoutAnAperture = this.projectInfoList.length;
+        // Colors for each aperture and aperture edges
+        this.color = apertureColor;
+        this.edgeColor = apertureEdgeColor;
 
-        // Using projectInfoObject.length determine how many total aperture/hexagon aperture class objects are needed
-        while(numberOfThumnailsWithoutAnAperture > 0) {
-            let nextColumnInitialIndex = this.numberHorizontalApertures * this.numberVerticalApertures;
-            // Loop through each column 
-            for(let verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
-                let nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
-                if(this.numberHorizontalApertures%2 != 0) {
+        // aperturesArray is the list of apertures positioned to form the tesselation geometry
+        this.aperturesArray = [];
+
+        // numProjectsToAssignToAPerture is the count of how many projects in the project list still need
+        // to be set to an aperture to have it's project info displayed
+        let numProjectsToAssignToAperture = projectInfoList.length;
+
+        // Adding aperture objects to this.apertureList attribute in tesselation class based on the remaining number of projects to assign
+        // Requires a while loop for this solutiona and not a for loop because project apertures are only assign if the row is not clipped/cut by the screen top/bottom
+        while(numProjectsToAssignToAperture > 0) {
+            // nextApertureIndex is the total number of apertures that have been added to the tesselation by multiplying the 
+            // number of rows x number of columns that have been added to this.apertureList
+            let nextApertureIndex = this.numberOfColumns * this.numberOfRows;
+
+            // Loop through each row 
+            for(let tesselationRow = 0;tesselationRow < this.numberOfRows;tesselationRow++) {
+                // nextApertureCenter is the next position of the aperture that will be added to apertureArray
+                let nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberOfColumns*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + tesselationRow*this.hexTesselationVerticalOffset};
+                
+                // Checking if the numberOfColumns is even or not to determine if this.hexTesselationVerticalOffset/2 
+                // needs to be added to center location to form the tesselation alternating pattern
+                if(this.numberOfColumns%2 != 0) {
                     nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                 }
-                this.aperturesList.push(new aperture(nextApertureCenter, hexagonalApothem, fullyShrunkenPercentage, fullyOpenedPercentage, fullEdgeThicknessPercentage, shrinkPercentagePerFrame, openPercentagePerFrame, edgePercentagePerFrame, color, edgeColor));
-            
-                let nextApertureIsTooHighForThumbnail = this.aperturesList[verticalIndex + nextColumnInitialIndex].apertureCenter.y < this.hexTesselationVerticalOffset/2;
-                let nextApertureIsTooLowForThumbnail = this.aperturesList[verticalIndex + nextColumnInitialIndex].apertureCenter.y > window.innerHeight - this.hexTesselationVerticalOffset/2;
 
+                // pushing the new aperture that has been correctly positioned to aperturesArray
+                this.aperturesArray.push(new aperture(nextApertureCenter));
+            
+                // These variables check to see if the newly added aperture can be set to a Project aperture with Project Thumbnail/Title/Type
+                let nextApertureIsTooHighForThumbnail = this.aperturesArray[tesselationRow + nextApertureIndex].apertureCenter.y < this.hexTesselationVerticalOffset/2;
+                let nextApertureIsTooLowForThumbnail = this.aperturesArray[tesselationRow + nextApertureIndex].apertureCenter.y > window.innerHeight - this.hexTesselationVerticalOffset/2;
+
+                // attachThumbnail() to the newly created 
                 if(!nextApertureIsTooHighForThumbnail && !nextApertureIsTooLowForThumbnail) {
-                    this.aperturesList[verticalIndex + nextColumnInitialIndex].attachThumbnaiil(projectInfoList[projectInfoList.length - numberOfThumnailsWithoutAnAperture]);
-                    numberOfThumnailsWithoutAnAperture--;
+                    this.aperturesArray[tesselationRow + nextApertureIndex].attachThumbnaiil(projectInfoList[projectInfoList.length - numProjectsToAssignToAperture]);
+                    
+                    // Decrement number of projects by one since 1 project was assigned
+                    numProjectsToAssignToAperture--;
                 }
             }
-            this.numberHorizontalApertures++;
+
+            // We've added a full column in the previous for loop so the number of columns is incremented
+            this.numberOfColumns++;
         }
         
-        // Adding extra column if the number of columns in the tesselation is not even
-        if(this.numberHorizontalApertures%2 != 0) {
-            for(let verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
-                let nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
-                if(this.numberHorizontalApertures%2 != 0) {
+
+        // the number of extra columns to add
+        let numberOfExtraColumns = 1;
+        
+        if(this.numberOfColumns%2 == 0) {
+            // this.numberOfColumns is incremented by one because we added a column
+            numberOfExtraColumns = 2;
+        }
+
+        // Adding extra column if the number of columns in the tesselation is not even and two columns if it is even to keep it even
+        for(let njLColumns = 0;njLColumns < numberOfExtraColumns;njLColumns++) {
+            for(let tesselationRow = 0;tesselationRow < this.numberOfRows;tesselationRow++) {
+                let nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberOfColumns*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + tesselationRow*this.hexTesselationVerticalOffset};
+                if(this.numberOfColumns%2 != 0) {
                     nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                 }
-                this.aperturesList.push(new aperture(nextApertureCenter));
-                this.aperturesList[this.aperturesList.length-1].is_njLAperture = true;
+                this.aperturesArray.push(new aperture(nextApertureCenter));
+                this.aperturesArray[this.aperturesArray.length-1].is_njLAperture = true;
             }
-            this.numberHorizontalApertures++;
-        }
-        else {
-            for(let njLColumns = 0;njLColumns < 2;njLColumns++) {
-                for(let verticalIndex = 0;verticalIndex < this.numberVerticalApertures;verticalIndex++) {
-                    let nextApertureCenter = {x:this.tesselationOriginPosition.x + this.numberHorizontalApertures*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y + verticalIndex*this.hexTesselationVerticalOffset};
-                    if(this.numberHorizontalApertures%2 != 0) {
-                        nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
-                    }
-                    this.aperturesList.push(new aperture(nextApertureCenter));
-                    this.aperturesList[this.aperturesList.length-1].is_njLAperture = true;
-                }
-                this.numberHorizontalApertures++;
-            }
+            this.numberOfColumns++;
         }
         
         // Adding one more row on top so that the tesselation gets extended to the gap for projectInfotext
-        for(let horizontalIndex = 0;horizontalIndex < this.numberHorizontalApertures;horizontalIndex++) {
-            let nextApertureCenter = {x:this.tesselationOriginPosition.x + (horizontalIndex+1)*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y -0.5* this.hexTesselationVerticalOffset};
-            if(horizontalIndex%2 != 0) {
+        for(let tesselationColumn = 0;tesselationColumn < this.numberOfColumns;tesselationColumn++) {
+            let nextApertureCenter = {x:this.tesselationOriginPosition.x + (tesselationColumn+1)*this.hexTesselationHorizontalOffset,y: this.tesselationOriginPosition.y -0.5* this.hexTesselationVerticalOffset};
+            if(tesselationColumn%2 != 0) {
                 nextApertureCenter.y -= this.hexTesselationVerticalOffset/2;
             }
-            this.aperturesList.push(new aperture(nextApertureCenter));
-            this.aperturesList[this.aperturesList.length-1].is_njLAperture = true;
+            this.aperturesArray.push(new aperture(nextApertureCenter));
+            this.aperturesArray[this.aperturesArray.length-1].is_njLAperture = true;
         }
 
-        this.doneWithInitialOpeningApertures = false;
     }
 
-    setTesselationEdgeColor(newColor) {
-        for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
-            this.aperturesList[apertureIndex].setEdgeColor(newColor);
+    // used to change the edge color of each aperture in the tesselation
+    setTesselationEdgeColor(newEdgeColor) {
+        for(let apertureIndex = 0;apertureIndex < this.aperturesArray.length;apertureIndex++) {
+            this.aperturesArray[apertureIndex].setEdgeColor(newEdgeColor);
         }
-    }
-    // TODO: should really use the aperture class version of this duplicate
-    percentageToPixelsOfApothem(percentageOfApothem) {
-        return ((percentageOfApothem/100.0)*this.hexagonApothem);
     }
     
-    scrollToLeftAnimationStep(scrollSpeedInPercentageGlobal) {
-        for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
-            if(this.aperturesList[0].apertureCenter.x > -(this.hexTesselationHorizontalOffset * this.numberHorizontalApertures)) {
-                this.aperturesList[apertureIndex].apertureCenter.x += Math.abs(this.maximumScrollPixelsPerFrame)*scrollSpeedInPercentageGlobal;
+    scrollAnimationStep(scrollSpeedInPercentage) {
+        // This method scrolls the tesselation horizontally and when apertures overflow their apertureCenters get reset to the 
+        // other end of the tesselation pattern
+        for(let apertureIndex = 0;apertureIndex < this.aperturesArray.length;apertureIndex++) {
+            if(this.aperturesArray[0].apertureCenter.x > -(this.hexTesselationHorizontalOffset * this.numberOfColumns)) {
+                this.aperturesArray[apertureIndex].apertureCenter.x += Math.abs(this.maximumScrollPixelsPerFrame)*scrollSpeedInPercentage;
             }
 
-            if(this.aperturesList[apertureIndex].apertureCenter.x < -(this.hexTesselationHorizontalOffset)) {
-                this.aperturesList[apertureIndex].apertureCenter.x += (this.numberHorizontalApertures)*this.hexTesselationHorizontalOffset;
+            if(this.aperturesArray[apertureIndex].apertureCenter.x < -(this.hexTesselationHorizontalOffset)) {
+                this.aperturesArray[apertureIndex].apertureCenter.x += (this.numberOfColumns)*this.hexTesselationHorizontalOffset;
             }
             
-            if(this.aperturesList[apertureIndex].apertureCenter.x > mainCanvas.width + (this.hexTesselationHorizontalOffset)) {
-                this.aperturesList[apertureIndex].apertureCenter.x -= (this.numberHorizontalApertures)*this.hexTesselationHorizontalOffset;
+            if(this.aperturesArray[apertureIndex].apertureCenter.x > mainCanvas.width + (this.hexTesselationHorizontalOffset)) {
+                this.aperturesArray[apertureIndex].apertureCenter.x -= (this.numberOfColumns)*this.hexTesselationHorizontalOffset;
             }
         }
     }
 
     drawCurrentTesselation() {
-        for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
-            this.aperturesList[apertureIndex].drawCurrent();
+        // Draw all of the apertures
+        for(let apertureIndex = 0;apertureIndex < this.aperturesArray.length;apertureIndex++) {
+            this.aperturesArray[apertureIndex].drawCurrent();
         }
 
+        // if the shrink Animation is done then scroll to the left automatically if 
         if(shrinkAnimationComplete == true) {
-            this.scrollToLeftAnimationStep(scrollSpeedInPercentage);
+            this.scrollAnimationStep(scrollSpeedInPercentage);
         }
-    }
-
-    drawTesselation() {
-        for(let apertureIndex = 0;apertureIndex < this.aperturesList.length;apertureIndex++) {
-            // if((this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullyOpenedDistance
-            // && this.aperturesList[apertureIndex].apertureCenter.x < mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance)
-            // || this.aperturesList[apertureIndex].projectThumbnail == null) {
-            // Shrink hexagons stage from fully black screen to black hexagons
-            if(!shrinkAnimationComplete) {
-                this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.Shrink);
-            }
-            
-            // Done with shrink hexagon stage
-            // Starting open edge stage , aperture edges currently red open on apertures 
-            if(shrinkAnimationComplete && !edgeOpenAnimationComplete) {
-                this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenEdge);
-                this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole,this.aperturesList[apertureIndex].AnimationStages.OpenEdge.pixelsPerFrame);
-            }
-            
-            // Done with open edge stage
-            // Starting open aperture stage , apertures on right and left sides of the screen 
-            // should only open apertures up to the screen edge to reveal project thumbnails
-            // No scrolling has started at this point
-            if(edgeOpenAnimationComplete && !openHoleAnimationComplete){
-                // If the aperture in this iteration of the for loop through the list of apertures is not on the left edge or right edge while scrolling
-                if((this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullyOpenedDistance
-                && this.aperturesList[apertureIndex].apertureCenter.x < mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance)) {
-                    this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole);
-                }
-                // Otherwise if current aperture in this for loop is on the left edge and is close enough to the edge to start closing the aperture at the edge
-                else {
-                    if(this.aperturesList[apertureIndex].apertureCenter.x <= this.aperturesList[apertureIndex].fullyOpenedDistance){
-                        if(this.aperturesList[apertureIndex].AnimationStages.OpenHole.currentStageVariable <= this.aperturesList[apertureIndex].apertureCenter.x) {
-                            this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole);
-                        }
-                        else {
-                            openHoleAnimationComplete = true;
-                            this.aperturesList[apertureIndex].drawCurrent();
-                        }
-                    }else if(this.aperturesList[apertureIndex].apertureCenter.x >= mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance){
-                        if(this.aperturesList[apertureIndex].AnimationStages.OpenHole.currentStageVariable <= mainCanvas.width - this.aperturesList[apertureIndex].apertureCenter.x) {
-                            this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole);
-                        }
-                        else {
-                            openHoleAnimationComplete = true;
-
-                            this.aperturesList[apertureIndex].drawCurrent();
-                        }
-                    }
-                }
-            }
-
-            // Done opening apertures and now dynamic user input scrolling has started
-            // Now when scrolling and an aperture reaches a threshold x value on the right/left sides of the screen 
-            // the aperture sets its hole opened distance to the distance from the apertureCenter to the right/left edge of the screen, so it
-            // looks like the screen edge is closing and opening them 
-            if(openHoleAnimationComplete) {
-                this.aperturesList[apertureIndex].drawCurrent();
-
-                // If aperture center is past the threshold on the left
-                // AND it's greater than the aperture edge thickness on the left so that it doesn't close too far 
-                // set it to the distance from apertureCenter.x to the left edge 
-                if(this.aperturesList[apertureIndex].apertureCenter.x < this.aperturesList[apertureIndex].fullyOpenedDistance
-                && this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullEdgeThickness) {
-                    this.aperturesList[apertureIndex].setAnimationVariable(this.aperturesList[apertureIndex].apertureCenter.x, this.aperturesList[apertureIndex].AnimationStages.OpenHole);
-                }
-
-                // If aperture center is past the threshold on the right
-                // AND it's greater than the aperture edge thickness on the right so that it doesn't close aperture hole too far making little points on hexagon vertices
-                // set it to the distance from apertureCenter.x to the right edge 
-                else if(this.aperturesList[apertureIndex].apertureCenter.x >=  mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance
-                && this.aperturesList[apertureIndex].apertureCenter.x <= mainCanvas.width - this.aperturesList[apertureIndex].fullEdgeThickness) {
-                    this.aperturesList[apertureIndex].setAnimationVariable(mainCanvas.width - this.aperturesList[apertureIndex].apertureCenter.x, this.aperturesList[apertureIndex].AnimationStages.OpenHole);
-                }
-                this.scrollToLeftAnimationStep(scrollSpeedInPercentage);
-            }
-
-        }
-        
     }
 
 }
-// TODO set parameter for apeture constructor to has a duration of open/close/shrink instead of a pixels per frame speed based on the FPS and percentges
 
-let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, window.innerHeight/3, shrinkPercent, openPercent, edgePercent, shrinkSpeed, openSpeed, edgeSpeed, apertureColor, apertureEdgeColor, scrollSpeedMultiplier);
+let mainApertureTesselation = new apertureTesselation(projectInfoObjectList, {x: 0, y: window.innerHeight/18}, scrollSpeedMultiplier);
 
 let initialPageOpenTime = new Date();
 let delayInitialPauseTimeInSeconds = 1; 
@@ -695,8 +633,8 @@ function shrinkAnimationStep(timeStamp) {
     if(animationProgress < 1) {
         drawBackground();
 
-        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
-            mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.Shrink)
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
+            mainApertureTesselation.aperturesArray[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.Shrink)
         }
 
         backgroundColorButton.drawColorSelector();
@@ -722,10 +660,10 @@ function openAperturesAnimationStep(timeStamp) {
     
     if(animationProgress < 1) {
         drawBackground();
-        // let commandValue = mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize - ((mainApertureTesselation.aperturesList[4].hexagonalApothem - mainApertureTesselation.aperturesList[4].fullyShrunkenHexagonSize) * (animationProgress - 1.0));
-        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
-            mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenEdge);
-            mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenHole);
+        // let commandValue = mainApertureTesselation.aperturesArray[4].fullyShrunkenHexagonSize - ((mainApertureTesselation.aperturesArray[4].hexagonalApothem - mainApertureTesselation.aperturesArray[4].fullyShrunkenHexagonSize) * (animationProgress - 1.0));
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
+            mainApertureTesselation.aperturesArray[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.OpenEdge);
+            mainApertureTesselation.aperturesArray[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.OpenHole);
         }
         backgroundColorButton.drawColorSelector();
         apertureEdgeColorButton.drawColorSelector();
