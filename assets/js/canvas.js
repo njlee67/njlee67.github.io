@@ -21,6 +21,13 @@ let openSpeed = 10;
 let edgeSpeed = 0.2;
 let scrollSpeedMultiplier = 7;
 
+let shrinkAnimationComplete = false;
+let expansionAnimationComplete = false;
+let openHoleAnimationComplete = false;
+let closeHoleAnimationComplete = false;
+let edgeOpenAnimationComplete = false;
+let edgeCloseAnimationComplete = false;
+
 // apertureHexagonApothem is the distance from the center to a vertex of fully tesselated hexagon/aperture when the screen loads 
 const apertureHexagonApothem = Math.round(window.innerHeight/3);
 
@@ -48,15 +55,15 @@ let ALEEgators = new projectInfo('images/thumbnails/ALEEgators.jpg', 'ALEEgators
 
 // list of projectInfoObjects used to create apertureTessalation
 let projectInfoObjectList = [
-lmbbV1,
-yoyos,
-noStress,
-lmbbV2,
-noCap,
-QUAD,
-satchPackV1,
-uAreal1,
-ALEEgators
+    lmbbV1,
+    yoyos,
+    noStress,
+    lmbbV2,
+    noCap,
+    QUAD,
+    satchPackV1,
+    uAreal1,
+    ALEEgators
 ]
 
 // aperture object is named after a camera aperture and represents a single object that has the project info and opens to display the thumbnail image among other animations
@@ -116,38 +123,31 @@ class aperture {
         this.AnimationStages = {
             Shrink: {
                 currentStageVariable: this.currentShrunkenSize, 
-                doneWithStageBoolean: this.doneShrinking,
                 initialValue: this.hexagonApothem,
                 finalValue: this.fullyShrunkenHexagonSize},
             Expand: {
                 currentStageVariable: this.currentShrunkenSize, 
-                doneWithStageBoolean: this.doneExpanding,
                 initialValue: this.fullyShrunkenHexagonSize,
                 finalValue: this.hexagonApothem},
             OpenHole: {
                 currentStageVariable: this.currentOpenedDistance, 
-                doneWithStageBoolean: this.doneOpeningApertureHole,
                 initialValue: 0,
                 finalValue: this.fullyOpenedDistance},
             CloseHole: {
                 currentStageVariable: this.currentOpenedDistance, 
-                doneWithStageBoolean: this.doneClosingApertureHole,
                 initialValue: this.fullyOpenedDistance,
                 finalValue: 0},
             OpenEdge: {
                 currentStageVariable: this.currentOpenedDistance, 
-                doneWithStageBoolean: this.doneOpeningEdge,
                 initialValue: 0,
                 finalValue: this.fullEdgeThickness},
             CloseEdge: {
                 currentStageVariable: this.currentEdgeThickness, 
-                doneWithStageBoolean: this.doneClosingEdge,
                 initialValue: this.fullEdgeThickness,
                 finalValue: 0},
         };
     }
 
-    // Sets the color of the 6 aperture parts
     // Sets the color of the 6 aperture parts
     setColor(newcolor) {
         this.color = newcolor;
@@ -163,19 +163,11 @@ class aperture {
         return ((percentageOfApothem/100.0)*this.hexagonApothem);
     }
 
-    updateAnimationStageBooleans() {
-        this.AnimationStages.Shrink.doneWithStageBoolean = this.AnimationStages.Shrink.currentStageVariable <= this.fullyShrunkenHexagonSize;
-        this.AnimationStages.Expand.doneWithStageBoolean = this.AnimationStages.Shrink.currentStageVariable >= this.hexagonApothem;
-        this.AnimationStages.OpenEdge.doneWithStageBoolean = this.AnimationStages.OpenEdge.currentStageVariable >= this.fullEdgeThickness;
-        this.AnimationStages.CloseEdge.doneWithStageBoolean = this.AnimationStages.OpenEdge.currentStageVariable <= 0;
-        this.AnimationStages.OpenHole.doneWithStageBoolean = this.AnimationStages.OpenHole.currentStageVariable >= this.fullyOpenedDistance;
-        this.AnimationStages.CloseHole.doneWithStageBoolean = this.AnimationStages.OpenHole.currentStageVariable <= 0;
-    }
-
+    // drawCurrent draws the current state of the aperture
     drawCurrent() {
         if(this.projectThumbnail != null) {
             this.drawProjectInfo();
-            if(this.AnimationStages.Shrink.doneWithStageBoolean == true) {
+            if(shrinkAnimationComplete == true) {
                 this.drawThumbnail();
                 this.drawBackgroundAperatureQuadrilaterals();
                 this.drawHexagonBorderWindow();
@@ -219,7 +211,6 @@ class aperture {
 
         ctx.fillText(projectNameText, this.apertureCenter.x -  projectNameWidth/2, this.apertureCenter.y + projectNameHeight/2 - (Math.sqrt(3)/2)*((this.hexagonApothem)));
         
-        let projectThemeTextSize = this.fullEdgeThickness*2.5;
         let projectTopicWidth = ctx.measureText(this.projectInfoObject.projectTopic).width;
         let projectTopicHeight = ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxAscent + ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxDescent;
 
@@ -503,7 +494,7 @@ class apertureTesselation {
             this.aperturesList[apertureIndex].drawCurrent();
         }
 
-        if(this.aperturesList[0].AnimationStages.OpenHole.doneWithStageBoolean == true) {
+        if(shrinkAnimationComplete == true) {
             this.scrollToLeftAnimationStep(scrollSpeedInPercentage);
         }
     }
@@ -514,13 +505,13 @@ class apertureTesselation {
             // && this.aperturesList[apertureIndex].apertureCenter.x < mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance)
             // || this.aperturesList[apertureIndex].projectThumbnail == null) {
             // Shrink hexagons stage from fully black screen to black hexagons
-            if(!this.aperturesList[apertureIndex].AnimationStages.Shrink.doneWithStageBoolean) {
+            if(!shrinkAnimationComplete) {
                 this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.Shrink);
             }
             
             // Done with shrink hexagon stage
             // Starting open edge stage , aperture edges currently red open on apertures 
-            if(this.aperturesList[apertureIndex].AnimationStages.Shrink.doneWithStageBoolean && !this.aperturesList[apertureIndex].AnimationStages.OpenEdge.doneWithStageBoolean) {
+            if(shrinkAnimationComplete && !edgeOpenAnimationComplete) {
                 this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenEdge);
                 this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole,this.aperturesList[apertureIndex].AnimationStages.OpenEdge.pixelsPerFrame);
             }
@@ -529,7 +520,7 @@ class apertureTesselation {
             // Starting open aperture stage , apertures on right and left sides of the screen 
             // should only open apertures up to the screen edge to reveal project thumbnails
             // No scrolling has started at this point
-            if(this.aperturesList[apertureIndex].AnimationStages.OpenEdge.doneWithStageBoolean && !this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean){
+            if(edgeOpenAnimationComplete && !openHoleAnimationComplete){
                 // If the aperture in this iteration of the for loop through the list of apertures is not on the left edge or right edge while scrolling
                 if((this.aperturesList[apertureIndex].apertureCenter.x > this.aperturesList[apertureIndex].fullyOpenedDistance
                 && this.aperturesList[apertureIndex].apertureCenter.x < mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance)) {
@@ -542,7 +533,7 @@ class apertureTesselation {
                             this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole);
                         }
                         else {
-                            this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean = true;
+                            openHoleAnimationComplete = true;
                             this.aperturesList[apertureIndex].drawCurrent();
                         }
                     }else if(this.aperturesList[apertureIndex].apertureCenter.x >= mainCanvas.width - this.aperturesList[apertureIndex].fullyOpenedDistance){
@@ -550,7 +541,7 @@ class apertureTesselation {
                             this.aperturesList[apertureIndex].specificAnimationStageStep(this.aperturesList[apertureIndex].AnimationStages.OpenHole);
                         }
                         else {
-                            this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean = true;
+                            openHoleAnimationComplete = true;
 
                             this.aperturesList[apertureIndex].drawCurrent();
                         }
@@ -562,7 +553,7 @@ class apertureTesselation {
             // Now when scrolling and an aperture reaches a threshold x value on the right/left sides of the screen 
             // the aperture sets its hole opened distance to the distance from the apertureCenter to the right/left edge of the screen, so it
             // looks like the screen edge is closing and opening them 
-            if(this.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean) {
+            if(openHoleAnimationComplete) {
                 this.aperturesList[apertureIndex].drawCurrent();
 
                 // If aperture center is past the threshold on the left
@@ -675,23 +666,22 @@ function shrinkAnimationStep(timeStamp) {
         animationStartTime = timeStamp;
     }
 
-
     const animationProgress = powerTiming( (timeStamp - animationStartTime) / shrinkDuration, 4);
     
     if(animationProgress < 1) {
         drawBackground();
+
         for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
-            mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.Shrink);
+            mainApertureTesselation.aperturesList[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.Shrink)
         }
+
         backgroundColorButton.drawColorSelector();
         apertureEdgeColorButton.drawColorSelector();
 
         globalAnimationId = requestAnimationFrame(shrinkAnimationStep);
     }
     else {
-        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
-            mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.Shrink.doneWithStageBoolean = true;
-        }
+        shrinkAnimationComplete = true;
 
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
@@ -719,10 +709,8 @@ function openAperturesAnimationStep(timeStamp) {
         globalAnimationId = requestAnimationFrame(openAperturesAnimationStep);
     }
     else {
-        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesList.length;apertureIndex++) {
-            mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenHole.doneWithStageBoolean = true;
-            mainApertureTesselation.aperturesList[apertureIndex].AnimationStages.OpenEdge.doneWithStageBoolean = true;
-        }
+        openHoleAnimationComplete = true;
+        edgeOpenAnimationComplete = true;
 
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
@@ -747,8 +735,6 @@ function setupCanvas() {
     initialPageOpenTime = new Date();
 
     requestAnimationFrame(dramaticPageOpenPause);
-    // updateCanvasAnimations handles the sequence of the canvas animations
-    // updateCanvasAnimations();
 }
 
 function getEventLocation(e)
