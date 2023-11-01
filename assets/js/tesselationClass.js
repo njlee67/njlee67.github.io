@@ -1,23 +1,27 @@
+import { Aperture } from "./ApertureClass.js";
 export class Tesselation {
     // TODO: set projectInfoList to projectInfoRelativeFolderPath
     constructor(projectInfoList, tesselationOriginPosition, maximumScrollPixelsPerFrame) {
         // Setting Tesselation Position and spacing
         this.tesselationOriginPosition = tesselationOriginPosition;
-
+        
         // These offsets determine the distance between hexagon apertures
-        this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(aperture.apertureHexagonApothem, 2) - Math.pow(aperture.apertureHexagonApothem/2, 2));
-        this.hexTesselationHorizontalOffset = 1.5*aperture.apertureHexagonApothem; 
-
+        this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(Aperture.apertureHexagonApothem, 2) - Math.pow(Aperture.apertureHexagonApothem/2, 2));
+        this.hexTesselationHorizontalOffset = 1.5*Aperture.apertureHexagonApothem; 
+        
         // This is the maximum speed of the horizontal scrolling
         this.maximumScrollPixelsPerFrame = maximumScrollPixelsPerFrame;
 
         // The number of rows of apertures is determined by the height of the screen
         this.numberOfRows = Math.ceil((window.innerHeight - this.tesselationOriginPosition.y)/this.hexTesselationVerticalOffset) + 1;
         this.numberOfColumns = 0;
-
+        
         // Colors for each aperture and aperture edges
-        this.color = aperture.apertureColor;
-        this.edgeColor = aperture.apertureEdgeColor;
+        this.color = Aperture.apertureColor;
+        this.edgeColor = Aperture.apertureEdgeColor;
+        
+        // Setting default scroll to half speed on page open
+        this.scrollSpeedInPercentage = -0.5;
 
         // aperturesArray is the list of apertures positioned to form the tesselation geometry
         this.aperturesArray = [];
@@ -45,7 +49,7 @@ export class Tesselation {
                 }
 
                 // pushing the new aperture that has been correctly positioned to aperturesArray
-                this.aperturesArray.push(new aperture(nextApertureCenter));
+                this.aperturesArray.push(new Aperture(nextApertureCenter));
             
                 // These variables check to see if the newly added aperture can be set to a Project aperture with Project Thumbnail/Title/Type
                 let nextApertureIsTooHighForThumbnail = this.aperturesArray[tesselationRow + nextApertureIndex].apertureCenter.y < this.hexTesselationVerticalOffset/2;
@@ -80,7 +84,7 @@ export class Tesselation {
                 if(this.numberOfColumns%2 != 0) {
                     nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                 }
-                this.aperturesArray.push(new aperture(nextApertureCenter));
+                this.aperturesArray.push(new Aperture(nextApertureCenter));
                 this.aperturesArray[this.aperturesArray.length-1].is_njLAperture = true;
             }
             this.numberOfColumns++;
@@ -92,7 +96,7 @@ export class Tesselation {
             if(tesselationColumn%2 != 0) {
                 nextApertureCenter.y -= this.hexTesselationVerticalOffset/2;
             }
-            this.aperturesArray.push(new aperture(nextApertureCenter));
+            this.aperturesArray.push(new Aperture(nextApertureCenter));
             this.aperturesArray[this.aperturesArray.length-1].is_njLAperture = true;
         }
 
@@ -105,19 +109,19 @@ export class Tesselation {
         }
     }
     
-    scrollAnimationStep(scrollSpeedInPercentage) {
+    scrollAnimationStep() {
         // This method scrolls the tesselation horizontally and when apertures overflow their apertureCenters get reset to the 
         // other end of the tesselation pattern
         for(let apertureIndex = 0;apertureIndex < this.aperturesArray.length;apertureIndex++) {
             if(this.aperturesArray[0].apertureCenter.x > -(this.hexTesselationHorizontalOffset * this.numberOfColumns)) {
-                this.aperturesArray[apertureIndex].apertureCenter.x += Math.abs(this.maximumScrollPixelsPerFrame)*scrollSpeedInPercentage;
+                this.aperturesArray[apertureIndex].apertureCenter.x += Math.abs(this.maximumScrollPixelsPerFrame)*this.scrollSpeedInPercentage;
             }
 
             if(this.aperturesArray[apertureIndex].apertureCenter.x < -(this.hexTesselationHorizontalOffset)) {
                 this.aperturesArray[apertureIndex].apertureCenter.x += (this.numberOfColumns)*this.hexTesselationHorizontalOffset;
             }
             
-            if(this.aperturesArray[apertureIndex].apertureCenter.x > mainCanvas.width + (this.hexTesselationHorizontalOffset)) {
+            if(this.aperturesArray[apertureIndex].apertureCenter.x > Aperture.mainCanvas.width + (this.hexTesselationHorizontalOffset)) {
                 this.aperturesArray[apertureIndex].apertureCenter.x -= (this.numberOfColumns)*this.hexTesselationHorizontalOffset;
             }
         }
@@ -130,8 +134,8 @@ export class Tesselation {
         }
 
         // if the shrink Animation is done then scroll to the left automatically if 
-        if(aperture.shrinkAnimationComplete == true) {
-            this.scrollAnimationStep(scrollSpeedInPercentage);
+        if(Aperture.shrinkAnimationComplete == true) {
+            this.scrollAnimationStep(this.scrollSpeedInPercentage);
         }
     }
 
