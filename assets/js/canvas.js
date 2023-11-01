@@ -8,9 +8,11 @@ let ctx;
 // aperture class is named after a camera aperture
 import { Aperture } from './ApertureClass.js';
 // Tesselation class creates a repeating grid of apertures and allows control over how many apertures are displayed
-import { Tesselation } from './tesselationClass.js';
+import { Tesselation } from './TesselationClass.js';
 // Color Sliders to change the color scheme
 import { ColorSlider } from './ColorSlider.js';
+// projectCanvas.js fills the project.html template when a thumbnail is clicked
+import * as projectCanvas from './projectCanvas.js';
 
 // The canvasBackgroundColor is the color behind the aperture tesselation pattern in between apertures
 let canvasBackgroundColor = "hsl(340, 100%, 50%)";
@@ -121,10 +123,10 @@ function onPointerDown(e) {
         apertureEdgeColorButton.pointerDown = true;
         backgroundColorButton.pointerDown = false;
     }
-    console.log("mouseDown");
-    if(Math.hypot(mainApertureTesselation.aperturesArray[3].apertureCenter.x - mouseLocationOnDown.x, mainApertureTesselation.aperturesArray[3].apertureCenter.y - mouseLocationOnDown.y) < Aperture.apertureHexagonApothem * (Aperture.shrinkPercent/100)) {
-        console.log("pressed on LMBB v2")
-        window.open("/assets/projectpages/project_page_template.html", "_self");
+
+    if(Math.hypot(mainApertureTesselation.aperturesArray[mainApertureTesselation.projectApertureIndices[3]].apertureCenter.x - mouseLocationOnDown.x, mainApertureTesselation.aperturesArray[mainApertureTesselation.projectApertureIndices[3]].apertureCenter.y - mouseLocationOnDown.y) < Aperture.apertureHexagonApothem * (Aperture.shrinkPercent/100)) {
+        projectCanvas.setCurrentProject("LMBB v2");
+        // window.open("/projects.html", "_self");
     }
 
     if(mouseLocationOnDown != undefined && mouseLocationOnDown != null) {

@@ -132,7 +132,7 @@ export class Aperture {
         // If the aperture object doesn't have a projectThumbnail then draw it as just a hexagon and if it's an njL initials hexagon draw it on top
         else {
             this.drawHexagon();
-            
+            console.log("drawing empty hexagon at " + this.apertureCenter.x + ', ' + this.apertureCenter.y)
             if(this.is_njLAperture) {
                 this.draw_njL_portfolioText();
             }

@@ -23,8 +23,13 @@ export class Tesselation {
         // Setting default scroll to half speed on page open
         this.scrollSpeedInPercentage = -0.5;
 
+        // Saving projectInfoList of projects in Tesselation object
+        this.projectInfoObjectList = projectInfoList;
         // aperturesArray is the list of apertures positioned to form the tesselation geometry
         this.aperturesArray = [];
+
+        // projectApertureIndices are the indices of the apertureArray that actually have project info/thumbnail
+        this.projectApertureIndices = [];
 
         // numProjectsToAssignToAPerture is the count of how many projects in the project list still need
         // to be set to an aperture to have it's project info displayed
@@ -59,6 +64,8 @@ export class Tesselation {
                 if(!nextApertureIsTooHighForThumbnail && !nextApertureIsTooLowForThumbnail) {
                     this.aperturesArray[tesselationRow + nextApertureIndex].attachThumbnaiil(projectInfoList[projectInfoList.length - numProjectsToAssignToAperture]);
                     
+                    // Push the index of this aperture to the projectApertureIndices because it has a thumbnail
+                    this.projectApertureIndices.push(this.aperturesArray.length - 1);
                     // Decrement number of projects by one since 1 project was assigned
                     numProjectsToAssignToAperture--;
                 }
