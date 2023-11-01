@@ -81,7 +81,7 @@ export class Aperture {
                 finalValue: this.hexagonApothem},
             OpenHole: {
                 currentStageVariable: this.currentOpenedDistance, 
-                initialValue: 0,
+                initialValue: this.fullEdgeThickness,
                 finalValue: this.fullyOpenedDistance},
             CloseHole: {
                 currentStageVariable: this.currentOpenedDistance, 
