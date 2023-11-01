@@ -1,30 +1,28 @@
 'use strict';
 import { aperture } from './apertureClass.js';
 
+// Global variables
 // Declare Canvas and Context Objects
 let mainCanvas;
 let ctx;
 
-// Global variables
-// The canvasBackgroundColor is the color behind the aperture tesselation in between apertures
+// The canvasBackgroundColor is the color behind the aperture tesselation pattern in between apertures
 let canvasBackgroundColor = "hsl(340, 100%, 50%)";
-// apertureColor is the color of the aperture sides
+// apertureColor is the color of the apertures themselves as a static field
 aperture.apertureColor = "hsl(0, 0%, 0%)";
 // apertureEdgeColor is the color of the aperture slits in between the sides of the aperture
 aperture.apertureEdgeColor = "hsl(200, 100%, 50%)";
 
-let scrollSpeedMultiplier = 7;
-
 // User Interface Global Variables
-
+// scrollSpeedMultiplier sets the direction that the tesselation scrolls in
+let scrollSpeedMultiplier = 7;
 let scrollSpeedInPercentage = -0.5;
-
+// states for mouse and touch events
 let globalPointerDown = false;
-
 let wasTouchEvent = false;
 
 // apertureHexagonApothem is the distance from the center to a vertex of fully tesselated hexagon/aperture when the screen loads 
-const apertureHexagonApothem = Math.round(window.innerHeight/3);
+aperture.apertureHexagonApothem = Math.round(window.innerHeight/3);
 
 // TODO: Remove projectInfo classes and just merge into aperture class
 // projectInfo class contains all the information and media related to a project thumbnail/description and is used to add new projects
@@ -70,8 +68,8 @@ class apertureTesselation {
         this.tesselationOriginPosition = tesselationOriginPosition;
 
         // These offsets determine the distance between hexagon apertures
-        this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(apertureHexagonApothem, 2) - Math.pow(apertureHexagonApothem/2, 2));
-        this.hexTesselationHorizontalOffset = 1.5*apertureHexagonApothem; 
+        this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(aperture.apertureHexagonApothem, 2) - Math.pow(aperture.apertureHexagonApothem/2, 2));
+        this.hexTesselationHorizontalOffset = 1.5*aperture.apertureHexagonApothem; 
 
         // This is the maximum speed of the horizontal scrolling
         this.maximumScrollPixelsPerFrame = maximumScrollPixelsPerFrame;
@@ -211,7 +209,7 @@ let CanvasHeightOfColorSliders = window.innerHeight*0.85;
 class hexagonColorSlider {
     constructor(hexagonCenterPosition, hexagonalApothem, initialColor) {
         this.hexagonCenterPosition = hexagonCenterPosition;
-        this.apertureHexagonApothem = hexagonalApothem;
+        this.hexagonApothem = hexagonalApothem;
         this.color = initialColor;
         this.previousColor = initialColor;
         this.pointerDown = false;
@@ -222,10 +220,10 @@ class hexagonColorSlider {
         
         // Draw hexagon filled shape using lineTo() and closePath() functions going from each vertex and back again in a loop
         ctx.beginPath();
-        ctx.moveTo(this.hexagonCenterPosition.x + this.apertureHexagonApothem*Math.sin(Math.PI/6), this.hexagonCenterPosition.y + this.apertureHexagonApothem*Math.cos(Math.PI/6));
+        ctx.moveTo(this.hexagonCenterPosition.x + this.hexagonApothem*Math.sin(Math.PI/6), this.hexagonCenterPosition.y + this.hexagonApothem*Math.cos(Math.PI/6));
     
         for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.lineTo(this.hexagonCenterPosition.x + this.apertureHexagonApothem*Math.sin(vertex*Math.PI/3 + Math.PI/6), this.hexagonCenterPosition.y + this.apertureHexagonApothem*Math.cos(vertex*Math.PI/3 + Math.PI/6));
+            ctx.lineTo(this.hexagonCenterPosition.x + this.hexagonApothem*Math.sin(vertex*Math.PI/3 + Math.PI/6), this.hexagonCenterPosition.y + this.hexagonApothem*Math.cos(vertex*Math.PI/3 + Math.PI/6));
         }
     
         ctx.closePath();
