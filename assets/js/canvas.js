@@ -9,6 +9,8 @@ let ctx;
 import { Aperture } from './ApertureClass.js';
 // Tesselation class creates a repeating grid of apertures and allows control over how many apertures are displayed
 import { Tesselation } from './tesselationClass.js';
+// Color Sliders to change the color scheme
+import { ColorSlider } from './ColorSlider.js';
 
 // The canvasBackgroundColor is the color behind the aperture tesselation pattern in between apertures
 let canvasBackgroundColor = "hsl(340, 100%, 50%)";
@@ -82,48 +84,17 @@ let mainApertureTesselation = new Tesselation(projectInfoObjectList, {x: 0, y: w
 let colorSlidersHexagonApothem = window.innerHeight/12;
 let canvasHeightOfColorSliders = window.innerHeight*0.85;
 
-class hexagonColorSlider {
-    constructor(hexagonCenterPosition, hexagonalApothem, initialHue) {
-        this.hexagonCenterPosition = hexagonCenterPosition;
-        this.hexagonApothem = hexagonalApothem;
-        this.hue = initialHue;
-        this.color = "hsl(" + initialHue + ", 100%, 50%)";
-        this.previousColor = this.color;
-        this.pointerDown = false;
-    }
-
-    drawColorSelector() {
-        ctx.fillStyle = this.color;
-        
-        // Draw hexagon filled shape using lineTo() and closePath() functions going from each vertex and back again in a loop
-        ctx.beginPath();
-        ctx.moveTo(this.hexagonCenterPosition.x + this.hexagonApothem*Math.sin(Math.PI/6), this.hexagonCenterPosition.y + this.hexagonApothem*Math.cos(Math.PI/6));
-    
-        for(let vertex = 0;vertex < 6;vertex++) {
-            ctx.lineTo(this.hexagonCenterPosition.x + this.hexagonApothem*Math.sin(vertex*Math.PI/3 + Math.PI/6), this.hexagonCenterPosition.y + this.hexagonApothem*Math.cos(vertex*Math.PI/3 + Math.PI/6));
-        }
-    
-        ctx.closePath();
-        ctx.fill();
-    }
-
-    setNewHSLAColor(newHSLAColor) {
-        this.color = newHSLAColor;
-    }
-}
-
 function getHueFromHslString(hslString) {
     let hueValue = parseInt(hslString.split(",")[0].replace("hsl(", ""));
     return hueValue;
 }
 
-let backgroundColorButton = new hexagonColorSlider({x: 1.5*colorSlidersHexagonApothem, y: canvasHeightOfColorSliders}, colorSlidersHexagonApothem, getHueFromHslString(canvasBackgroundColor));
+let backgroundColorButton = new ColorSlider({x: 1.5*colorSlidersHexagonApothem, y: canvasHeightOfColorSliders}, colorSlidersHexagonApothem, getHueFromHslString(canvasBackgroundColor));
 
-let apertureEdgeColorButton = new hexagonColorSlider({x: window.innerWidth - 1.5*colorSlidersHexagonApothem, y: canvasHeightOfColorSliders}, colorSlidersHexagonApothem, getHueFromHslString(Aperture.apertureEdgeColor));
+let apertureEdgeColorButton = new ColorSlider({x: window.innerWidth - 1.5*colorSlidersHexagonApothem, y: canvasHeightOfColorSliders}, colorSlidersHexagonApothem, getHueFromHslString(Aperture.apertureEdgeColor));
 
-
-let animationStartTime = undefined;
 let globalAnimationId;
+let animationStartTime = undefined;
 let dramaticPageOpenDuration = 2000;
 let shrinkDuration = 2000;
 let openHoleDuration = 1000;
