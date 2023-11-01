@@ -121,6 +121,11 @@ function onPointerDown(e) {
         apertureEdgeColorButton.pointerDown = true;
         backgroundColorButton.pointerDown = false;
     }
+    console.log("mouseDown");
+    if(Math.hypot(mainApertureTesselation.aperturesArray[3].apertureCenter.x - mouseLocationOnDown.x, mainApertureTesselation.aperturesArray[3].apertureCenter.y - mouseLocationOnDown.y) < Aperture.apertureHexagonApothem * (Aperture.shrinkPercent/100)) {
+        console.log("pressed on LMBB v2")
+        window.open("/assets/projectpages/project_page_template.html", "_self");
+    }
 
     if(mouseLocationOnDown != undefined && mouseLocationOnDown != null) {
         if(wasTouchEvent) {
