@@ -34,6 +34,17 @@ class projectInfo {
         this.projectTopic = projectTopic;
     }
 }
+// project JSON file to store all relevant project data for a project page
+/* 
+projectJSON = {
+    Title: "LMBB",
+    GeneralDescription: "Blah Blah",
+    DevelopmentDescription: "Blah dev blah",
+    ThumbnailImagePath: "Thumbnail/",
+    SlideShowFiles: ["image0", "video1", "image2"],
+
+}
+*/
 
 // projectInfo variables for the projects I want to display on this portfolio page
 let lmbbV2 = new projectInfo('/images/thumbnails/LMBB v2.jpg', 'LMBB v2', 'v2.0', 'BT Speaker');
@@ -319,6 +330,10 @@ function powerTiming(timing, exponent) {
     return Math.pow(timing, exponent);
 }
 
+function linearTime(timeStamp, durationOfAnimation) {
+    return timeStamp/durationOfAnimation;
+}
+
 function shrinkAnimationStep(timeStamp) {
     if(animationStartTime === undefined) {
         animationStartTime = timeStamp;
@@ -352,7 +367,7 @@ function openAperturesAnimationStep(timeStamp) {
         animationStartTime = timeStamp;
     }
 
-    const animationProgress = 7*powerTiming( (timeStamp - animationStartTime) / openHoleDuration - 0.5, 3) - 0.75*powerTiming( (timeStamp - animationStartTime) / openHoleDuration, 2) + 0.875;
+    const animationProgress = linearTime((timeStamp - animationStartTime), openHoleDuration);
     
     if(animationProgress < 1) {
         drawBackground();
