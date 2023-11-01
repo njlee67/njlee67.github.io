@@ -1,4 +1,4 @@
-export class aperture {
+export class Aperture {
     // apertureColor is the color of the aperture sides
     static apertureColor = "hsl(0, 0%, 0%";
     // apertureEdgeColor is the color of the aperture slits in between the sides of the aperture
@@ -7,7 +7,7 @@ export class aperture {
     static apertureHexagonApothem = Math.round(window.innerHeight/3);
 
     static mainCanvas = document.getElementById("main-canvas");
-    static ctx = aperture.mainCanvas.getContext("2d");
+    static ctx = Aperture.mainCanvas.getContext("2d");
 
     // Variables describing aperture geometry in tesselation view
     static shrinkPercent = 90;
@@ -31,19 +31,19 @@ export class aperture {
         this.apertureCenter = apertureCenter;
 
         // Setting the default hexagon apothem to global default value for tesselation pattern of apothems
-        this.hexagonApothem = aperture.apertureHexagonApothem;
+        this.hexagonApothem = Aperture.apertureHexagonApothem;
         // Constant variables for aperture geometric features/dimensions final form for each animation
-        this.fullyShrunkenHexagonSize = this.percentageToPixelsOfApothem(aperture.shrinkPercent);
+        this.fullyShrunkenHexagonSize = this.percentageToPixelsOfApothem(Aperture.shrinkPercent);
 
         // The opened distance is the distance from the center of the aperture to the vertices of the aperture opening
-        this.fullyOpenedDistance = this.percentageToPixelsOfApothem(aperture.openPercent);
+        this.fullyOpenedDistance = this.percentageToPixelsOfApothem(Aperture.openPercent);
 
         // Edge thickness is the difference in the Opened Distances of the foregound and background apertures to give an edge looking effect because they have the color and edgeColor respectively
-        this.fullEdgeThickness = this.percentageToPixelsOfApothem(aperture.edgePercent);
+        this.fullEdgeThickness = this.percentageToPixelsOfApothem(Aperture.edgePercent);
 
         // Dynamic variables fo animations that are the current state of the corresponding variable and are altered/incremented/decremented to update the animations
         // The current size of the aperture which controls the spacing between apertures
-        this.currentShrunkenSize = aperture.apertureHexagonApothem;
+        this.currentShrunkenSize = Aperture.apertureHexagonApothem;
 
         // The current distance from the center of the aperture to the six vertices of the opening
         this.currentOpenedDistance = 0;
@@ -52,10 +52,10 @@ export class aperture {
         this.currentEdgeThickness = 0;
 
         // this.color is the color of the aperture and 
-        this.color = aperture.apertureColor;
+        this.color = Aperture.apertureColor;
         
         // this.edgeColor is the color of the aperture slits or edges between each of the six aperture parts
-        this.edgeColor = aperture.apertureEdgeColor;
+        this.edgeColor = Aperture.apertureEdgeColor;
 
         // Animation stage variables
         this.doneShrinking = false;
@@ -119,7 +119,7 @@ export class aperture {
         if(this.projectThumbnail != null) {
             this.drawProjectTitleText();
             this.drawProjectTypeText();
-            if(aperture.shrinkAnimationComplete == true) {
+            if(Aperture.shrinkAnimationComplete == true) {
                 this.drawThumbnail();
                 this.drawEdgeAperatureQuadrilaterals();
                 this.drawHexagonBorderWindow();
@@ -143,50 +143,50 @@ export class aperture {
         let initials = 'njL';
 
         // Set initials color in the context to edge color
-        aperture.ctx.fillStyle = this.edgeColor;
+        Aperture.ctx.fillStyle = this.edgeColor;
         // Setting the font size and font style
         let fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(70));
-        aperture.ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
+        Aperture.ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
         // measuring width of initials to center the text later
-        let initialsWidth = aperture.ctx.measureText(initials).width;
+        let initialsWidth = Aperture.ctx.measureText(initials).width;
 
         // Draw njL initials
-        aperture.ctx.fillText(initials, this.apertureCenter.x - (initialsWidth/2), this.apertureCenter.y + Math.round(this.percentageToPixelsOfApothem(5)) )
+        Aperture.ctx.fillText(initials, this.apertureCenter.x - (initialsWidth/2), this.apertureCenter.y + Math.round(this.percentageToPixelsOfApothem(5)) )
         
         // Setting the font size of portfolio text
         fontSizeFractionOfApothem = Math.round(this.percentageToPixelsOfApothem(20));
-        aperture.ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
+        Aperture.ctx.font = fontSizeFractionOfApothem.toString() + "px Arial";
         // Measure the width of portfolio text to center it like njL text with new font size 
-        let portfolioWidth = aperture.ctx.measureText('portfolio').width;
+        let portfolioWidth = Aperture.ctx.measureText('portfolio').width;
 
         // Draw portfolio text
-        aperture.ctx.fillText('portfolio', this.apertureCenter.x - (portfolioWidth/2), this.apertureCenter.y + (Math.round(this.percentageToPixelsOfApothem(45))) )
+        Aperture.ctx.fillText('portfolio', this.apertureCenter.x - (portfolioWidth/2), this.apertureCenter.y + (Math.round(this.percentageToPixelsOfApothem(45))) )
     }
 
     drawProjectTitleText() {
         // Set the size of the project title text
         let projectInfoTextSize = this.fullEdgeThickness*2.5;
-        aperture.ctx.fillStyle = aperture.apertureColor;
-        aperture.ctx.font = '900 ' + projectInfoTextSize.toString() + "px Arial";
+        Aperture.ctx.fillStyle = Aperture.apertureColor;
+        Aperture.ctx.font = '900 ' + projectInfoTextSize.toString() + "px Arial";
         
         let projectTitleText = this.projectInfoObject.projectName;
-        let projectTitleWidth = aperture.ctx.measureText(projectTitleText).width;
-        let projectTitleHeight = aperture.ctx.measureText(projectTitleText).actualBoundingBoxAscent + aperture.ctx.measureText(projectTitleText).actualBoundingBoxDescent;
+        let projectTitleWidth = Aperture.ctx.measureText(projectTitleText).width;
+        let projectTitleHeight = Aperture.ctx.measureText(projectTitleText).actualBoundingBoxAscent + Aperture.ctx.measureText(projectTitleText).actualBoundingBoxDescent;
         
-        aperture.ctx.fillText(projectTitleText, this.apertureCenter.x -  projectTitleWidth/2, this.apertureCenter.y + projectTitleHeight/2 - (Math.sqrt(3)/2)*((this.hexagonApothem)));
+        Aperture.ctx.fillText(projectTitleText, this.apertureCenter.x -  projectTitleWidth/2, this.apertureCenter.y + projectTitleHeight/2 - (Math.sqrt(3)/2)*((this.hexagonApothem)));
         
     }
     
     drawProjectTypeText() {
         // Set the size of the project type text
         let projectInfoTextSize = this.fullEdgeThickness*2.5;
-        aperture.ctx.fillStyle = aperture.apertureColor;
-        aperture.ctx.font = '900 ' + projectInfoTextSize.toString() + "px Arial";
+        Aperture.ctx.fillStyle = Aperture.apertureColor;
+        Aperture.ctx.font = '900 ' + projectInfoTextSize.toString() + "px Arial";
         
-        let projectTopicWidth = aperture.ctx.measureText(this.projectInfoObject.projectTopic).width;
-        let projectTopicHeight = aperture.ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxAscent + aperture.ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxDescent;
+        let projectTopicWidth = Aperture.ctx.measureText(this.projectInfoObject.projectTopic).width;
+        let projectTopicHeight = Aperture.ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxAscent + Aperture.ctx.measureText(this.projectInfoObject.projectTopic).actualBoundingBoxDescent;
         
-        aperture.ctx.fillText(this.projectInfoObject.projectTopic, this.apertureCenter.x - projectTopicWidth/2, this.apertureCenter.y + projectTopicHeight/2 +  (Math.sqrt(3)/2)*((this.hexagonApothem)));
+        Aperture.ctx.fillText(this.projectInfoObject.projectTopic, this.apertureCenter.x - projectTopicWidth/2, this.apertureCenter.y + projectTopicHeight/2 +  (Math.sqrt(3)/2)*((this.hexagonApothem)));
     }
 
     setAnimationVariable(setValue, AnimationStageEnum) {
@@ -207,25 +207,25 @@ export class aperture {
 
     drawHexagon() {
         // Hexagon or a closed aperture is set to this.color 
-        aperture.ctx.fillStyle = this.color;
+        Aperture.ctx.fillStyle = this.color;
         
         // Draw hexagon filled shape using lineTo() and closePath() functions going from each vertex and back again in a loop
-        aperture.ctx.beginPath();
-        aperture.ctx.moveTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin(Math.PI/6), this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos(Math.PI/6));
+        Aperture.ctx.beginPath();
+        Aperture.ctx.moveTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin(Math.PI/6), this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos(Math.PI/6));
     
         for(let vertex = 0;vertex < 6;vertex++) {
-            aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin(vertex*Math.PI/3 + Math.PI/6), this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos(vertex*Math.PI/3 + Math.PI/6));
+            Aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin(vertex*Math.PI/3 + Math.PI/6), this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos(vertex*Math.PI/3 + Math.PI/6));
         }
     
-        aperture.ctx.closePath();
-        aperture.ctx.fill();
+        Aperture.ctx.closePath();
+        Aperture.ctx.fill();
     }
 
     drawHexagonBorderWindow() {
         
         for(let vertex = 0;vertex < 6;vertex++) {
-            aperture.ctx.fillStyle = this.color;
-            aperture.ctx.beginPath();
+            Aperture.ctx.fillStyle = this.color;
+            Aperture.ctx.beginPath();
             
             // The parallelToSideUnitVector is the vector from the current vertex to the next vertex 60deg away CCW. This vector has a magnitude of the apertureHexagonApothem letiable
             let parallelToSideUnitVector = {x: Math.sin(vertex*Math.PI/3 + Math.PI/6) - Math.sin((vertex+1)*Math.PI/3 + Math.PI/6), y: Math.cos(vertex*Math.PI/3 + Math.PI/6) -  Math.cos((vertex+1)*Math.PI/3 + Math.PI/6)};
@@ -234,31 +234,31 @@ export class aperture {
             let parallelToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
             
             // Draw the lines that make up each quadrilateral
-            aperture.ctx.moveTo(this.apertureCenter.x + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.x,
+            Aperture.ctx.moveTo(this.apertureCenter.x + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.x,
                          this.apertureCenter.y + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.y);
         
-            aperture.ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenHexagonSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVectorPrev.x, 
+            Aperture.ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenHexagonSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVectorPrev.x, 
                         this.apertureCenter.y + this.fullyShrunkenHexagonSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVectorPrev.y);
             
-            aperture.ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenHexagonSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
+            Aperture.ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenHexagonSize*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
                         this.apertureCenter.y + this.fullyShrunkenHexagonSize*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
         
-            aperture.ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenHexagonSize*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.x, 
+            Aperture.ctx.lineTo(this.apertureCenter.x + this.fullyShrunkenHexagonSize*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.x, 
                         this.apertureCenter.y + this.fullyShrunkenHexagonSize*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + (this.fullyShrunkenHexagonSize - 2*this.fullEdgeThickness)*parallelToSideUnitVector.y);
                         
-            aperture.ctx.closePath();
-            aperture.ctx.fill();
+            Aperture.ctx.closePath();
+            Aperture.ctx.fill();
         }
 
     
     }
 
     drawAperatureQuadrilaterals() {
-        // aperture.ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width));
+        // Aperture.ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
-            aperture.ctx.fillStyle = this.color;
-            aperture.ctx.beginPath();
+            Aperture.ctx.fillStyle = this.color;
+            Aperture.ctx.beginPath();
     
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the apertureHexagonApothem
             // so when the irisMechanismDistance is 0 the irisMechanism animation is completely closed and when it  = apertureHexagonApothem it is completely open but we use it as a border, so it never equals the apertureHexagonApothem
@@ -273,28 +273,28 @@ export class aperture {
             let perpindicularToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
             
             // Draw the lines that make up each quadrilateral
-            aperture.ctx.moveTo(this.apertureCenter.x + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.x - this.AnimationStages.OpenEdge.currentStageVariable*perpindicularToSideUnitVectorPrev.x, this.apertureCenter.y + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.y - this.AnimationStages.OpenEdge.currentStageVariable*perpindicularToSideUnitVectorPrev.y);
+            Aperture.ctx.moveTo(this.apertureCenter.x + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.x - this.AnimationStages.OpenEdge.currentStageVariable*perpindicularToSideUnitVectorPrev.x, this.apertureCenter.y + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.y - this.AnimationStages.OpenEdge.currentStageVariable*perpindicularToSideUnitVectorPrev.y);
     
-            aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVectorPrev.x - this.AnimationStages.OpenEdge.currentStageVariable*perpindicularToSideUnitVectorPrev.x, 
+            Aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVectorPrev.x - this.AnimationStages.OpenEdge.currentStageVariable*perpindicularToSideUnitVectorPrev.x, 
                         this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVectorPrev.y - this.AnimationStages.OpenEdge.currentStageVariable*perpindicularToSideUnitVectorPrev.y);
             
-            aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
+            Aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
                         this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
     
-            aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.x, 
+            Aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.x, 
                         this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.y);
     
-            aperture.ctx.closePath();
-            aperture.ctx.fill();
+            Aperture.ctx.closePath();
+            Aperture.ctx.fill();
         }
     }
 
     drawEdgeAperatureQuadrilaterals() {
-        // aperture.ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width));
+        // Aperture.ctx.drawImage(img, centerPositon.x - shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, centerPositon.y - img.height*(shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width), 2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem, img.height*(2*shrinkHexSize*percentOfhexagonApothemIrisSize*apertureHexagonApothem/img.width));
         // Loop and draw the 6 quadrilaterals
         for(let vertex = 0;vertex < 6;vertex++) {
-            aperture.ctx.fillStyle = this.edgeColor; 
-            aperture.ctx.beginPath();
+            Aperture.ctx.fillStyle = this.edgeColor; 
+            Aperture.ctx.beginPath();
     
             // openedPercentage is the percentage that the irisMecanism is open because the distance the 6 quadrilaterals travel from the center is equal to the apertureHexagonApothem
             // so when the irisMechanismDistance is 0 the irisMechanism animation is completely closed and when it  = apertureHexagonApothem it is completely open but we use it as a border, so it never equals the apertureHexagonApothem
@@ -306,20 +306,20 @@ export class aperture {
             let parallelToSideUnitVectorPrev = {x: Math.sin((vertex-1)*Math.PI/3 + Math.PI/6) - Math.sin((vertex)*Math.PI/3 + Math.PI/6), y: Math.cos((vertex-1)*Math.PI/3 + Math.PI/6) - Math.cos((vertex)*Math.PI/3 + Math.PI/6)};
             
             // Draw the lines that make up each quadrilateral
-            aperture.ctx.moveTo(this.apertureCenter.x + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.x - this.AnimationStages.OpenEdge.currentStageVariable*parallelToSideUnitVector.x, 
+            Aperture.ctx.moveTo(this.apertureCenter.x + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.x - this.AnimationStages.OpenEdge.currentStageVariable*parallelToSideUnitVector.x, 
                         this.apertureCenter.y + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.y - this.AnimationStages.OpenEdge.currentStageVariable*parallelToSideUnitVector.y);
     
-            aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVectorPrev.x, 
+            Aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVectorPrev.x, 
                         this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos((vertex)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVectorPrev.y);
             
-            aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
+            Aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex)*Math.PI/3 + Math.PI/6), 
                         this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos((vertex)*Math.PI/3 + Math.PI/6));
     
-            aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.x - this.AnimationStages.OpenEdge.currentStageVariable*parallelToSideUnitVector.x, 
+            Aperture.ctx.lineTo(this.apertureCenter.x + this.AnimationStages.Shrink.currentStageVariable*Math.sin((vertex+1)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.x - this.AnimationStages.OpenEdge.currentStageVariable*parallelToSideUnitVector.x, 
                         this.apertureCenter.y + this.AnimationStages.Shrink.currentStageVariable*Math.cos((vertex+1)*Math.PI/3 + Math.PI/6) + this.AnimationStages.OpenHole.currentStageVariable*parallelToSideUnitVector.y - this.AnimationStages.OpenEdge.currentStageVariable*parallelToSideUnitVector.y);
     
-            aperture.ctx.closePath();
-            aperture.ctx.fill();
+            Aperture.ctx.closePath();
+            Aperture.ctx.fill();
         }
     }
 
@@ -348,7 +348,7 @@ export class aperture {
                 croppedWidth = (2/Math.sqrt(3)) * croppedHeight;
             }
 
-            aperture.ctx.drawImage(this.projectThumbnail,0, 0, croppedWidth, croppedHeight, this.apertureCenter.x - this.fullyOpenedDistance, this.apertureCenter.y - (Math.sqrt(3)/2)*(this.fullyOpenedDistance), 2*(this.fullyOpenedDistance), Math.sqrt(3)*(this.fullyOpenedDistance))
+            Aperture.ctx.drawImage(this.projectThumbnail,0, 0, croppedWidth, croppedHeight, this.apertureCenter.x - this.fullyOpenedDistance, this.apertureCenter.y - (Math.sqrt(3)/2)*(this.fullyOpenedDistance), 2*(this.fullyOpenedDistance), Math.sqrt(3)*(this.fullyOpenedDistance))
         }
     }
 

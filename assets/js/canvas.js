@@ -1,5 +1,5 @@
 'use strict';
-import { aperture } from './apertureClass.js';
+import { Aperture } from './apertureClass.js';
 
 // Global variables
 // Declare Canvas and Context Objects
@@ -9,9 +9,9 @@ let ctx;
 // The canvasBackgroundColor is the color behind the aperture tesselation pattern in between apertures
 let canvasBackgroundColor = "hsl(340, 100%, 50%)";
 // apertureColor is the color of the apertures themselves as a static field
-aperture.apertureColor = "hsl(0, 0%, 0%)";
+Aperture.apertureColor = "hsl(0, 0%, 0%)";
 // apertureEdgeColor is the color of the aperture slits in between the sides of the aperture
-aperture.apertureEdgeColor = "hsl(200, 100%, 50%)";
+Aperture.apertureEdgeColor = "hsl(200, 100%, 50%)";
 
 // User Interface Global Variables
 // scrollSpeedMultiplier sets the direction that the tesselation scrolls in
@@ -22,7 +22,7 @@ let globalPointerDown = false;
 let wasTouchEvent = false;
 
 // apertureHexagonApothem is the distance from the center to a vertex of fully tesselated hexagon/aperture when the screen loads 
-aperture.apertureHexagonApothem = Math.round(window.innerHeight/3);
+Aperture.apertureHexagonApothem = Math.round(window.innerHeight/3);
 
 // TODO: Remove projectInfo classes and just merge into aperture class
 // projectInfo class contains all the information and media related to a project thumbnail/description and is used to add new projects
@@ -79,8 +79,8 @@ class apertureTesselation {
         this.tesselationOriginPosition = tesselationOriginPosition;
 
         // These offsets determine the distance between hexagon apertures
-        this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(aperture.apertureHexagonApothem, 2) - Math.pow(aperture.apertureHexagonApothem/2, 2));
-        this.hexTesselationHorizontalOffset = 1.5*aperture.apertureHexagonApothem; 
+        this.hexTesselationVerticalOffset = 2*Math.sqrt(Math.pow(Aperture.apertureHexagonApothem, 2) - Math.pow(Aperture.apertureHexagonApothem/2, 2));
+        this.hexTesselationHorizontalOffset = 1.5*Aperture.apertureHexagonApothem; 
 
         // This is the maximum speed of the horizontal scrolling
         this.maximumScrollPixelsPerFrame = maximumScrollPixelsPerFrame;
@@ -90,8 +90,8 @@ class apertureTesselation {
         this.numberOfColumns = 0;
 
         // Colors for each aperture and aperture edges
-        this.color = aperture.apertureColor;
-        this.edgeColor = aperture.apertureEdgeColor;
+        this.color = Aperture.apertureColor;
+        this.edgeColor = Aperture.apertureEdgeColor;
 
         // aperturesArray is the list of apertures positioned to form the tesselation geometry
         this.aperturesArray = [];
@@ -119,7 +119,7 @@ class apertureTesselation {
                 }
 
                 // pushing the new aperture that has been correctly positioned to aperturesArray
-                this.aperturesArray.push(new aperture(nextApertureCenter));
+                this.aperturesArray.push(new Aperture(nextApertureCenter));
             
                 // These variables check to see if the newly added aperture can be set to a Project aperture with Project Thumbnail/Title/Type
                 let nextApertureIsTooHighForThumbnail = this.aperturesArray[tesselationRow + nextApertureIndex].apertureCenter.y < this.hexTesselationVerticalOffset/2;
@@ -154,7 +154,7 @@ class apertureTesselation {
                 if(this.numberOfColumns%2 != 0) {
                     nextApertureCenter.y += this.hexTesselationVerticalOffset/2;
                 }
-                this.aperturesArray.push(new aperture(nextApertureCenter));
+                this.aperturesArray.push(new Aperture(nextApertureCenter));
                 this.aperturesArray[this.aperturesArray.length-1].is_njLAperture = true;
             }
             this.numberOfColumns++;
@@ -166,7 +166,7 @@ class apertureTesselation {
             if(tesselationColumn%2 != 0) {
                 nextApertureCenter.y -= this.hexTesselationVerticalOffset/2;
             }
-            this.aperturesArray.push(new aperture(nextApertureCenter));
+            this.aperturesArray.push(new Aperture(nextApertureCenter));
             this.aperturesArray[this.aperturesArray.length-1].is_njLAperture = true;
         }
 
@@ -204,7 +204,7 @@ class apertureTesselation {
         }
 
         // if the shrink Animation is done then scroll to the left automatically if 
-        if(aperture.shrinkAnimationComplete == true) {
+        if(Aperture.shrinkAnimationComplete == true) {
             this.scrollAnimationStep(scrollSpeedInPercentage);
         }
     }
@@ -312,7 +312,7 @@ function dramaticPageOpenPause(timeStamp) {
     const dramaticPageOpenProgress = (timeStamp - animationStartTime) / dramaticPageOpenDuration;
 
     if(dramaticPageOpenProgress < 1) {
-        drawBackground(aperture.apertureColor);
+        drawBackground(Aperture.apertureColor);
         backgroundColorButton.drawColorSelector();
         apertureEdgeColorButton.drawColorSelector();
 
@@ -354,7 +354,7 @@ function shrinkAnimationStep(timeStamp) {
         globalAnimationId = requestAnimationFrame(shrinkAnimationStep);
     }
     else {
-        aperture.shrinkAnimationComplete = true;
+        Aperture.shrinkAnimationComplete = true;
 
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
@@ -382,8 +382,8 @@ function openAperturesAnimationStep(timeStamp) {
         globalAnimationId = requestAnimationFrame(openAperturesAnimationStep);
     }
     else {
-        aperture.openHoleAnimationComplete = true;
-        aperture.edgeOpenAnimationComplete = true;
+        Aperture.openHoleAnimationComplete = true;
+        Aperture.edgeOpenAnimationComplete = true;
 
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
