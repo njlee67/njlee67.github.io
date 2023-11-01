@@ -29,6 +29,131 @@ let scrollSpeedMultiplier = 7;
 let globalPointerDown = false;
 let wasTouchEvent = false;
 
+// Draws background rectangle on the canvas
+function drawBackground(color = canvasBackgroundColor) {
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+}
+
+// User Interface Functions for a positive user experience
+function getEventLocation(e)
+{
+    if (e.touches && e.touches.length === 1) {
+        // console.log('touch location: ('+  e.touches[0].clientX + ', ' + e.touches[0].clientY + ')')
+        return { 
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY
+        }
+    }
+    else if (e.clientX && e.clientY) {
+        return {
+            x: e.clientX,
+            y: e.clientY
+        }
+    }
+}
+
+function handleTouch(e, singleTouchHandler) {
+    e.preventDefault();
+    if (e.touches.length <= 1) {
+        singleTouchHandler(e);
+        wasTouchEvent = true;
+    }
+}
+
+function onPointerMove(e) {
+    let mouseLocationOnMove = getEventLocation(e);
+    // console.log('touchmovin');
+    if(mouseLocationOnMove != undefined && mouseLocationOnMove != null) {
+        if(mouseLocationOnMove.x > (2/3)*mainCanvas.width) {
+            mainApertureTesselation.scrollSpeedInPercentage = ((mouseLocationOnMove.x-((2/3)*mainCanvas.width))/((1/3)*mainCanvas.width))
+        }
+        else if(mouseLocationOnMove.x < (1/3)*mainCanvas.width) {
+            mainApertureTesselation.scrollSpeedInPercentage = -(1-(mouseLocationOnMove.x/((1/3)*mainCanvas.width)))
+        }
+        else {
+            mainApertureTesselation.scrollSpeedInPercentage = 0;
+        }
+    
+        if(backgroundColorButton.pointerDown) {
+            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,backgroundColorButton.hexagonCenterPosition.y) /backgroundColorButton.hexagonCenterPosition.y, 0);
+            
+            let verticalColor = 360*(1 - mouseBoundedVertical) + getHueFromHslString(backgroundColorButton.previousColor);
+            
+            if(verticalColor > 360) {
+                verticalColor -= 360;
+            }
+            
+            let newColor = "hsl(" + verticalColor.toString() + ", 100%, 50%)";
+            
+            backgroundColorButton.setNewHSLAColor(newColor);
+            canvasBackgroundColor = newColor;
+        }
+
+        if(apertureEdgeColorButton.pointerDown) {
+            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,apertureEdgeColorButton.hexagonCenterPosition.y) /apertureEdgeColorButton.hexagonCenterPosition.y, 0);
+            
+            let verticalColor = 360*(1 - mouseBoundedVertical) + getHueFromHslString(apertureEdgeColorButton.previousColor);
+            
+            if(verticalColor > 360) {
+                verticalColor -= 360;
+            }
+
+            let newColor = "hsl(" + verticalColor.toString() + ", 100%, 50%)";
+            
+            apertureEdgeColorButton.setNewHSLAColor(newColor);
+            mainApertureTesselation.setTesselationEdgeColor(newColor);
+        }
+    }
+}
+
+function onPointerDown(e) {
+    let mouseLocationOnDown = getEventLocation(e);
+    
+    globalPointerDown = true;
+    if(Math.hypot(backgroundColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, backgroundColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < colorSlidersHexagonApothem) {
+        backgroundColorButton.pointerDown = true;
+        apertureEdgeColorButton.pointerDown = false;
+    }
+    
+    if(Math.hypot(apertureEdgeColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, apertureEdgeColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < colorSlidersHexagonApothem) {
+        apertureEdgeColorButton.pointerDown = true;
+        backgroundColorButton.pointerDown = false;
+    }
+
+    if(mouseLocationOnDown != undefined && mouseLocationOnDown != null) {
+        if(wasTouchEvent) {
+            if(mouseLocationOnDown.x > (2/3)*mainCanvas.width) {
+                mainApertureTesselation.scrollSpeedInPercentage = ((mouseLocationOnDown.x-((2/3)*mainCanvas.width))/((1/3)*mainCanvas.width))
+            }
+            else if(mouseLocationOnDown.x < (1/3)*mainCanvas.width) {
+                mainApertureTesselation.scrollSpeedInPercentage = -(1-(mouseLocationOnDown.x/((1/3)*mainCanvas.width)))
+            }
+            else {
+                mainApertureTesselation.scrollSpeedInPercentage = 0;
+            }
+        }
+    }
+}
+
+function onPointerUp(e) {
+    globalPointerDown = false;
+    backgroundColorButton.pointerDown = false;
+    backgroundColorButton.previousColor = backgroundColorButton.color;
+
+    if(backgroundColorButton.color.length < 9) {
+        backgroundColorButton.color = backgroundColorButton.color;
+    }
+    
+    apertureEdgeColorButton.pointerDown = false;
+    apertureEdgeColorButton.previousColor = apertureEdgeColorButton.color;
+
+    if(apertureEdgeColorButton.color.length < 9) {
+        apertureEdgeColorButton.color = apertureEdgeColorButton.color;
+    }
+}
+
 // TODO: Remove projectInfo classes and just merge into aperture class
 // projectInfo class contains all the information and media related to a project thumbnail/description and is used to add new projects
 class projectInfo {
@@ -251,132 +376,6 @@ function setupCanvas() {
 // Ensures setupCanvas() is run only once
 window.addEventListener('load', setupCanvas);
 
-function getEventLocation(e)
-{
-    if (e.touches && e.touches.length === 1) {
-        // console.log('touch location: ('+  e.touches[0].clientX + ', ' + e.touches[0].clientY + ')')
-        return { 
-            x: e.touches[0].clientX,
-            y: e.touches[0].clientY
-        }
-    }
-    else if (e.clientX && e.clientY) {
-        return {
-            x: e.clientX,
-            y: e.clientY
-        }
-    }
-}
-
-function handleTouch(e, singleTouchHandler) {
-    e.preventDefault();
-    if (e.touches.length <= 1) {
-        singleTouchHandler(e);
-        wasTouchEvent = true;
-    }
-}
-
-function onPointerMove(e) {
-    let mouseLocationOnMove = getEventLocation(e);
-    // console.log('touchmovin');
-    if(mouseLocationOnMove != undefined && mouseLocationOnMove != null) {
-        if(mouseLocationOnMove.x > (2/3)*mainCanvas.width) {
-            mainApertureTesselation.scrollSpeedInPercentage = ((mouseLocationOnMove.x-((2/3)*mainCanvas.width))/((1/3)*mainCanvas.width))
-        }
-        else if(mouseLocationOnMove.x < (1/3)*mainCanvas.width) {
-            mainApertureTesselation.scrollSpeedInPercentage = -(1-(mouseLocationOnMove.x/((1/3)*mainCanvas.width)))
-        }
-        else {
-            mainApertureTesselation.scrollSpeedInPercentage = 0;
-        }
-    
-        if(backgroundColorButton.pointerDown) {
-            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,backgroundColorButton.hexagonCenterPosition.y) /backgroundColorButton.hexagonCenterPosition.y, 0);
-            
-            let verticalColor = 360*(1 - mouseBoundedVertical) + getHueFromHslString(backgroundColorButton.previousColor);
-            
-            if(verticalColor > 360) {
-                verticalColor -= 360;
-            }
-            
-            let newColor = "hsl(" + verticalColor.toString() + ", 100%, 50%)";
-            
-            backgroundColorButton.setNewHSLAColor(newColor);
-            canvasBackgroundColor = newColor;
-        }
-
-        if(apertureEdgeColorButton.pointerDown) {
-            let mouseBoundedVertical = Math.max(Math.min(mouseLocationOnMove.y,apertureEdgeColorButton.hexagonCenterPosition.y) /apertureEdgeColorButton.hexagonCenterPosition.y, 0);
-            
-            let verticalColor = 360*(1 - mouseBoundedVertical) + getHueFromHslString(apertureEdgeColorButton.previousColor);
-            
-            if(verticalColor > 360) {
-                verticalColor -= 360;
-            }
-
-            let newColor = "hsl(" + verticalColor.toString() + ", 100%, 50%)";
-            
-            apertureEdgeColorButton.setNewHSLAColor(newColor);
-            mainApertureTesselation.setTesselationEdgeColor(newColor);
-        }
-    }
-}
-
-// https://css-tricks.com/converting-color-spaces-in-javascript/
-
-function onPointerDown(e) {
-    let mouseLocationOnDown = getEventLocation(e);
-    
-    globalPointerDown = true;
-    if(Math.hypot(backgroundColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, backgroundColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < colorSlidersHexagonApothem) {
-        backgroundColorButton.pointerDown = true;
-        apertureEdgeColorButton.pointerDown = false;
-    }
-    
-    if(Math.hypot(apertureEdgeColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, apertureEdgeColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < colorSlidersHexagonApothem) {
-        apertureEdgeColorButton.pointerDown = true;
-        backgroundColorButton.pointerDown = false;
-    }
-
-    if(mouseLocationOnDown != undefined && mouseLocationOnDown != null) {
-        if(wasTouchEvent) {
-            if(mouseLocationOnDown.x > (2/3)*mainCanvas.width) {
-                mainApertureTesselation.scrollSpeedInPercentage = ((mouseLocationOnDown.x-((2/3)*mainCanvas.width))/((1/3)*mainCanvas.width))
-            }
-            else if(mouseLocationOnDown.x < (1/3)*mainCanvas.width) {
-                mainApertureTesselation.scrollSpeedInPercentage = -(1-(mouseLocationOnDown.x/((1/3)*mainCanvas.width)))
-            }
-            else {
-                mainApertureTesselation.scrollSpeedInPercentage = 0;
-            }
-        }
-    }
-}
-
-function onPointerUp(e) {
-    globalPointerDown = false;
-    backgroundColorButton.pointerDown = false;
-    backgroundColorButton.previousColor = backgroundColorButton.color;
-
-    if(backgroundColorButton.color.length < 9) {
-        backgroundColorButton.color = backgroundColorButton.color;
-    }
-    
-    apertureEdgeColorButton.pointerDown = false;
-    apertureEdgeColorButton.previousColor = apertureEdgeColorButton.color;
-
-    if(apertureEdgeColorButton.color.length < 9) {
-        apertureEdgeColorButton.color = apertureEdgeColorButton.color;
-    }
-}
-
-// Draws background rectangle on the canvas
-function drawBackground(color = canvasBackgroundColor) {
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    ctx.fillStyle = color;
-    ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
-}
-
 // Main Animation Loop using requestAnimationFrame function for each conditional on stage booleans declared above animation
 function updateCanvasAnimations() {
     // Set the canvas width and height each time in case window size changes
@@ -384,6 +383,8 @@ function updateCanvasAnimations() {
     mainCanvas.height = window.innerHeight;
 
     drawBackground();
+
+    // Update the tesselation based on user interaction with scrolling after page open sequence of animations
     mainApertureTesselation.drawCurrentTesselation();
     
     backgroundColorButton.drawColorSelector();
@@ -391,14 +392,4 @@ function updateCanvasAnimations() {
 
     // Canvas Animation
     requestAnimationFrame(updateCanvasAnimations);
-}
-
-// https://stackoverflow.com/questions/1484506/random-color-generator
-function getRandomColor() {
-    let letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
 }
