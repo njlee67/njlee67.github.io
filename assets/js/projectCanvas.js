@@ -16,7 +16,6 @@ export function setCurrentProject(project) {
     currentProject = project;
     window.location.href = (window.location.href + "projects/lmbbv2.html");
     
-    console.log("title w: " + window.document.title)
 }
 
 if(window.location.href.includes("lmbbv2")) {
@@ -56,7 +55,7 @@ function updateProjectCanvasAnimations() {
     // Set the canvas width and height each time in case window size changes
     projectCanvas.width = window.innerWidth;
     projectCanvas.height = window.innerHeight;
-    console.log("title: " + window.document.title)
+
     drawBackground();
     slideShowAperture.drawCurrent();
     // Update the tesselation based on user interaction with scrolling after page open sequence of animations
