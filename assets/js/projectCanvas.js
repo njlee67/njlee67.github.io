@@ -17,9 +17,11 @@ export function setCurrentProject(project) {
     window.location.href = (window.location.href + "projects/lmbbv2.html");
     
     console.log("title w: " + window.document.title)
-    setupProjectCanvas();
 }
-window.addEventListener('load', setupProjectCanvas);
+
+if(window.location.href.includes("lmbbv2")) {
+    window.addEventListener('load', setupProjectCanvas);
+}
 
 // Draws background rectangle on the canvas
 function drawBackground(color = "hsl(80, 100%, 50%)") {
