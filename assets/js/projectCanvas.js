@@ -8,15 +8,18 @@ let currentProject;
 let projectCanvas;
 let ctx;
 
-Aperture.apertureHexagonApothem = Math.round(window.innerHeight/1.1);
+Aperture.apertureHexagonApothem = Math.round(Math.min(window.innerWidth, window.innerHeight)/2);
 
 let slideShowAperture = new Aperture({x: window.innerWidth/2, y:window.innerHeight/2});
 
 export function setCurrentProject(project) {
     currentProject = project;
-    window.open("/projects.html", "_self");
-    console.log("new current project: " + currentProject);
+    window.location.href = (window.location.href + "projects/lmbbv2.html");
+    
+    console.log("title w: " + window.document.title)
+    setupProjectCanvas();
 }
+window.addEventListener('load', setupProjectCanvas);
 
 // Draws background rectangle on the canvas
 function drawBackground(color = "hsl(80, 100%, 50%)") {
@@ -27,7 +30,8 @@ function drawBackground(color = "hsl(80, 100%, 50%)") {
 
 function setupProjectCanvas() {
     // Setup mainCanvas to html canvas element
-    projectCanvas = document.getElementById("main-canvas");
+    projectCanvas = document.getElementById("project-canvas");
+    // console.log(projectCanvas)
     ctx = projectCanvas.getContext("2d");
     
     projectCanvas.width = window.innerWidth;
@@ -50,9 +54,8 @@ function updateProjectCanvasAnimations() {
     // Set the canvas width and height each time in case window size changes
     projectCanvas.width = window.innerWidth;
     projectCanvas.height = window.innerHeight;
-
+    console.log("title: " + window.document.title)
     drawBackground();
-
     slideShowAperture.drawCurrent();
     // Update the tesselation based on user interaction with scrolling after page open sequence of animations
     // mainApertureTesselation.drawCurrentTesselation();
@@ -65,4 +68,4 @@ function updateProjectCanvasAnimations() {
 }
 
 // Ensures setupCanvas() is run only once
-window.addEventListener('load', setupProjectCanvas);
+// window.addEventListener('load', setupProjectCanvas);

@@ -6,17 +6,14 @@ export class Aperture {
 
     static apertureHexagonApothem = Math.round(window.innerHeight/3);
 
-    static mainCanvas = document.getElementById("main-canvas");
+    static mainCanvas = document.getElementsByTagName("canvas")[0];
     static ctx = Aperture.mainCanvas.getContext("2d");
-
+    
     // Variables describing aperture geometry in tesselation view
     static shrinkPercent = 90;
     static openPercent = 60;
     static edgePercent = 4;
-    static shrinkSpeed = 0.075;
-    static openSpeed = 10;
-    static edgeSpeed = 0.2;
-
+    
     static shrinkAnimationComplete = false;
     static openHoleAnimationComplete = false;
     static edgeOpenAnimationComplete = false;
@@ -26,7 +23,6 @@ export class Aperture {
     static edgeCloseAnimationComplete = false;
     
     constructor(apertureCenter, relativeProjectInfoFolder = undefined) {
-
         // The center of the aperture object
         this.apertureCenter = apertureCenter;
 
@@ -122,8 +118,8 @@ export class Aperture {
             if(Aperture.shrinkAnimationComplete == true) {
                 this.drawThumbnail();
                 this.drawEdgeAperatureQuadrilaterals();
-                this.drawHexagonBorderWindow();
                 this.drawAperatureQuadrilaterals();
+                // this.drawHexagonBorderWindow();
             }
             else {
                 this.drawHexagon();
@@ -132,7 +128,7 @@ export class Aperture {
         // If the aperture object doesn't have a projectThumbnail then draw it as just a hexagon and if it's an njL initials hexagon draw it on top
         else {
             this.drawHexagon();
-            console.log("drawing empty hexagon at " + this.apertureCenter.x + ', ' + this.apertureCenter.y)
+
             if(this.is_njLAperture) {
                 this.draw_njL_portfolioText();
             }

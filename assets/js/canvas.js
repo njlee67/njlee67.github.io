@@ -126,7 +126,6 @@ function onPointerDown(e) {
 
     if(Math.hypot(mainApertureTesselation.aperturesArray[mainApertureTesselation.projectApertureIndices[3]].apertureCenter.x - mouseLocationOnDown.x, mainApertureTesselation.aperturesArray[mainApertureTesselation.projectApertureIndices[3]].apertureCenter.y - mouseLocationOnDown.y) < Aperture.apertureHexagonApothem * (Aperture.shrinkPercent/100)) {
         projectCanvas.setCurrentProject("LMBB v2");
-        // window.open("/projects.html", "_self");
     }
 
     if(mouseLocationOnDown != undefined && mouseLocationOnDown != null) {

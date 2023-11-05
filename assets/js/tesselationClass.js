@@ -107,11 +107,13 @@ export class Tesselation {
             this.aperturesArray[this.aperturesArray.length-1].is_njLAperture = true;
         }
 
+        this.LengthOfApertureArray = this.aperturesArray.length;
+
     }
 
     // used to change the edge color of each aperture in the tesselation
     setTesselationEdgeColor(newEdgeColor) {
-        for(let apertureIndex = 0;apertureIndex < this.aperturesArray.length;apertureIndex++) {
+        for(let apertureIndex = 0;apertureIndex < this.LengthOfApertureArray;apertureIndex++) {
             this.aperturesArray[apertureIndex].setEdgeColor(newEdgeColor);
         }
     }
@@ -119,7 +121,7 @@ export class Tesselation {
     scrollAnimationStep() {
         // This method scrolls the tesselation horizontally and when apertures overflow their apertureCenters get reset to the 
         // other end of the tesselation pattern
-        for(let apertureIndex = 0;apertureIndex < this.aperturesArray.length;apertureIndex++) {
+        for(let apertureIndex = 0;apertureIndex < this.LengthOfApertureArray;apertureIndex++) {
             if(this.aperturesArray[0].apertureCenter.x > -(this.hexTesselationHorizontalOffset * this.numberOfColumns)) {
                 this.aperturesArray[apertureIndex].apertureCenter.x += Math.abs(this.maximumScrollPixelsPerFrame)*this.scrollSpeedInPercentage;
             }
@@ -136,7 +138,7 @@ export class Tesselation {
 
     drawCurrentTesselation() {
         // Draw all of the apertures
-        for(let apertureIndex = 0;apertureIndex < this.aperturesArray.length;apertureIndex++) {
+        for(let apertureIndex = 0;apertureIndex < this.LengthOfApertureArray;apertureIndex++) {
             this.aperturesArray[apertureIndex].drawCurrent();
         }
 
