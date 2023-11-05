@@ -192,7 +192,6 @@ export class Aperture {
 
     setAnimationProgress(progressValue, AnimationStageEnum) {
         let command = (AnimationStageEnum.finalValue - AnimationStageEnum.initialValue)*progressValue + AnimationStageEnum.initialValue;
-
         AnimationStageEnum.currentStageVariable = command;
         this.drawCurrent();
     }

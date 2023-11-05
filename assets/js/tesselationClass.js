@@ -148,4 +148,10 @@ export class Tesselation {
         }
     }
 
+    setTesselationAnimationProgress(animationProgress, animationStageEnum) {
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
+            this.aperturesArray[apertureIndex].setAnimationProgress(animationProgress, animationStageEnum);
+        }
+    }
+
 }

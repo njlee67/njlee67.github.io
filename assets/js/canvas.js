@@ -8,11 +8,13 @@ let ctx;
 // aperture class is named after a camera aperture
 import { Aperture } from './ApertureClass.js';
 // Tesselation class creates a repeating grid of apertures and allows control over how many apertures are displayed
-import { Tesselation } from './TesselationClass.js';
+import { Tesselation } from './tesselationClass.js';
 // Color Sliders to change the color scheme
 import { ColorSlider } from './ColorSlider.js';
 // projectCanvas.js fills the project.html template when a thumbnail is clicked
 import * as projectCanvas from './projectCanvas.js';
+
+import { DurationAnimation } from './animationsClass.js';
 
 // The canvasBackgroundColor is the color behind the aperture tesselation pattern in between apertures
 let canvasBackgroundColor = "hsl(340, 100%, 50%)";
@@ -294,6 +296,34 @@ function shrinkAnimationStep(timeStamp) {
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
         requestAnimationFrame(openEdgesAnimationStep);
+    }
+}
+
+function expandAnimationStep(timeStamp) {
+    if(animationStartTime === undefined) {
+        animationStartTime = timeStamp;
+    }
+
+    const animationProgress = powerTiming( (timeStamp - animationStartTime), 7, shrinkDuration);
+    
+    if(animationProgress < 1) {
+        drawBackground();
+
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
+            mainApertureTesselation.aperturesArray[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.Expand)
+        }
+
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
+        globalAnimationId = requestAnimationFrame(expandAnimationStep);
+    }
+    else {
+        Aperture.shrinkAnimationComplete = true;
+
+        cancelAnimationFrame(globalAnimationId);
+        animationStartTime = undefined;
+        // requestAnimationFrame(openEdgesAnimationStep);
     }
 }
 

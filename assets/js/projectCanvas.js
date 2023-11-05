@@ -10,7 +10,7 @@ let ctx;
 
 Aperture.apertureHexagonApothem = Math.round(Math.min(window.innerWidth, window.innerHeight)/2);
 
-let slideShowAperture = new Aperture({x: window.innerWidth/2, y:window.innerHeight/2});
+let slideShowAperture = new Aperture({x: window.innerWidth/3, y:window.innerHeight/2});
 
 export function setCurrentProject(project) {
     currentProject = project;
