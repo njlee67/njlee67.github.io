@@ -240,7 +240,7 @@ let openEdgesDuration = 1000;
 let openHoleDuration = 1000;
 let closeHoleDuration = 1000;
 let closeEdgeDuration = 1000;
-let expandDuration = 2000;
+let expandDuration = 1000;
 
 // Functions to control animation progress
 function powerTiming(timing, exponent, durationOfAnimation) {
