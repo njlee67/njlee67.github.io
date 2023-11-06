@@ -14,14 +14,12 @@ import { ColorSlider } from './ColorSlider.js';
 // projectCanvas.js fills the project.html template when a thumbnail is clicked
 import * as projectCanvas from './projectCanvas.js';
 
-import { DurationAnimation } from './animationsClass.js';
-
 // The canvasBackgroundColor is the color behind the aperture tesselation pattern in between apertures
-let canvasBackgroundColor = "hsl(340, 100%, 50%)";
+let canvasBackgroundColor = "hsl(120, 50%, 50%)";
 // apertureColor is the color of the apertures themselves as a static field
 Aperture.apertureColor = "hsl(0, 0%, 0%)";
 // apertureEdgeColor is the color of the aperture slits in between the sides of the aperture
-Aperture.apertureEdgeColor = "hsl(200, 100%, 50%)";
+Aperture.apertureEdgeColor = "hsl(0, 100%, 50%)";
 // apertureHexagonApothem is the distance from the center to a vertex of fully tesselated hexagon/aperture when the screen loads 
 Aperture.apertureHexagonApothem = Math.round(window.innerHeight/3);
 
@@ -239,6 +237,9 @@ let dramaticPageOpenDuration = 1500;
 let shrinkDuration = 1000;
 let openEdgesDuration = 1000;
 let openHoleDuration = 1000;
+let closeHoleDuration = 1000;
+let closeEdgeDuration = 1000;
+let expandDuration = 2000;
 
 // Functions to control animation progress
 function powerTiming(timing, exponent, durationOfAnimation) {
@@ -366,7 +367,7 @@ function closeHoleAnimationStep(timeStamp) {
         animationStartTime = timeStamp;
     }
 
-    const animationProgress = powerTiming( (timeStamp - animationStartTime), 7, shrinkDuration);
+    const animationProgress = powerTiming( (timeStamp - animationStartTime), 7, closeHoleDuration);
     
     if(animationProgress <= 1) {
         drawBackground();
@@ -393,7 +394,7 @@ function closeEdgesAnimationStep(timeStamp) {
         animationStartTime = timeStamp;
     }
 
-    const animationProgress = powerTiming( (timeStamp - animationStartTime), 7, shrinkDuration);
+    const animationProgress = powerTiming( (timeStamp - animationStartTime), 7, closeEdgeDuration);
     
     if(animationProgress <= 1) {
         drawBackground();
@@ -422,7 +423,7 @@ function expandAnimationStep(timeStamp) {
         animationStartTime = timeStamp;
     }
 
-    const animationProgress = powerTiming( (timeStamp - animationStartTime), 7, shrinkDuration);
+    const animationProgress = linearTime( (timeStamp - animationStartTime), expandDuration);
     
     if(animationProgress <= 1) {
         drawBackground();
