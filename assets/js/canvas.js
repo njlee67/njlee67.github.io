@@ -11,13 +11,15 @@ import { Aperture } from './ApertureClass.js';
 import { Tesselation } from './tesselationClass.js';
 // Color Sliders to change the color scheme
 import { ColorSlider } from './ColorSlider.js';
+// projectCanvas.js fills the project.html template when a thumbnail is clicked
+import * as projectCanvas from './projectCanvas.js';
 
 // The canvasBackgroundColor is the color behind the aperture tesselation pattern in between apertures
-let canvasBackgroundColor = "hsl(340, 100%, 50%)";
+let canvasBackgroundColor = "hsl(120, 50%, 50%)";
 // apertureColor is the color of the apertures themselves as a static field
 Aperture.apertureColor = "hsl(0, 0%, 0%)";
 // apertureEdgeColor is the color of the aperture slits in between the sides of the aperture
-Aperture.apertureEdgeColor = "hsl(200, 100%, 50%)";
+Aperture.apertureEdgeColor = "hsl(0, 100%, 50%)";
 // apertureHexagonApothem is the distance from the center to a vertex of fully tesselated hexagon/aperture when the screen loads 
 Aperture.apertureHexagonApothem = Math.round(window.innerHeight/3);
 
@@ -120,6 +122,10 @@ function onPointerDown(e) {
     if(Math.hypot(apertureEdgeColorButton.hexagonCenterPosition.x - mouseLocationOnDown.x, apertureEdgeColorButton.hexagonCenterPosition.y - mouseLocationOnDown.y) < colorSlidersHexagonApothem) {
         apertureEdgeColorButton.pointerDown = true;
         backgroundColorButton.pointerDown = false;
+    }
+
+    if(Math.hypot(mainApertureTesselation.aperturesArray[mainApertureTesselation.projectApertureIndices[3]].apertureCenter.x - mouseLocationOnDown.x, mainApertureTesselation.aperturesArray[mainApertureTesselation.projectApertureIndices[3]].apertureCenter.y - mouseLocationOnDown.y) < Aperture.apertureHexagonApothem * (Aperture.shrinkPercent/100)) {
+        projectCanvas.setCurrentProject("LMBB v2");
     }
 
     if(mouseLocationOnDown != undefined && mouseLocationOnDown != null) {
@@ -231,6 +237,9 @@ let dramaticPageOpenDuration = 1500;
 let shrinkDuration = 1000;
 let openEdgesDuration = 1000;
 let openHoleDuration = 1000;
+let closeHoleDuration = 1000;
+let closeEdgeDuration = 1000;
+let expandDuration = 2000;
 
 // Functions to control animation progress
 function powerTiming(timing, exponent, durationOfAnimation) {
@@ -295,7 +304,7 @@ function openEdgesAnimationStep(timeStamp) {
     if(animationStartTime === undefined) {
         animationStartTime = timeStamp;
     }
-
+    
     const animationProgress = linearTime((timeStamp - animationStartTime), openEdgesDuration);
     
     if(animationProgress < 1) {
@@ -349,7 +358,94 @@ function openAperturesAnimationStep(timeStamp) {
 
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
-        requestAnimationFrame(updateCanvasAnimations);
+        requestAnimationFrame(closeHoleAnimationStep);
+    }
+}
+
+function closeHoleAnimationStep(timeStamp) {
+    if(animationStartTime === undefined) {
+        animationStartTime = timeStamp;
+    }
+
+    const animationProgress = powerTiming( (timeStamp - animationStartTime), 7, closeHoleDuration);
+    
+    if(animationProgress <= 1) {
+        drawBackground();
+
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
+            mainApertureTesselation.aperturesArray[apertureIndex].setReverseAnimationProgress(animationProgress, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.OpenHole)
+        }
+
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
+        globalAnimationId = requestAnimationFrame(closeHoleAnimationStep);
+    }
+    else {
+
+        cancelAnimationFrame(globalAnimationId);
+        animationStartTime = undefined;
+        requestAnimationFrame(closeEdgesAnimationStep);
+    }
+}
+
+function closeEdgesAnimationStep(timeStamp) {
+    if(animationStartTime === undefined) {
+        animationStartTime = timeStamp;
+    }
+
+    const animationProgress = powerTiming( (timeStamp - animationStartTime), 7, closeEdgeDuration);
+    
+    if(animationProgress <= 1) {
+        drawBackground();
+
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
+            mainApertureTesselation.aperturesArray[apertureIndex].setReverseAnimationProgress(animationProgress, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.OpenEdge);
+            mainApertureTesselation.aperturesArray[apertureIndex].setAnimationVariable(mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.OpenEdge.currentStageVariable, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.OpenHole);
+        }
+
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
+        globalAnimationId = requestAnimationFrame(closeEdgesAnimationStep);
+    }
+    else {
+        Aperture.edgeCloseAnimationComplete = true;
+
+        cancelAnimationFrame(globalAnimationId);
+        animationStartTime = undefined;
+        requestAnimationFrame(expandAnimationStep);
+    }
+}
+
+function expandAnimationStep(timeStamp) {
+    if(animationStartTime === undefined) {
+        animationStartTime = timeStamp;
+    }
+
+    const animationProgress = linearTime( (timeStamp - animationStartTime), expandDuration);
+    
+    if(animationProgress <= 1) {
+        drawBackground();
+
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
+            mainApertureTesselation.aperturesArray[apertureIndex].setReverseAnimationProgress(animationProgress, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.Shrink)
+        }
+
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
+        globalAnimationId = requestAnimationFrame(expandAnimationStep);
+    }
+    else {
+
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
+            mainApertureTesselation.aperturesArray[apertureIndex].setAnimationVariable(Aperture.apertureHexagonApothem*1.1, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.Shrink);
+        }
+
+        cancelAnimationFrame(globalAnimationId);
+        animationStartTime = undefined;
+        // requestAnimationFrame(openEdgesAnimationStep);
     }
 }
 

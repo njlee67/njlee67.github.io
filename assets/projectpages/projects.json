@@ -1,0 +1,15 @@
+{
+    "Projects":[
+        {
+            "Title": "LMBB",
+            "Version": 2,
+            "GeneralDescription": "LMBB is a compact bluetooth speaker that features a pair of two sealed 5W speakers, a bluetooth module to play your music, and my personal favorite is an LED Matrix display that can display scrolling text and Fast Fourier Transform (FFT) visualization of the bluetooth audio. The enclosure of LMBB has 3D Printed decals on the edges and foam core inbetween the 3D printed edges.",
+            "DetailedDescription": "I got the idea to build LMBB v2 from a desire to improve upon LMBB v1. I wanted to make LMBB much smaller, and have sealed speakers for a better sound while still having space for my favorite feature: the FFT display. I sourced major components like the 5W sealed speakers, bluetooth modules, a portable USB battery, and other components. I then determined a size for the enclosure based on these major components. When I mostly completed the CAD in Onshape I started to order the needed electronic components to get started on the circuit. I was able to quickly test the bluetooth module since it was plug and play. I used a y split aux cord to send the signal to both the 5W speakers and the ESP32 microcontroller I used. I used existing libraries to display the FFT of the audio with the 8x8 LED matrix. Once I got the circuit working I placed everything in the enclosure and the end result is displayed in the slide show.",
+            "ThumbnailImagePath": "../../images/thumbnails/LMBB v2.jpg",
+            "SlideShowFilePaths": ["../../images/thumbnails/LMBB v2.jpg"],
+            "SkillsUsed": ["Electronics Prototyping", "Arduino", "ESP32", "3D Printing", "Arduino C++", "Fast Fourier Transform"],
+            "BillOfMaterials": [],
+            "TutorialLinks": []
+        }
+    ]
+}

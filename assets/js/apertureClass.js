@@ -6,17 +6,14 @@ export class Aperture {
 
     static apertureHexagonApothem = Math.round(window.innerHeight/3);
 
-    static mainCanvas = document.getElementById("main-canvas");
+    static mainCanvas = document.getElementsByTagName("canvas")[0];
     static ctx = Aperture.mainCanvas.getContext("2d");
-
+    
     // Variables describing aperture geometry in tesselation view
     static shrinkPercent = 90;
     static openPercent = 60;
     static edgePercent = 4;
-    static shrinkSpeed = 0.075;
-    static openSpeed = 10;
-    static edgeSpeed = 0.2;
-
+    
     static shrinkAnimationComplete = false;
     static openHoleAnimationComplete = false;
     static edgeOpenAnimationComplete = false;
@@ -26,7 +23,6 @@ export class Aperture {
     static edgeCloseAnimationComplete = false;
     
     constructor(apertureCenter, relativeProjectInfoFolder = undefined) {
-
         // The center of the aperture object
         this.apertureCenter = apertureCenter;
 
@@ -74,27 +70,21 @@ export class Aperture {
             Shrink: {
                 currentStageVariable: this.currentShrunkenSize, 
                 initialValue: this.hexagonApothem,
-                finalValue: this.fullyShrunkenHexagonSize},
-            Expand: {
-                currentStageVariable: this.currentShrunkenSize, 
-                initialValue: this.fullyShrunkenHexagonSize,
-                finalValue: this.hexagonApothem},
+                finalValue: this.fullyShrunkenHexagonSize,
+                reverseInitialValue: this.fullyShrunkenHexagonSize,
+                reverseFinalValue: this.hexagonApothem},
             OpenHole: {
                 currentStageVariable: this.currentOpenedDistance, 
                 initialValue: this.fullEdgeThickness,
-                finalValue: this.fullyOpenedDistance},
-            CloseHole: {
-                currentStageVariable: this.currentOpenedDistance, 
-                initialValue: this.fullyOpenedDistance,
-                finalValue: 0},
+                finalValue: this.fullyOpenedDistance,
+                reverseInitialValue: this.fullyOpenedDistance,
+                reverseFinalValue: this.fullEdgeThickness},
             OpenEdge: {
                 currentStageVariable: this.currentOpenedDistance, 
                 initialValue: 0,
-                finalValue: this.fullEdgeThickness},
-            CloseEdge: {
-                currentStageVariable: this.currentEdgeThickness, 
-                initialValue: this.fullEdgeThickness,
-                finalValue: 0},
+                finalValue: this.fullEdgeThickness,
+                reverseInitialValue: this.fullEdgeThickness,
+                reverseFinalValue: 0},
         };
     }
 
@@ -119,11 +109,11 @@ export class Aperture {
         if(this.projectThumbnail != null) {
             this.drawProjectTitleText();
             this.drawProjectTypeText();
-            if(Aperture.shrinkAnimationComplete == true) {
+            if(Aperture.shrinkAnimationComplete == true && Aperture.edgeCloseAnimationComplete == false) {
                 this.drawThumbnail();
                 this.drawEdgeAperatureQuadrilaterals();
-                this.drawHexagonBorderWindow();
                 this.drawAperatureQuadrilaterals();
+                // this.drawHexagonBorderWindow();
             }
             else {
                 this.drawHexagon();
@@ -132,7 +122,7 @@ export class Aperture {
         // If the aperture object doesn't have a projectThumbnail then draw it as just a hexagon and if it's an njL initials hexagon draw it on top
         else {
             this.drawHexagon();
-            
+
             if(this.is_njLAperture) {
                 this.draw_njL_portfolioText();
             }
@@ -196,7 +186,12 @@ export class Aperture {
 
     setAnimationProgress(progressValue, AnimationStageEnum) {
         let command = (AnimationStageEnum.finalValue - AnimationStageEnum.initialValue)*progressValue + AnimationStageEnum.initialValue;
-
+        AnimationStageEnum.currentStageVariable = command;
+        this.drawCurrent();
+    }
+    
+    setReverseAnimationProgress(progressValue, AnimationStageEnum) {
+        let command = (AnimationStageEnum.reverseFinalValue - AnimationStageEnum.reverseInitialValue)*progressValue + AnimationStageEnum.reverseInitialValue;
         AnimationStageEnum.currentStageVariable = command;
         this.drawCurrent();
     }

@@ -23,8 +23,13 @@ export class Tesselation {
         // Setting default scroll to half speed on page open
         this.scrollSpeedInPercentage = -0.5;
 
+        // Saving projectInfoList of projects in Tesselation object
+        this.projectInfoObjectList = projectInfoList;
         // aperturesArray is the list of apertures positioned to form the tesselation geometry
         this.aperturesArray = [];
+
+        // projectApertureIndices are the indices of the apertureArray that actually have project info/thumbnail
+        this.projectApertureIndices = [];
 
         // numProjectsToAssignToAPerture is the count of how many projects in the project list still need
         // to be set to an aperture to have it's project info displayed
@@ -59,6 +64,8 @@ export class Tesselation {
                 if(!nextApertureIsTooHighForThumbnail && !nextApertureIsTooLowForThumbnail) {
                     this.aperturesArray[tesselationRow + nextApertureIndex].attachThumbnaiil(projectInfoList[projectInfoList.length - numProjectsToAssignToAperture]);
                     
+                    // Push the index of this aperture to the projectApertureIndices because it has a thumbnail
+                    this.projectApertureIndices.push(this.aperturesArray.length - 1);
                     // Decrement number of projects by one since 1 project was assigned
                     numProjectsToAssignToAperture--;
                 }
@@ -100,11 +107,13 @@ export class Tesselation {
             this.aperturesArray[this.aperturesArray.length-1].is_njLAperture = true;
         }
 
+        this.LengthOfApertureArray = this.aperturesArray.length;
+
     }
 
     // used to change the edge color of each aperture in the tesselation
     setTesselationEdgeColor(newEdgeColor) {
-        for(let apertureIndex = 0;apertureIndex < this.aperturesArray.length;apertureIndex++) {
+        for(let apertureIndex = 0;apertureIndex < this.LengthOfApertureArray;apertureIndex++) {
             this.aperturesArray[apertureIndex].setEdgeColor(newEdgeColor);
         }
     }
@@ -112,7 +121,7 @@ export class Tesselation {
     scrollAnimationStep() {
         // This method scrolls the tesselation horizontally and when apertures overflow their apertureCenters get reset to the 
         // other end of the tesselation pattern
-        for(let apertureIndex = 0;apertureIndex < this.aperturesArray.length;apertureIndex++) {
+        for(let apertureIndex = 0;apertureIndex < this.LengthOfApertureArray;apertureIndex++) {
             if(this.aperturesArray[0].apertureCenter.x > -(this.hexTesselationHorizontalOffset * this.numberOfColumns)) {
                 this.aperturesArray[apertureIndex].apertureCenter.x += Math.abs(this.maximumScrollPixelsPerFrame)*this.scrollSpeedInPercentage;
             }
@@ -129,13 +138,19 @@ export class Tesselation {
 
     drawCurrentTesselation() {
         // Draw all of the apertures
-        for(let apertureIndex = 0;apertureIndex < this.aperturesArray.length;apertureIndex++) {
+        for(let apertureIndex = 0;apertureIndex < this.LengthOfApertureArray;apertureIndex++) {
             this.aperturesArray[apertureIndex].drawCurrent();
         }
 
         // if the shrink Animation is done then scroll to the left automatically if 
         if(Aperture.shrinkAnimationComplete == true) {
             this.scrollAnimationStep(this.scrollSpeedInPercentage);
+        }
+    }
+
+    setTesselationAnimationProgress(animationProgress, animationStageEnum) {
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
+            this.aperturesArray[apertureIndex].setAnimationProgress(animationProgress, animationStageEnum);
         }
     }
 
