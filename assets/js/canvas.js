@@ -295,35 +295,7 @@ function shrinkAnimationStep(timeStamp) {
 
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
-        requestAnimationFrame(expandAnimationStep);
-    }
-}
-
-function expandAnimationStep(timeStamp) {
-    if(animationStartTime === undefined) {
-        animationStartTime = timeStamp;
-    }
-
-    const animationProgress = powerTiming( (timeStamp - animationStartTime), 7, shrinkDuration);
-    
-    if(animationProgress < 1) {
-        drawBackground();
-
-        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
-            mainApertureTesselation.aperturesArray[apertureIndex].setReverseAnimationProgress(animationProgress, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.Shrink)
-        }
-
-        backgroundColorButton.drawColorSelector();
-        apertureEdgeColorButton.drawColorSelector();
-
-        globalAnimationId = requestAnimationFrame(expandAnimationStep);
-    }
-    else {
-        Aperture.shrinkAnimationComplete = true;
-
-        cancelAnimationFrame(globalAnimationId);
-        animationStartTime = undefined;
-        // requestAnimationFrame(openEdgesAnimationStep);
+        requestAnimationFrame(openEdgesAnimationStep);
     }
 }
 
@@ -331,7 +303,7 @@ function openEdgesAnimationStep(timeStamp) {
     if(animationStartTime === undefined) {
         animationStartTime = timeStamp;
     }
-
+    
     const animationProgress = linearTime((timeStamp - animationStartTime), openEdgesDuration);
     
     if(animationProgress < 1) {
@@ -385,7 +357,94 @@ function openAperturesAnimationStep(timeStamp) {
 
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
-        requestAnimationFrame(updateCanvasAnimations);
+        requestAnimationFrame(closeHoleAnimationStep);
+    }
+}
+
+function closeHoleAnimationStep(timeStamp) {
+    if(animationStartTime === undefined) {
+        animationStartTime = timeStamp;
+    }
+
+    const animationProgress = powerTiming( (timeStamp - animationStartTime), 7, shrinkDuration);
+    
+    if(animationProgress <= 1) {
+        drawBackground();
+
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
+            mainApertureTesselation.aperturesArray[apertureIndex].setReverseAnimationProgress(animationProgress, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.OpenHole)
+        }
+
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
+        globalAnimationId = requestAnimationFrame(closeHoleAnimationStep);
+    }
+    else {
+
+        cancelAnimationFrame(globalAnimationId);
+        animationStartTime = undefined;
+        requestAnimationFrame(closeEdgesAnimationStep);
+    }
+}
+
+function closeEdgesAnimationStep(timeStamp) {
+    if(animationStartTime === undefined) {
+        animationStartTime = timeStamp;
+    }
+
+    const animationProgress = powerTiming( (timeStamp - animationStartTime), 7, shrinkDuration);
+    
+    if(animationProgress <= 1) {
+        drawBackground();
+
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
+            mainApertureTesselation.aperturesArray[apertureIndex].setReverseAnimationProgress(animationProgress, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.OpenEdge);
+            mainApertureTesselation.aperturesArray[apertureIndex].setAnimationVariable(mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.OpenEdge.currentStageVariable, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.OpenHole);
+        }
+
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
+        globalAnimationId = requestAnimationFrame(closeEdgesAnimationStep);
+    }
+    else {
+        Aperture.edgeCloseAnimationComplete = true;
+
+        cancelAnimationFrame(globalAnimationId);
+        animationStartTime = undefined;
+        requestAnimationFrame(expandAnimationStep);
+    }
+}
+
+function expandAnimationStep(timeStamp) {
+    if(animationStartTime === undefined) {
+        animationStartTime = timeStamp;
+    }
+
+    const animationProgress = powerTiming( (timeStamp - animationStartTime), 7, shrinkDuration);
+    
+    if(animationProgress <= 1) {
+        drawBackground();
+
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
+            mainApertureTesselation.aperturesArray[apertureIndex].setReverseAnimationProgress(animationProgress, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.Shrink)
+        }
+
+        backgroundColorButton.drawColorSelector();
+        apertureEdgeColorButton.drawColorSelector();
+
+        globalAnimationId = requestAnimationFrame(expandAnimationStep);
+    }
+    else {
+
+        for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
+            mainApertureTesselation.aperturesArray[apertureIndex].setAnimationVariable(Aperture.apertureHexagonApothem, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.Shrink);
+        }
+        
+        cancelAnimationFrame(globalAnimationId);
+        animationStartTime = undefined;
+        // requestAnimationFrame(openEdgesAnimationStep);
     }
 }
 

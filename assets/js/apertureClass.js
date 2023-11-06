@@ -73,26 +73,18 @@ export class Aperture {
                 finalValue: this.fullyShrunkenHexagonSize,
                 reverseInitialValue: this.fullyShrunkenHexagonSize,
                 reverseFinalValue: this.hexagonApothem},
-            Expand: {
-                currentStageVariable: this.currentShrunkenSize, 
-                initialValue: this.fullyShrunkenHexagonSize,
-                finalValue: this.hexagonApothem},
             OpenHole: {
                 currentStageVariable: this.currentOpenedDistance, 
                 initialValue: this.fullEdgeThickness,
-                finalValue: this.fullyOpenedDistance},
-            CloseHole: {
-                currentStageVariable: this.currentOpenedDistance, 
-                initialValue: this.fullyOpenedDistance,
-                finalValue: 0},
+                finalValue: this.fullyOpenedDistance,
+                reverseInitialValue: this.fullyOpenedDistance,
+                reverseFinalValue: this.fullEdgeThickness},
             OpenEdge: {
                 currentStageVariable: this.currentOpenedDistance, 
                 initialValue: 0,
-                finalValue: this.fullEdgeThickness},
-            CloseEdge: {
-                currentStageVariable: this.currentEdgeThickness, 
-                initialValue: this.fullEdgeThickness,
-                finalValue: 0},
+                finalValue: this.fullEdgeThickness,
+                reverseInitialValue: this.fullEdgeThickness,
+                reverseFinalValue: 0},
         };
     }
 
@@ -117,11 +109,12 @@ export class Aperture {
         if(this.projectThumbnail != null) {
             this.drawProjectTitleText();
             this.drawProjectTypeText();
-            if(Aperture.shrinkAnimationComplete == true) {
+            if(Aperture.shrinkAnimationComplete == true && Aperture.edgeCloseAnimationComplete == false) {
                 this.drawThumbnail();
                 this.drawEdgeAperatureQuadrilaterals();
                 this.drawAperatureQuadrilaterals();
                 // this.drawHexagonBorderWindow();
+                console.log("no expanhex")
             }
             else {
                 this.drawHexagon();
