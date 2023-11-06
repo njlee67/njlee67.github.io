@@ -446,7 +446,7 @@ function expandAnimationStep(timeStamp) {
 
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
-        projectCanvas.setCurrentProject("LMBB v2");
+        projectCanvas.setCurrentProject("LMBB v2", canvasBackgroundColor);
         // requestAnimationFrame(openEdgesAnimationStep);
     }
 }

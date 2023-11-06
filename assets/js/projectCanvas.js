@@ -4,6 +4,7 @@ import { Aperture } from "./ApertureClass.js";
 // Aperture.mainCanvas = document.getElementById("main-canvas");
 // Aperture.ctx = Aperture.mainCanvas.getContext("2D");
 
+let projectCanvasBackground = getRandomHue();
 let currentProject;
 let projectCanvas;
 let ctx;
@@ -23,10 +24,15 @@ if(window.location.href.includes("lmbbv2")) {
 }
 
 // Draws background rectangle on the canvas
-function drawBackground(color = "hsl(80, 100%, 50%)") {
+function drawBackground(color = projectCanvasBackground) {
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, projectCanvas.width, projectCanvas.height);
+}
+
+function getRandomHue() {
+    let randomHue = 360*Math.random();
+    return "hsl(" + randomHue + ", 50%, 50%)"
 }
 
 function setupProjectCanvas() {
