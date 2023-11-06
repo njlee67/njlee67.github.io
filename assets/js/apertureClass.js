@@ -70,7 +70,9 @@ export class Aperture {
             Shrink: {
                 currentStageVariable: this.currentShrunkenSize, 
                 initialValue: this.hexagonApothem,
-                finalValue: this.fullyShrunkenHexagonSize},
+                finalValue: this.fullyShrunkenHexagonSize,
+                reverseInitialValue: this.fullyShrunkenHexagonSize,
+                reverseFinalValue: this.hexagonApothem},
             Expand: {
                 currentStageVariable: this.currentShrunkenSize, 
                 initialValue: this.fullyShrunkenHexagonSize,
@@ -192,6 +194,12 @@ export class Aperture {
 
     setAnimationProgress(progressValue, AnimationStageEnum) {
         let command = (AnimationStageEnum.finalValue - AnimationStageEnum.initialValue)*progressValue + AnimationStageEnum.initialValue;
+        AnimationStageEnum.currentStageVariable = command;
+        this.drawCurrent();
+    }
+    
+    setReverseAnimationProgress(progressValue, AnimationStageEnum) {
+        let command = (AnimationStageEnum.reverseFinalValue - AnimationStageEnum.reverseInitialValue)*progressValue + AnimationStageEnum.reverseInitialValue;
         AnimationStageEnum.currentStageVariable = command;
         this.drawCurrent();
     }

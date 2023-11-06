@@ -295,7 +295,7 @@ function shrinkAnimationStep(timeStamp) {
 
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
-        requestAnimationFrame(openEdgesAnimationStep);
+        requestAnimationFrame(expandAnimationStep);
     }
 }
 
@@ -310,7 +310,7 @@ function expandAnimationStep(timeStamp) {
         drawBackground();
 
         for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
-            mainApertureTesselation.aperturesArray[apertureIndex].setAnimationProgress(animationProgress, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.Expand)
+            mainApertureTesselation.aperturesArray[apertureIndex].setReverseAnimationProgress(animationProgress, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.Shrink)
         }
 
         backgroundColorButton.drawColorSelector();
