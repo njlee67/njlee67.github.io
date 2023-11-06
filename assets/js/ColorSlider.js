@@ -7,7 +7,7 @@ export class ColorSlider {
         this.hexagonCenterPosition = hexagonCenterPosition;
         this.hexagonApothem = hexagonalApothem;
         this.hue = initialHue;
-        this.color = "hsl(" + initialHue + ", 100%, 50%)";
+        this.color = "hsl(" + initialHue + ", 50%, 50%)";
         this.previousColor = this.color;
         this.pointerDown = false;
     }

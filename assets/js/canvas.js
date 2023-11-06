@@ -19,7 +19,7 @@ let canvasBackgroundColor = "hsl(120, 50%, 50%)";
 // apertureColor is the color of the apertures themselves as a static field
 Aperture.apertureColor = "hsl(0, 0%, 0%)";
 // apertureEdgeColor is the color of the aperture slits in between the sides of the aperture
-Aperture.apertureEdgeColor = "hsl(0, 100%, 50%)";
+Aperture.apertureEdgeColor = "hsl(0, 50%, 50%)";
 // apertureHexagonApothem is the distance from the center to a vertex of fully tesselated hexagon/aperture when the screen loads 
 Aperture.apertureHexagonApothem = Math.round(window.innerHeight/3);
 
@@ -87,7 +87,7 @@ function onPointerMove(e) {
                 verticalColor -= 360;
             }
             
-            let newColor = "hsl(" + verticalColor.toString() + ", 100%, 50%)";
+            let newColor = "hsl(" + verticalColor.toString() + ", 50%, 50%)";
             
             backgroundColorButton.setNewHSLAColor(newColor);
             canvasBackgroundColor = newColor;
@@ -102,7 +102,7 @@ function onPointerMove(e) {
                 verticalColor -= 360;
             }
 
-            let newColor = "hsl(" + verticalColor.toString() + ", 100%, 50%)";
+            let newColor = "hsl(" + verticalColor.toString() + ", 50%, 50%)";
             
             apertureEdgeColorButton.setNewHSLAColor(newColor);
             mainApertureTesselation.setTesselationEdgeColor(newColor);
@@ -358,7 +358,7 @@ function openAperturesAnimationStep(timeStamp) {
 
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
-        requestAnimationFrame(closeHoleAnimationStep);
+        requestAnimationFrame(updateCanvasAnimations);
     }
 }
 
