@@ -114,7 +114,6 @@ export class Aperture {
                 this.drawEdgeAperatureQuadrilaterals();
                 this.drawAperatureQuadrilaterals();
                 // this.drawHexagonBorderWindow();
-                console.log("no expanhex")
             }
             else {
                 this.drawHexagon();

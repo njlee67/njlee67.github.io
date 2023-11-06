@@ -439,9 +439,9 @@ function expandAnimationStep(timeStamp) {
     else {
 
         for(let apertureIndex = 0;apertureIndex < mainApertureTesselation.aperturesArray.length;apertureIndex++) {
-            mainApertureTesselation.aperturesArray[apertureIndex].setAnimationVariable(Aperture.apertureHexagonApothem, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.Shrink);
+            mainApertureTesselation.aperturesArray[apertureIndex].setAnimationVariable(Aperture.apertureHexagonApothem*1.1, mainApertureTesselation.aperturesArray[apertureIndex].AnimationStages.Shrink);
         }
-        
+
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
         // requestAnimationFrame(openEdgesAnimationStep);
