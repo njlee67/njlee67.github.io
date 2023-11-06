@@ -125,7 +125,8 @@ function onPointerDown(e) {
     }
 
     if(Math.hypot(mainApertureTesselation.aperturesArray[mainApertureTesselation.projectApertureIndices[3]].apertureCenter.x - mouseLocationOnDown.x, mainApertureTesselation.aperturesArray[mainApertureTesselation.projectApertureIndices[3]].apertureCenter.y - mouseLocationOnDown.y) < Aperture.apertureHexagonApothem * (Aperture.shrinkPercent/100)) {
-        projectCanvas.setCurrentProject("LMBB v2");
+        // projectCanvas.setCurrentProject("LMBB v2");
+        requestAnimationFrame(closeHoleAnimationStep);
     }
 
     if(mouseLocationOnDown != undefined && mouseLocationOnDown != null) {
@@ -445,6 +446,7 @@ function expandAnimationStep(timeStamp) {
 
         cancelAnimationFrame(globalAnimationId);
         animationStartTime = undefined;
+        projectCanvas.setCurrentProject("LMBB v2");
         // requestAnimationFrame(openEdgesAnimationStep);
     }
 }
