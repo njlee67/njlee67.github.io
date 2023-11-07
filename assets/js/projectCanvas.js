@@ -9,9 +9,12 @@ let currentProject;
 let projectCanvas;
 let ctx;
 
-Aperture.apertureHexagonApothem = Math.round(Math.min(window.innerWidth, window.innerHeight)/2);
+Aperture.apertureHexagonApothem = Math.round(Math.min(window.innerWidth, window.innerHeight)/(2 * Math.sin(Math.PI/3)));
 
-let slideShowAperture = new Aperture({x: window.innerWidth/3, y:window.innerHeight/2});
+let slideShowAperture = new Aperture({x: Aperture.apertureHexagonApothem, y: window.innerHeight/2});
+
+let bigUpperRight = new Aperture({x: 1.75*(window.innerWidth/2), y: window.innerHeight/2 - (window.innerWidth/2 * Math.sin(Math.PI/3))});
+bigUpperRight.AnimationStages.Shrink.currentStageVariable = window.innerWidth/2;
 
 export function setCurrentProject(project) {
     currentProject = project;
@@ -64,6 +67,7 @@ function updateProjectCanvasAnimations() {
 
     drawBackground();
     slideShowAperture.drawCurrent();
+    bigUpperRight.drawCurrent();
     // Update the tesselation based on user interaction with scrolling after page open sequence of animations
     // mainApertureTesselation.drawCurrentTesselation();
     
