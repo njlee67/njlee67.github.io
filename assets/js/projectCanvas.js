@@ -14,7 +14,9 @@ let ctx;
 
 let globalPointerDown = false;
 
-Aperture.apertureHexagonApothem = Math.round(Math.min(window.innerWidth, window.innerHeight)/(2 * Math.sin(Math.PI/3)));
+let scaleUp = 1.25;
+
+Aperture.apertureHexagonApothem =  Math.round(scaleUp*Math.min(window.innerWidth, window.innerHeight)/(2 * Math.sin(Math.PI/3)));
 Aperture.shrinkPercent = 92;
 Aperture.apertureEdgeColor = getRandomHue();
 
@@ -107,9 +109,9 @@ function onPointerUp(e) {
 }
 
 for(let apertureIndex = 0;apertureIndex < 4;apertureIndex++) {
-    projectApertures.push(new Aperture({x: window.innerWidth/2, y: window.innerHeight/2 + apertureIndex * window.innerHeight}))
-    projectApertures.push(new Aperture({x: window.innerWidth/2 + 1.5*Aperture.apertureHexagonApothem, y: apertureIndex * window.innerHeight}))
-    projectApertures.push(new Aperture({x: window.innerWidth/2 - 1.5*Aperture.apertureHexagonApothem, y: apertureIndex * window.innerHeight}))
+    projectApertures.push(new Aperture({x: window.innerWidth/2, y: scaleUp*window.innerHeight/2 + scaleUp*apertureIndex * window.innerHeight}))
+    projectApertures.push(new Aperture({x: window.innerWidth/2 + 1.5*Aperture.apertureHexagonApothem, y: scaleUp*apertureIndex * window.innerHeight}))
+    projectApertures.push(new Aperture({x: window.innerWidth/2 - 1.5*Aperture.apertureHexagonApothem, y: scaleUp*apertureIndex * window.innerHeight}))
 }
 
 // Color sliders are the hexagon buttons on the right and left of the canvas which control the color of the
@@ -146,7 +148,7 @@ let globalAnimationId;
 let animationStartTime = undefined;
 
 // The durations of each animation stage
-let dramaticPageOpenDuration = 1500;
+let dramaticPageOpenDuration = 1000;
 let shrinkDuration = 1000;
 let openEdgesDuration = 1000;
 let openHoleDuration = 1000;
@@ -372,7 +374,7 @@ function setupProjectCanvas() {
     projectCanvas.addEventListener('wheel', onScrollMove);
 
     // Enter the first animation stage with requestAnimationFrame()
-    requestAnimationFrame(shrinkAnimationStep);
+    requestAnimationFrame(dramaticPageOpenPause);
 }
 
 function onScrollMove(e) {
