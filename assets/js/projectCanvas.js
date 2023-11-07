@@ -16,8 +16,8 @@ Aperture.apertureHexagonApothem = Math.round(Math.min(window.innerWidth, window.
 
 let projectApertures = [];
 
-for(let apertureIndex = 0;apertureIndex < 3;apertureIndex++) {
-    projectApertures.push(new Aperture({x: window.innerWidth/2, y: window.innerHeight/2 - apertureIndex * window.innerHeight}))
+for(let apertureIndex = 0;apertureIndex < 4;apertureIndex++) {
+    projectApertures.push(new Aperture({x: window.innerWidth/2, y: window.innerHeight/2 + apertureIndex * window.innerHeight}))
     projectApertures.push(new Aperture({x: window.innerWidth/2 + 1.5*Aperture.apertureHexagonApothem, y: apertureIndex * window.innerHeight}))
     projectApertures.push(new Aperture({x: window.innerWidth/2 - 1.5*Aperture.apertureHexagonApothem, y: apertureIndex * window.innerHeight}))
 }
@@ -70,13 +70,48 @@ function setupProjectCanvas() {
 }
 
 function onScrollMove(e) {
-    console.log("Scrolled: " + e.deltaY)
-    let SCROLL_SENSITIVITY = -0.5;
+    let SCROLL_SENSITIVITY = -0.25;
     let scrollDelta = e.deltaY * SCROLL_SENSITIVITY;
-
-    for(let apertureIndex = 0;apertureIndex < projectApertures.length;apertureIndex++) {
-        projectApertures[apertureIndex].apertureCenter = {x: projectApertures[apertureIndex].apertureCenter.x, y: projectApertures[apertureIndex].apertureCenter.y + scrollDelta};
+    let allAperturesLessThanWindowHeight = true;
+    let allAperturesGreaterThan0 = true;
+    console.log(projectApertures[1].apertureCenter.y )
+    // for(let apertureIndex = 0;apertureIndex < projectApertures.length;apertureIndex++) {
+        // }
+    if(projectApertures[1].apertureCenter.y < -2*window.innerHeight) {
+        allAperturesLessThanWindowHeight = false;
+        console.log("less than height")
     }
+    else if(projectApertures[1].apertureCenter.y > 0) {
+        allAperturesGreaterThan0 = false;
+        console.log("greater than 0")
+    }
+        
+    if(projectApertures[1].apertureCenter.y >= -2*window.innerHeight && projectApertures[1].apertureCenter.y <= 0) {
+        for(let apertureIndex = 0;apertureIndex < projectApertures.length;apertureIndex++) {
+            projectApertures[apertureIndex].apertureCenter = {x: projectApertures[apertureIndex].apertureCenter.x, y: projectApertures[apertureIndex].apertureCenter.y + scrollDelta};
+        }
+    }
+    else{
+        if(projectApertures[1].apertureCenter.y <= -2*window.innerHeight && scrollDelta > 0) {
+            for(let apertureIndex = 0;apertureIndex < projectApertures.length;apertureIndex++) {
+                projectApertures[apertureIndex].apertureCenter = {x: projectApertures[apertureIndex].apertureCenter.x, y: projectApertures[apertureIndex].apertureCenter.y + scrollDelta};
+            }
+            
+        }
+        else if(projectApertures[1].apertureCenter.y >= 0 && scrollDelta < 0) {
+            for(let apertureIndex = 0;apertureIndex < projectApertures.length;apertureIndex++) {
+                projectApertures[apertureIndex].apertureCenter = {x: projectApertures[apertureIndex].apertureCenter.x, y: projectApertures[apertureIndex].apertureCenter.y + scrollDelta};
+            }
+        }
+    }
+  
+   
+    // if(allAperturesLessThanWindowHeight == true && allAperturesGreaterThan0 == false && scrollDelta < 0) {
+    //     for(let apertureIndex = 0;apertureIndex < projectApertures.length;apertureIndex++) {
+    //         projectApertures[apertureIndex].apertureCenter = {x: projectApertures[apertureIndex].apertureCenter.x, y: projectApertures[apertureIndex].apertureCenter.y + scrollDelta};
+    //     }
+    // }
+  
 }
 
 // Main Animation Loop using requestAnimationFrame function for each conditional on stage booleans declared above animation
