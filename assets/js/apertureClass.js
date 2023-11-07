@@ -2,7 +2,7 @@ export class Aperture {
     // apertureColor is the color of the aperture sides
     static apertureColor = "hsl(0, 0%, 0%";
     // apertureEdgeColor is the color of the aperture slits in between the sides of the aperture
-    static apertureEdgeColor = "hsl(0, 100%, 50%)";
+    static apertureEdgeColor = "hsl(0, 50%, 50%)";
 
     static apertureHexagonApothem = Math.round(window.innerHeight/3);
 

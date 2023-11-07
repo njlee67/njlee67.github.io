@@ -1,6 +1,6 @@
 export class ColorSlider {
 
-    static mainCanvas = document.getElementById("main-canvas");
+    static mainCanvas = document.getElementsByTagName("canvas")[0];
     static ctx = ColorSlider.mainCanvas.getContext("2d");
 
     constructor(hexagonCenterPosition, hexagonalApothem, initialHue) {
